@@ -212,49 +212,49 @@ export function PanelSidebar({
         </header>
 
         {/* Persistent Exam Countdown Bar (MSÜ / TYT / AYT) + Today's Date */}
-        <div className="sticky top-14 z-20 border-b border-[#DCE4EE] bg-white/95 px-3 py-2.5 shadow-2xs backdrop-blur-md sm:px-6 sm:py-3 lg:top-0 lg:px-10">
-          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex flex-wrap items-center justify-between gap-2 lg:justify-start lg:gap-4">
-              <div className="flex items-center gap-2 text-xs font-bold text-[#11284B] sm:text-sm">
-                <CalendarClock className="h-4 w-4 text-[#B18A52] sm:h-5 sm:w-5" />
+        <div className="sticky top-14 z-20 border-b border-[#DCE4EE] bg-white/95 px-3 py-3 shadow-sm backdrop-blur-md sm:px-6 sm:py-4 lg:top-0 lg:px-10 lg:py-5">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2.5 xl:flex-col xl:items-start xl:justify-center xl:gap-2">
+              <div className="flex items-center gap-2.5 text-sm font-bold text-[#11284B] sm:text-base lg:text-lg">
+                <CalendarClock className="h-5 w-5 text-[#B18A52] sm:h-6 sm:w-6" />
                 <span>Sınavlara Kalan Süre</span>
               </div>
               {todayLabel && (
-                <span className="inline-flex items-center rounded-lg border border-[#E5DEC9] bg-[#FAF8F5] px-2.5 py-1 text-[11px] font-semibold text-[#203B5C] sm:px-3 sm:text-xs">
+                <span className="inline-flex items-center rounded-xl border border-[#E5DEC9] bg-[#FAF8F5] px-3 py-1.5 text-xs font-semibold text-[#203B5C] sm:px-3.5 sm:text-sm">
                   📅 {todayLabel}
                 </span>
               )}
             </div>
 
-            <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 xl:flex xl:items-stretch xl:gap-4">
               {EXAM_COUNTDOWNS.map((exam) => {
                 const days = getRemainingDays(exam.dateIso, todayUtc);
                 return (
                   <div
                     key={exam.label}
                     className={cn(
-                      "flex flex-col items-center justify-between gap-1 rounded-xl border px-2.5 py-1.5 shadow-2xs sm:flex-row sm:gap-3 sm:px-4 sm:py-2",
+                      "flex flex-col items-center justify-between gap-2 rounded-2xl border-2 px-2.5 py-3 shadow-sm sm:flex-row sm:gap-5 sm:px-6 sm:py-4 xl:min-w-[215px] xl:px-7 xl:py-5",
                       exam.cardClass
                     )}
                   >
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex flex-col items-center gap-1 sm:items-start">
                       <span
                         className={cn(
-                          "rounded-md px-2 py-0.5 text-[10px] font-extrabold tracking-wider sm:text-xs",
+                          "rounded-lg px-2.5 py-1 text-xs font-extrabold tracking-wider sm:px-3 sm:py-1 sm:text-sm lg:text-base",
                           exam.tagClass
                         )}
                       >
                         {exam.label}
                       </span>
-                      <span className="hidden text-[11px] font-medium opacity-80 xl:inline">
-                        ({exam.dateLabel})
+                      <span className="hidden text-xs font-semibold opacity-80 sm:inline">
+                        {exam.dateLabel}
                       </span>
                     </div>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-base font-extrabold leading-none sm:text-xl">
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-2xl font-black leading-none tracking-tight sm:text-4xl lg:text-[42px]">
                         {days !== null ? days : "—"}
                       </span>
-                      <span className="text-[10px] font-bold uppercase opacity-80 sm:text-[11px]">
+                      <span className="text-xs font-bold uppercase opacity-80 sm:text-sm lg:text-base">
                         Gün
                       </span>
                     </div>
