@@ -15,9 +15,30 @@ import {
 import { cn } from "@/lib/utils";
 
 const EXAM_COUNTDOWNS = [
-  { label: "MSÜ", dateIso: "2027-02-28", dateLabel: "28 Şub 2027", badgeClass: "bg-[#EEF3F9] text-[#11284B] border-[#C9D8EA]" },
-  { label: "TYT", dateIso: "2027-06-19", dateLabel: "19 Haz 2027", badgeClass: "bg-[#EAF6F0] text-[#0E4D3A] border-[#BBE0CE]" },
-  { label: "AYT", dateIso: "2027-06-20", dateLabel: "20 Haz 2027", badgeClass: "bg-[#FEF7E6] text-[#8A6508] border-[#F2DC9B]" },
+  {
+    label: "MSÜ",
+    dateIso: "2027-02-28",
+    dateLabel: "28 Şub 2027",
+    cardClass:
+      "border-[#11284B]/20 bg-gradient-to-br from-[#EEF3F9] to-white text-[#11284B]",
+    tagClass: "bg-[#11284B] text-white",
+  },
+  {
+    label: "TYT",
+    dateIso: "2027-06-19",
+    dateLabel: "19 Haz 2027",
+    cardClass:
+      "border-[#0E4D3A]/25 bg-gradient-to-br from-[#EAF6F0] to-white text-[#0E4D3A]",
+    tagClass: "bg-[#0E4D3A] text-white",
+  },
+  {
+    label: "AYT",
+    dateIso: "2027-06-20",
+    dateLabel: "20 Haz 2027",
+    cardClass:
+      "border-[#B8860B]/30 bg-gradient-to-br from-[#FEF7E6] to-white text-[#8A6508]",
+    tagClass: "bg-[#B8860B] text-white",
+  },
 ] as const;
 
 function getRemainingDays(targetIso: string, todayUtc: number | null): number | null {
@@ -53,10 +74,19 @@ export function PanelSidebar({
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [todayUtc, setTodayUtc] = useState<number | null>(null);
+  const [todayLabel, setTodayLabel] = useState<string>("");
 
   useEffect(() => {
     const now = new Date();
     setTodayUtc(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+    setTodayLabel(
+      now.toLocaleDateString("tr-TR", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        weekday: "long",
+      })
+    );
   }, []);
 
   const navContent = (
@@ -181,33 +211,53 @@ export function PanelSidebar({
           </span>
         </header>
 
-        {/* Persistent Exam Countdown Bar (MSÜ / TYT / AYT) */}
-        <div className="sticky top-14 z-20 border-b border-[#E5DEC9] bg-white/95 px-3 py-2 backdrop-blur-md sm:px-6 lg:top-0 lg:px-10">
-          <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="hidden items-center gap-2 text-xs font-bold text-[#11284B] sm:flex">
-              <CalendarClock className="h-4 w-4 text-[#B18A52]" />
-              <span>Sınavlara Kalan Süre</span>
+        {/* Persistent Exam Countdown Bar (MSÜ / TYT / AYT) + Today's Date */}
+        <div className="sticky top-14 z-20 border-b border-[#DCE4EE] bg-white/95 px-3 py-2.5 shadow-2xs backdrop-blur-md sm:px-6 sm:py-3 lg:top-0 lg:px-10">
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2 lg:justify-start lg:gap-4">
+              <div className="flex items-center gap-2 text-xs font-bold text-[#11284B] sm:text-sm">
+                <CalendarClock className="h-4 w-4 text-[#B18A52] sm:h-5 sm:w-5" />
+                <span>Sınavlara Kalan Süre</span>
+              </div>
+              {todayLabel && (
+                <span className="inline-flex items-center rounded-lg border border-[#E5DEC9] bg-[#FAF8F5] px-2.5 py-1 text-[11px] font-semibold text-[#203B5C] sm:px-3 sm:text-xs">
+                  📅 {todayLabel}
+                </span>
+              )}
             </div>
-            <div className="grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap sm:items-center sm:gap-2">
+
+            <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
               {EXAM_COUNTDOWNS.map((exam) => {
                 const days = getRemainingDays(exam.dateIso, todayUtc);
                 return (
                   <div
                     key={exam.label}
                     className={cn(
-                      "flex items-center justify-center gap-1.5 rounded-md border px-2 py-1 text-[11px] sm:inline-flex sm:rounded-lg sm:px-3 sm:text-xs",
-                      exam.badgeClass
+                      "flex flex-col items-center justify-between gap-1 rounded-xl border px-2.5 py-1.5 shadow-2xs sm:flex-row sm:gap-3 sm:px-4 sm:py-2",
+                      exam.cardClass
                     )}
                   >
-                    <span className="font-extrabold tracking-wide">
-                      {exam.label}
-                    </span>
-                    <span className="font-bold">
-                      {days !== null ? `${days} Gün` : "—"}
-                    </span>
-                    <span className="hidden text-[10px] opacity-75 md:inline">
-                      ({exam.dateLabel})
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={cn(
+                          "rounded-md px-2 py-0.5 text-[10px] font-extrabold tracking-wider sm:text-xs",
+                          exam.tagClass
+                        )}
+                      >
+                        {exam.label}
+                      </span>
+                      <span className="hidden text-[11px] font-medium opacity-80 xl:inline">
+                        ({exam.dateLabel})
+                      </span>
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-base font-extrabold leading-none sm:text-xl">
+                        {days !== null ? days : "—"}
+                      </span>
+                      <span className="text-[10px] font-bold uppercase opacity-80 sm:text-[11px]">
+                        Gün
+                      </span>
+                    </div>
                   </div>
                 );
               })}
