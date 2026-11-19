@@ -8,6 +8,7 @@ import { ArrowRight } from "lucide-react";
 import { AcademicMarquee } from "@/components/academic-marquee";
 import { HomeEcosystemBand } from "@/components/home-ecosystem-band";
 import { WhyDershaneSection } from "@/components/why-dershane-section";
+import { InstagramReelsSection } from "@/components/instagram-reels-section";
 import { useCampus } from "@/lib/campus-store";
 
 interface FeaturedStudent {
@@ -131,6 +132,9 @@ export default function HomePage() {
 
       {/* INFINITE SCROLLING MARQUEE RIGHT BELOW VIDEO */}
       <AcademicMarquee />
+
+      {/* INSTAGRAM REELS LOOPING SHOWCASE */}
+      <InstagramReelsSection />
 
       {/* NEDEN DERSHANE KURUMLARI? SEQUENTIAL FLOWING SECTION */}
       <WhyDershaneSection />
