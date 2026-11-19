@@ -190,12 +190,23 @@ export interface FeaturedHonorStudent {
   image: string;
 }
 
+export interface InstagramReelItem {
+  id: string;
+  title: string;
+  category: string;
+  views: string;
+  videoSrc: string;
+  poster: string;
+  instagramUrl: string;
+}
+
 export interface SiteContentConfig {
   heroTitlePrefix: string;
   heroTitleAccent: string;
   heroTitleSuffix: string;
   ecosystemBannerImage: string;
   honorStudents: FeaturedHonorStudent[];
+  instagramReels?: InstagramReelItem[];
 }
 
 interface CampusState {
@@ -1266,6 +1277,44 @@ const INITIAL_SITE_CONTENT: SiteContentConfig = {
   heroTitleAccent: "ölçülebilir",
   heroTitleSuffix: "akademik yükseliş.",
   ecosystemBannerImage: "/images/2dershane.jpeg",
+  instagramReels: [
+    {
+      id: "reel-1",
+      title: "Sabah Etüt & Soru Çözüm Maratonu",
+      category: "Kampüs Yaşamı",
+      views: "18.4B",
+      videoSrc: "/videos/girisvideo.mp4",
+      poster: "/images/1dershane.jpeg",
+      instagramUrl: "https://www.instagram.com/reels/",
+    },
+    {
+      id: "reel-2",
+      title: "Türkiye Geneli TYT Deneme Günü",
+      category: "Ölçme & Analiz",
+      views: "24.1B",
+      videoSrc: "/videos/dershanevideogiris.mp4",
+      poster: "/images/2dershane.jpeg",
+      instagramUrl: "https://www.instagram.com/reels/",
+    },
+    {
+      id: "reel-3",
+      title: "Birebir Akademik Koçluk & Konu Takibi",
+      category: "Rehberlik",
+      views: "15.9B",
+      videoSrc: "/videos/girisvideo.mp4",
+      poster: "/images/mentoring-session.jpg",
+      instagramUrl: "https://www.instagram.com/reels/",
+    },
+    {
+      id: "reel-4",
+      title: "2026 YKS Derece Öğrencilerimizden Notlar",
+      category: "Başarı Hikayesi",
+      views: "32.7B",
+      videoSrc: "/videos/dershanevideogiris.mp4",
+      poster: "/images/hero-academy.jpg",
+      instagramUrl: "https://www.instagram.com/reels/",
+    },
+  ],
   honorStudents: [
     {
       rank: "TR 84.",

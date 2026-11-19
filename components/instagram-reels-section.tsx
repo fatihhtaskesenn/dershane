@@ -8,6 +8,7 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
+import { useCampus, type InstagramReelItem } from "@/lib/campus-store";
 
 function InstagramIcon({ className }: { className?: string }) {
   return (
@@ -28,17 +29,7 @@ function InstagramIcon({ className }: { className?: string }) {
   );
 }
 
-interface ReelItem {
-  id: string;
-  title: string;
-  category: string;
-  views: string;
-  videoSrc: string;
-  poster: string;
-  instagramUrl: string;
-}
-
-const DERSHANE_REELS: ReelItem[] = [
+const DEFAULT_REELS: InstagramReelItem[] = [
   {
     id: "reel-1",
     title: "Sabah Etüt & Soru Çözüm Maratonu",
@@ -77,8 +68,20 @@ const DERSHANE_REELS: ReelItem[] = [
   },
 ];
 
+function toInstagramEmbedUrl(url: string): string | null {
+  const match = url.match(/instagram\.com\/(?:reel|reels|p)\/([A-Za-z0-9_-]+)/i);
+  if (!match) return null;
+  return `https://www.instagram.com/reel/${match[1]}/embed/`;
+}
+
 export function InstagramReelsSection() {
+  const { siteContent } = useCampus();
   const [unmutedId, setUnmutedId] = useState<string | null>(null);
+
+  const reels =
+    siteContent.instagramReels && siteContent.instagramReels.length > 0
+      ? siteContent.instagramReels.slice(0, 4)
+      : DEFAULT_REELS;
 
   return (
     <section className="border-b border-[#DCE8E2] bg-[#FCFBF8] py-10 sm:py-14">
@@ -113,8 +116,10 @@ export function InstagramReelsSection() {
 
         {/* 4 Vertical 9:16 Looping Reel Cards */}
         <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
-          {DERSHANE_REELS.map((reel, idx) => {
+          {reels.map((reel, idx) => {
             const isMuted = unmutedId !== reel.id;
+            const igEmbed = toInstagramEmbedUrl(reel.videoSrc);
+
             return (
               <motion.div
                 key={reel.id}
@@ -124,68 +129,80 @@ export function InstagramReelsSection() {
                 transition={{ duration: 0.45, delay: idx * 0.08 }}
                 className="group relative aspect-[9/16] overflow-hidden rounded-2xl border border-[#11284B]/10 bg-[#18191C] shadow-sm"
               >
-                <video
-                  src={reel.videoSrc}
-                  poster={reel.poster}
-                  autoPlay
-                  loop
-                  muted={isMuted}
-                  playsInline
-                  preload="metadata"
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
+                {igEmbed ? (
+                  <iframe
+                    src={igEmbed}
+                    title={reel.title}
+                    className="h-full w-full border-0"
+                    allow="autoplay; encrypted-media"
+                    allowFullScreen
+                  />
+                ) : (
+                  <>
+                    <video
+                      src={reel.videoSrc}
+                      poster={reel.poster}
+                      autoPlay
+                      loop
+                      muted={isMuted}
+                      playsInline
+                      preload="metadata"
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
 
-                {/* Top & Bottom Gradients */}
-                <div
-                  className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/45 via-transparent to-black/80"
-                  aria-hidden="true"
-                />
+                    {/* Top & Bottom Gradients */}
+                    <div
+                      className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/45 via-transparent to-black/80"
+                      aria-hidden="true"
+                    />
 
-                {/* Top Controls */}
-                <div className="absolute inset-x-3 top-3 flex items-center justify-between gap-2">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-black/45 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">
-                    <Play className="h-2.5 w-2.5 fill-white" />
-                    <span>{reel.category}</span>
-                  </span>
+                    {/* Top Controls */}
+                    <div className="absolute inset-x-3 top-3 flex items-center justify-between gap-2">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-black/45 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">
+                        <Play className="h-2.5 w-2.5 fill-white" />
+                        <span>{reel.category}</span>
+                      </span>
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setUnmutedId((prev) =>
-                        prev === reel.id ? null : reel.id
-                      )
-                    }
-                    aria-label={isMuted ? "Sesi Aç" : "Sesi Kapat"}
-                    className="flex h-7 w-7 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-sm transition hover:bg-black/70"
-                  >
-                    {isMuted ? (
-                      <VolumeX className="h-3.5 w-3.5" />
-                    ) : (
-                      <Volume2 className="h-3.5 w-3.5 text-[#E2BD82]" />
-                    )}
-                  </button>
-                </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setUnmutedId((prev) =>
+                            prev === reel.id ? null : reel.id
+                          )
+                        }
+                        aria-label={isMuted ? "Sesi Aç" : "Sesi Kapat"}
+                        className="flex h-7 w-7 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-sm transition hover:bg-black/70"
+                      >
+                        {isMuted ? (
+                          <VolumeX className="h-3.5 w-3.5" />
+                        ) : (
+                          <Volume2 className="h-3.5 w-3.5 text-[#E2BD82]" />
+                        )}
+                      </button>
+                    </div>
 
-                {/* Bottom Caption & Link */}
-                <div className="absolute inset-x-3 bottom-3 space-y-1.5 text-white sm:inset-x-4 sm:bottom-4">
-                  <p className="line-clamp-2 text-xs font-semibold leading-snug sm:text-sm">
-                    {reel.title}
-                  </p>
-                  <div className="flex items-center justify-between text-[10px] text-white/80 sm:text-[11px]">
-                    <span className="inline-flex items-center gap-1 font-medium">
-                      <Play className="h-3 w-3" /> {reel.views} izlenme
-                    </span>
-                    <a
-                      href={reel.instagramUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 font-semibold text-[#E2BD82] hover:underline"
-                    >
-                      <span>Reels</span>
-                      <ExternalLink className="h-2.5 w-2.5" />
-                    </a>
-                  </div>
-                </div>
+                    {/* Bottom Caption & Link */}
+                    <div className="absolute inset-x-3 bottom-3 space-y-1.5 text-white sm:inset-x-4 sm:bottom-4">
+                      <p className="line-clamp-2 text-xs font-semibold leading-snug sm:text-sm">
+                        {reel.title}
+                      </p>
+                      <div className="flex items-center justify-between text-[10px] text-white/80 sm:text-[11px]">
+                        <span className="inline-flex items-center gap-1 font-medium">
+                          <Play className="h-3 w-3" /> {reel.views} izlenme
+                        </span>
+                        <a
+                          href={reel.instagramUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 font-semibold text-[#E2BD82] hover:underline"
+                        >
+                          <span>Reels</span>
+                          <ExternalLink className="h-2.5 w-2.5" />
+                        </a>
+                      </div>
+                    </div>
+                  </>
+                )}
               </motion.div>
             );
           })}

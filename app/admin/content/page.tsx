@@ -9,8 +9,13 @@ import {
   Package,
   Phone,
   Sparkles,
+  Video,
 } from "lucide-react";
-import { useCampus, type FeaturedHonorStudent } from "@/lib/campus-store";
+import {
+  useCampus,
+  type FeaturedHonorStudent,
+  type InstagramReelItem,
+} from "@/lib/campus-store";
 
 const CAMPUS_IMAGES = [
   { label: "Derslik 1", value: "/images/1dershane.jpeg" },
@@ -49,6 +54,55 @@ export default function AdminSiteManagePage() {
       i === idx ? { ...item, ...patch } : item
     );
     updateSiteContent({ honorStudents: next });
+  };
+
+  const reelsList: InstagramReelItem[] = siteContent.instagramReels ?? [
+    {
+      id: "reel-1",
+      title: "Sabah Etüt & Soru Çözüm Maratonu",
+      category: "Kampüs Yaşamı",
+      views: "18.4B",
+      videoSrc: "/videos/girisvideo.mp4",
+      poster: "/images/1dershane.jpeg",
+      instagramUrl: "https://www.instagram.com/reels/",
+    },
+    {
+      id: "reel-2",
+      title: "Türkiye Geneli TYT Deneme Günü",
+      category: "Ölçme & Analiz",
+      views: "24.1B",
+      videoSrc: "/videos/dershanevideogiris.mp4",
+      poster: "/images/2dershane.jpeg",
+      instagramUrl: "https://www.instagram.com/reels/",
+    },
+    {
+      id: "reel-3",
+      title: "Birebir Akademik Koçluk & Konu Takibi",
+      category: "Rehberlik",
+      views: "15.9B",
+      videoSrc: "/videos/girisvideo.mp4",
+      poster: "/images/mentoring-session.jpg",
+      instagramUrl: "https://www.instagram.com/reels/",
+    },
+    {
+      id: "reel-4",
+      title: "2026 YKS Derece Öğrencilerimizden Notlar",
+      category: "Başarı Hikayesi",
+      views: "32.7B",
+      videoSrc: "/videos/dershanevideogiris.mp4",
+      poster: "/images/hero-academy.jpg",
+      instagramUrl: "https://www.instagram.com/reels/",
+    },
+  ];
+
+  const handleReelChange = (
+    idx: number,
+    patch: Partial<InstagramReelItem>
+  ) => {
+    const next = reelsList.map((item, i) =>
+      i === idx ? { ...item, ...patch } : item
+    );
+    updateSiteContent({ instagramReels: next });
   };
 
   return (
@@ -274,6 +328,124 @@ export default function AdminSiteManagePage() {
             />
           </div>
         )}
+      </section>
+
+      {/* 4. Instagram Reels Videos (4 Slots) */}
+      <section className="rounded-xl border border-[#DCE4EE] bg-white p-6">
+        <div className="flex flex-col justify-between gap-2 border-b border-[#E9EBEE] pb-3 sm:flex-row sm:items-center">
+          <div>
+            <h2 className="font-editorial flex items-center gap-2 text-2xl font-medium text-[#203B5C]">
+              <Video className="h-5 w-5 text-[#135D43]" />
+              <span>Anasayfa Instagram Reels Videoları (4 Bölüm)</span>
+            </h2>
+            <p className="mt-0.5 text-xs text-[#737B86]">
+              Her bölüm için doğrudan <code>.mp4</code> video yolu/linki veya{" "}
+              <code>https://www.instagram.com/reel/...</code> bağlantısı girebilirsiniz. Değişiklikler anında anasayfaya yansır.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+          {reelsList.slice(0, 4).map((reel, idx) => (
+            <div
+              key={reel.id}
+              className="space-y-2.5 rounded-xl border border-[#E5DEC9] bg-[#FCFBF8] p-4 text-xs"
+            >
+              <div className="flex items-center justify-between">
+                <span className="rounded bg-[#11284B] px-2.5 py-0.5 text-[11px] font-bold text-white">
+                  {idx + 1}. Video Bölümü
+                </span>
+                <span className="text-[11px] text-[#737B86]">
+                  {reel.views} izlenme
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-[10px] font-bold uppercase text-[#64748B]">
+                    Video Başlığı
+                  </label>
+                  <input
+                    type="text"
+                    value={reel.title}
+                    onChange={(e) =>
+                      handleReelChange(idx, { title: e.target.value })
+                    }
+                    className="w-full rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[10px] font-bold uppercase text-[#64748B]">
+                    Kategori Etiketi
+                  </label>
+                  <input
+                    type="text"
+                    value={reel.category}
+                    onChange={(e) =>
+                      handleReelChange(idx, { category: e.target.value })
+                    }
+                    className="w-full rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-[10px] font-bold uppercase text-[#64748B]">
+                  Video Linki (.mp4 veya Instagram Reel URL)
+                </label>
+                <input
+                  type="text"
+                  value={reel.videoSrc}
+                  onChange={(e) =>
+                    handleReelChange(idx, { videoSrc: e.target.value })
+                  }
+                  placeholder="/videos/girisvideo.mp4 veya https://www.instagram.com/reel/..."
+                  className="w-full rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5 font-mono text-[11px]"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-[10px] font-bold uppercase text-[#64748B]">
+                    Instagram Reels Bağlantısı
+                  </label>
+                  <input
+                    type="text"
+                    value={reel.instagramUrl}
+                    onChange={(e) =>
+                      handleReelChange(idx, { instagramUrl: e.target.value })
+                    }
+                    className="w-full rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5 text-[11px]"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[10px] font-bold uppercase text-[#64748B]">
+                    Kapak Görseli
+                  </label>
+                  <select
+                    value={reel.poster}
+                    onChange={(e) =>
+                      handleReelChange(idx, { poster: e.target.value })
+                    }
+                    className="w-full rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5 text-[11px]"
+                  >
+                    {CAMPUS_IMAGES.map((img) => (
+                      <option key={img.value} value={img.value}>
+                        {img.label}
+                      </option>
+                    ))}
+                    <option value="/images/mentoring-session.jpg">
+                      Akademik Danışmanlık
+                    </option>
+                    <option value="/images/hero-academy.jpg">
+                      Akademi Kampüs
+                    </option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
     </div>
   );
