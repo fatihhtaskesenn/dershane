@@ -151,7 +151,74 @@ export default function TeacherStudentsPage() {
           </span>
         </div>
 
-        <div className="max-h-[540px] overflow-x-auto overflow-y-auto">
+        {/* Mobile Student Cards */}
+        <div className="max-h-[420px] space-y-2.5 overflow-y-auto p-3 md:hidden">
+          {filtered.length === 0 ? (
+            <p className="py-8 text-center text-sm text-[#737B86]">
+              Aramanızla eşleşen öğrenci bulunamadı.
+            </p>
+          ) : (
+            filtered.map((s) => {
+              const tyts = s.exams.filter((e) => e.type === "TYT");
+              const ayts = s.exams.filter((e) => e.type === "AYT");
+              const tyt = tyts[tyts.length - 1];
+              const ayt = ayts[ayts.length - 1];
+              const weak = getWeakestSubject(tyt);
+              const isSelected = s.id === selectedStudent?.id;
+
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setSelectedStudentId(s.id)}
+                  className={`w-full rounded-xl border p-3.5 text-left transition ${
+                    isSelected
+                      ? "border-[#135D43] bg-[#EAF6F0] ring-1 ring-[#135D43]"
+                      : "border-[#E2E8F0] bg-[#FAF8F5]/60 hover:bg-[#FAF8F5]"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-bold text-[#11284B]">
+                        {s.name}
+                      </p>
+                      <p className="mt-0.5 text-[11px] text-[#64748B]">
+                        #{s.studentNo} · {s.className} ({s.track})
+                      </p>
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-bold ${
+                        isSelected
+                          ? "bg-[#135D43] text-white"
+                          : "border border-[#DCE4EE] bg-white text-[#203B5C]"
+                      }`}
+                    >
+                      {isSelected ? "Seçili" : "İncele"}
+                    </span>
+                  </div>
+                  <div className="mt-2.5 flex flex-wrap items-center gap-2 text-xs">
+                    <span className="rounded-md bg-white px-2 py-0.5 font-bold text-[#135D43]">
+                      TYT: {tyt ? `${tyt.totalNet}` : "—"}
+                    </span>
+                    <span className="rounded-md bg-white px-2 py-0.5 font-semibold text-[#203B5C]">
+                      AYT: {ayt ? `${ayt.totalNet}` : "—"}
+                    </span>
+                    <span className="rounded-md bg-white px-2 py-0.5 text-[#4B5563]">
+                      Devam: %{s.attendance}
+                    </span>
+                    {weak && (
+                      <span className="rounded-md bg-[#FDF0ED] px-2 py-0.5 text-[11px] font-semibold text-[#9A3412]">
+                        {weak.name} (%{weak.percent})
+                      </span>
+                    )}
+                  </div>
+                </button>
+              );
+            })
+          )}
+        </div>
+
+        <div className="hidden max-h-[540px] overflow-x-auto overflow-y-auto md:block">
           <table className="w-full min-w-[920px] text-left text-sm">
             <thead className="sticky top-0 z-10 border-b border-[#E2E8F0] bg-[#FAF8F5] text-[11px] font-bold uppercase tracking-wider text-[#64748B]">
               <tr>

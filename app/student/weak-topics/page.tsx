@@ -319,7 +319,51 @@ export default function StudentWeakTopicsPage() {
         </div>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-[#DCE4EE] bg-white shadow-xs">
-          <div className="overflow-x-auto">
+          {/* Mobile Card List */}
+          <div className="space-y-2.5 p-3 md:hidden">
+            {filteredTopics.map((row, idx) => (
+              <div
+                key={`${row.examId}-${row.subject}-${row.topic}-${idx}`}
+                className="rounded-xl border border-[#E2E8F0] bg-[#FAF8F5]/60 p-3.5"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <span className="inline-flex items-center gap-1 rounded bg-[#EEF3F9] px-2 py-0.5 text-[10px] font-bold text-[#11284B]">
+                      <BookOpen className="h-3 w-3" />
+                      {row.subject}
+                    </span>
+                    <p className="mt-1.5 text-sm font-bold text-[#203B5C]">
+                      {row.topic}
+                    </p>
+                    <p className="text-[11px] text-[#64748B]">{row.examTitle}</p>
+                  </div>
+                  <span
+                    className={`shrink-0 rounded-lg px-2 py-1 text-xs font-extrabold text-white ${
+                      row.percent >= 80
+                        ? "bg-[#135D43]"
+                        : row.percent >= 50
+                        ? "bg-[#B8860B]"
+                        : "bg-[#9A3412]"
+                    }`}
+                  >
+                    %{row.percent}
+                  </span>
+                </div>
+                <div className="mt-2.5 flex items-center gap-3 text-xs">
+                  <span className="font-medium text-[#11284B]">
+                    {row.total} Soru
+                  </span>
+                  <span className="font-bold text-[#135D43]">
+                    {row.correct}D
+                  </span>
+                  <span className="font-bold text-[#9A3412]">{row.wrong}Y</span>
+                  <span className="text-[#64748B]">{row.empty}B</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[760px] text-left text-xs">
               <thead className="border-b border-[#E2E8F0] bg-[#FAF8F5] text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
                 <tr>

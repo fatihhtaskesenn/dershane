@@ -277,7 +277,68 @@ export default function AdminStudentsPage() {
           </span>
         </div>
 
-        <div className="max-h-[380px] overflow-x-auto overflow-y-auto">
+        {/* Mobile Student Cards */}
+        <div className="max-h-[380px] space-y-2.5 overflow-y-auto p-3 md:hidden">
+          {filtered.length === 0 ? (
+            <p className="py-6 text-center text-xs text-[#737B86]">
+              Aramanızla eşleşen öğrenci bulunamadı.
+            </p>
+          ) : (
+            filtered.map((s) => {
+              const active = selectedStudent?.id === s.id;
+              const tyts = s.exams.filter((e) => e.type === "TYT");
+              const ayts = s.exams.filter((e) => e.type === "AYT");
+              const tyt = tyts[tyts.length - 1];
+              const ayt = ayts[ayts.length - 1];
+
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setSelectedStudentId(s.id)}
+                  className={`w-full rounded-xl border p-3.5 text-left transition ${
+                    active
+                      ? "border-[#135D43] bg-[#EAF6F0] ring-1 ring-[#135D43]"
+                      : "border-[#E2E8F0] bg-[#FAF8F5]/60"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-bold text-[#11284B]">
+                        {s.name}
+                      </p>
+                      <p className="mt-0.5 text-[11px] text-[#64748B]">
+                        #{s.studentNo} · {s.className} ({s.track})
+                      </p>
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-md px-2.5 py-1 text-[11px] font-bold ${
+                        active
+                          ? "bg-[#135D43] text-white"
+                          : "border border-[#DCE4EE] bg-white text-[#203B5C]"
+                      }`}
+                    >
+                      {active ? "Seçili" : "Yönet"}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                    <span className="rounded bg-white px-2 py-0.5 font-bold text-[#135D43]">
+                      TYT: {tyt ? `${tyt.totalNet}` : "—"}
+                    </span>
+                    <span className="rounded bg-white px-2 py-0.5 font-semibold text-[#203B5C]">
+                      AYT: {ayt ? `${ayt.totalNet}` : "—"}
+                    </span>
+                    <span className="rounded bg-white px-2 py-0.5 text-[11px] text-[#64748B]">
+                      {s.advisorName}
+                    </span>
+                  </div>
+                </button>
+              );
+            })
+          )}
+        </div>
+
+        <div className="hidden max-h-[380px] overflow-x-auto overflow-y-auto md:block">
           <table className="w-full min-w-[780px] text-left text-xs">
             <thead className="sticky top-0 z-10 border-b border-[#E2E8F0] bg-[#FAF8F5] text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
               <tr>

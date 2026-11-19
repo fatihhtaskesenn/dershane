@@ -496,7 +496,54 @@ export default function AdminExamsUploadPage() {
             </button>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Mobile Card View */}
+          <div className="space-y-3 p-3 md:hidden">
+            {parsedRows.map((row) => (
+              <div
+                key={row.studentId}
+                className="rounded-xl border border-[#DCE4EE] bg-[#FAF8F5]/60 p-3.5"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-bold text-[#11284B]">
+                      #{row.rank} · {row.studentName}
+                    </p>
+                    <p className="text-[11px] text-[#64748B]">
+                      #{row.studentNo} · {row.className}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-md bg-[#EAF6F0] px-2.5 py-1 text-xs font-bold text-[#0E4D3A]">
+                      {row.totalNet} Net
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveRow(row.studentId)}
+                      className="rounded p-1.5 text-[#64748B] hover:bg-red-50 hover:text-red-600"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+                <div className="mt-2.5 flex flex-wrap gap-1.5">
+                  {row.subjects.map((sub) => (
+                    <span
+                      key={sub.name}
+                      className="inline-flex items-center gap-1 rounded-md border border-[#DCE4EE] bg-white px-2 py-0.5 text-[11px]"
+                    >
+                      <strong className="text-[#11284B]">{sub.name}:</strong>
+                      <span className="font-bold text-[#0E4D3A]">{sub.net}</span>
+                      <span className="text-[#64748B]">
+                        ({sub.correct}D/{sub.wrong}Y)
+                      </span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[820px] text-left text-xs">
               <thead className="border-b border-[#E2E8F0] bg-[#FAF8F5] text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
                 <tr>

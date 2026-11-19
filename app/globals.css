@@ -26,6 +26,7 @@
 
 html {
   color-scheme: light;
+  overflow-x: hidden;
 }
 
 @media (min-width: 1024px) {

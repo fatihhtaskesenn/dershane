@@ -597,7 +597,145 @@ export default function AdminOneOnOnePage() {
               </div>
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-[#DCE4EE]">
+            {/* Mobile Daily Availability Picker (< md) */}
+            <div className="space-y-3 md:hidden">
+              <div className="grid grid-cols-7 gap-1 rounded-xl border border-[#DCE4EE] bg-white p-1.5">
+                {TIMETABLE_DAYS.map((d) => {
+                  const isActiveDay = day === d;
+                  return (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setDay(d)}
+                      className={`rounded-lg py-2 text-center text-[11px] font-bold transition ${
+                        isActiveDay
+                          ? "bg-[#11284B] text-white"
+                          : "bg-[#FAF8F5] text-[#475569]"
+                      }`}
+                    >
+                      {d.slice(0, 3)}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="space-y-2">
+                {timetableRows.map((timeRow, idx) => {
+                  const st = getSlotStatus(day, timeRow);
+                  const isSelected = time === timeRow;
+                  const teacherBusy =
+                    st.tClass.length > 0 || st.tOneOnOne.length > 0;
+                  const studentBusy = st.sEvents.length > 0;
+                  const bothBusy = teacherBusy && studentBusy;
+
+                  return (
+                    <React.Fragment key={timeRow}>
+                      {idx === lunchInsertIndex && (
+                        <div className="flex items-center justify-center gap-2 rounded-xl border border-[#F2DC9B] bg-[#FFFDF7] px-3 py-2 text-xs font-semibold text-[#8A6508]">
+                          <Coffee className="h-3.5 w-3.5" />
+                          <span>
+                            {lunchLabel} • Öğle Molası ({lunchBreak} Dakika)
+                          </span>
+                        </div>
+                      )}
+                      <div
+                        className={`rounded-xl border p-3 transition ${
+                          isSelected
+                            ? "border-[#11284B] bg-[#EEF3F9]/60 ring-1 ring-[#11284B]"
+                            : st.isFree
+                            ? "border-[#BBE0CE] bg-[#EAF6F0]/40"
+                            : bothBusy
+                            ? "border-[#FECACA] bg-[#FEF2F2]/70"
+                            : teacherBusy
+                            ? "border-[#BFDBFE] bg-[#EFF6FF]/70"
+                            : "border-[#FED7AA] bg-[#FFF7ED]/70"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="rounded-md bg-white px-2.5 py-1 text-xs font-bold text-[#11284B] shadow-2xs">
+                            {timeRow}
+                          </span>
+                          {st.isFree ? (
+                            <button
+                              type="button"
+                              onClick={() => handleSlotPick(day, timeRow)}
+                              className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                                isSelected
+                                  ? "bg-[#0E4D3A] text-white"
+                                  : "bg-[#0E4D3A]/10 text-[#0E4D3A]"
+                              }`}
+                            >
+                              {isSelected ? (
+                                <>
+                                  <Check className="h-3.5 w-3.5" />
+                                  <span>Seçildi</span>
+                                </>
+                              ) : (
+                                <span>✓ Müsait • Seç</span>
+                              )}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleSlotPick(day, timeRow)}
+                              className={`rounded-lg px-2.5 py-1 text-[11px] font-bold text-white ${
+                                bothBusy
+                                  ? "bg-[#991B1B]"
+                                  : teacherBusy
+                                  ? "bg-[#11284B]"
+                                  : "bg-[#C2410C]"
+                              }`}
+                            >
+                              {bothBusy
+                                ? "İkisi de Dolu"
+                                : teacherBusy
+                                ? "Öğretmen Dolu"
+                                : "Öğrenci Dolu"}
+                            </button>
+                          )}
+                        </div>
+                        {!st.isFree && (
+                          <div className="mt-2 space-y-1 text-xs">
+                            {st.tClass.map((tc) => (
+                              <p key={tc.id} className="font-semibold text-[#11284B]">
+                                Hoca: {tc.subject} ({tc.classGroup})
+                              </p>
+                            ))}
+                            {st.tOneOnOne.map((oo) => (
+                              <div
+                                key={oo.id}
+                                className="flex items-center justify-between gap-2 rounded bg-[#F5F3FF] px-2 py-1 font-bold text-[#4C1D95]"
+                              >
+                                <span>✦ Birebir: {oo.studentName}</span>
+                                {selectedTeacher && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      removeOneOnOneSlot(selectedTeacher.id, oo.id)
+                                    }
+                                    className="text-red-600"
+                                    title="Birebiri Sil"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                            {st.sEvents.map((se) => (
+                              <p key={se.id} className="font-semibold text-[#9A3412]">
+                                Öğr: {se.subject}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="hidden overflow-x-auto rounded-xl border border-[#DCE4EE] md:block">
               <table className="w-full min-w-[960px] border-collapse text-left">
                 <thead>
                   <tr className="border-b border-[#DCE4EE] bg-[#11284B] text-white">
