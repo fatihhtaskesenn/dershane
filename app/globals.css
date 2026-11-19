@@ -1,26 +1,88 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #FCFBF8;
+  --surface: #FFFFFF;
+  --primary: #135D43;
+  --secondary: #4E203D;
+  --accent: #C58B3B;
+  --border-subtle: #DCE8E2;
+  --foreground: #17241F;
+  --muted-foreground: #4E5E57;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-primary: var(--primary);
+  --color-accent: var(--accent);
+  --color-border-subtle: var(--border-subtle);
   --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
   --font-sans: var(--font-geist-sans);
+  --font-serif: var(--font-newsreader);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+html {
+  color-scheme: light;
+}
+
+@media (min-width: 1024px) {
+  html {
+    font-size: 115%;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #FCFBF8;
+  color: #1E242E;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-editorial {
+  font-family: var(--font-newsreader), Georgia, serif;
+}
+
+/* Custom subtle light scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F8F7F3;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D5D8DC;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #B0B6BE;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  width: max-content;
+  will-change: transform;
+  animation: marquee 28s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
 }
