@@ -35,12 +35,24 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-[#0A1936] via-[#0D2558] to-[#163B82] px-4 py-12 text-white">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#07152E] via-[#0F2D5E] to-[#0D4A3B] px-4 py-12 text-white">
+      <motion.div
+        animate={{ scale: [1, 1.08, 1], opacity: [0.4, 0.65, 0.4] }}
+        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+        className="pointer-events-none absolute -top-28 -left-24 h-96 w-96 rounded-full bg-[#1E4E9E]/35 blur-3xl"
+        aria-hidden="true"
+      />
+      <motion.div
+        animate={{ scale: [1, 1.12, 1], opacity: [0.35, 0.6, 0.35] }}
+        transition={{ duration: 11, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
+        className="pointer-events-none absolute -right-24 -bottom-28 h-[26rem] w-[26rem] rounded-full bg-[#E8C483]/20 blur-3xl"
+        aria-hidden="true"
+      />
       <motion.div
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45 }}
-        className="w-full max-w-md overflow-hidden rounded-2xl border border-white/15 bg-white text-[#17241F] shadow-2xl"
+        className="relative w-full max-w-md overflow-hidden rounded-2xl border border-white/15 bg-white text-[#17241F] shadow-[0_30px_80px_rgba(4,12,28,0.45)]"
       >
         <div className="relative bg-gradient-to-br from-[#091A3A] via-[#0D2558] to-[#133372] px-8 py-7 text-center text-white">
           <div

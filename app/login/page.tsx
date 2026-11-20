@@ -64,10 +64,22 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative flex min-h-[calc(100vh-112px)] items-center justify-center overflow-hidden bg-[#FCFBF8] px-4 py-10 sm:px-6 lg:py-14">
-      {/* Subtle Ambient Editorial Backdrop */}
+    <div className="relative flex min-h-[calc(100vh-112px)] items-center justify-center overflow-hidden bg-gradient-to-br from-[#07152E] via-[#0F2D5E] to-[#0D4A3B] px-4 py-10 sm:px-6 lg:py-14">
+      {/* Classy Animated Ambient Gradient Glows */}
+      <motion.div
+        animate={{ scale: [1, 1.08, 1], opacity: [0.45, 0.7, 0.45] }}
+        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+        className="pointer-events-none absolute -top-32 -left-24 h-96 w-96 rounded-full bg-[#1E4E9E]/35 blur-3xl"
+        aria-hidden="true"
+      />
+      <motion.div
+        animate={{ scale: [1, 1.12, 1], opacity: [0.35, 0.6, 0.35] }}
+        transition={{ duration: 11, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
+        className="pointer-events-none absolute -right-24 -bottom-32 h-[28rem] w-[28rem] rounded-full bg-[#E8C483]/20 blur-3xl"
+        aria-hidden="true"
+      />
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(19,93,67,0.06),transparent_45%),radial-gradient(circle_at_80%_80%,rgba(13,37,88,0.08),transparent_50%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(232,196,131,0.12),transparent_55%),radial-gradient(circle_at_85%_85%,rgba(19,93,67,0.28),transparent_50%)]"
         aria-hidden="true"
       />
 
@@ -75,7 +87,7 @@ export default function LoginPage() {
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-        className="relative grid w-full max-w-4xl grid-cols-1 overflow-hidden rounded-2xl border border-[#E5DEC9] bg-white shadow-[0_28px_70px_rgba(11,31,68,0.12)] lg:grid-cols-12"
+        className="relative grid w-full max-w-4xl grid-cols-1 overflow-hidden rounded-2xl border border-white/15 bg-white shadow-[0_30px_80px_rgba(4,12,28,0.45)] lg:grid-cols-12"
       >
         {/* Left Midnight Navy Editorial Brand Panel */}
         <div className="relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-[#091A3A] via-[#0D2558] to-[#133372] p-8 text-white sm:p-11 lg:col-span-5">
