@@ -114,6 +114,27 @@ export function StudentNetCharts({ exams }: { exams: StudentExamRecord[] }) {
     });
   }, [monthlyData]);
 
+  const { yDomain, yTicks } = useMemo(() => {
+    if (monthlyData.length === 0) {
+      return { yDomain: [0, 120] as [number, number], yTicks: [0, 30, 60, 90, 120] };
+    }
+    const vals = monthlyData.map((d) => Number(d[metric]));
+    const minVal = Math.min(...vals);
+    const maxVal = Math.max(...vals);
+    const pad = metric === "Toplam" ? 10 : 5;
+    const rawMin = Math.max(0, minVal - pad);
+    const rawMax = maxVal + pad;
+    const span = Math.max(10, rawMax - rawMin);
+    const tickStep = span > 50 ? 20 : span > 25 ? 10 : 5;
+    const start = Math.max(0, Math.floor(rawMin / tickStep) * tickStep);
+    const end = Math.ceil(rawMax / tickStep) * tickStep;
+    const ticks: number[] = [];
+    for (let t = start; t <= end; t += tickStep) {
+      ticks.push(t);
+    }
+    return { yDomain: [start, end] as [number, number], yTicks: ticks };
+  }, [monthlyData, metric]);
+
   if (monthlyData.length === 0) {
     return null;
   }
@@ -168,7 +189,7 @@ export function StudentNetCharts({ exams }: { exams: StudentExamRecord[] }) {
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={monthlyData}
-                margin={{ top: 12, right: 12, left: -18, bottom: 0 }}
+                margin={{ top: 12, right: 14, left: 4, bottom: 0 }}
               >
                 <defs>
                   <linearGradient id="emeraldWaveFill" x1="0" y1="0" x2="0" y2="1">
@@ -189,10 +210,13 @@ export function StudentNetCharts({ exams }: { exams: StudentExamRecord[] }) {
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fill: "#4E5E57", fontSize: 12 }}
+                  width={54}
+                  domain={yDomain}
+                  ticks={yTicks}
+                  tickFormatter={(v) => `${v} Net`}
+                  tick={{ fill: "#4E5E57", fontSize: 11, fontWeight: 500 }}
                   axisLine={false}
                   tickLine={false}
-                  domain={["dataMin - 4", "dataMax + 3"]}
                 />
                 <Tooltip
                   contentStyle={{
