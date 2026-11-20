@@ -179,7 +179,7 @@ export function PanelSidebar({
   return (
     <div className="flex min-h-screen bg-[#F8F7F3] text-[#252A32]">
       {/* Desktop Sidebar */}
-      <aside className="hidden w-72 shrink-0 border-r border-[#E9EBEE] bg-[#FFFFFF] lg:block">
+      <aside className="hidden w-72 shrink-0 border-r border-[#E9EBEE] bg-[#FFFFFF] lg:block print:hidden">
         <div className="sticky top-0 h-screen overflow-y-auto">
           {navContent}
         </div>
@@ -201,7 +201,7 @@ export function PanelSidebar({
       {/* Main Content */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Mobile Top Bar */}
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-[#E9EBEE] bg-[#FFFFFF]/95 px-4 backdrop-blur-md lg:hidden">
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-[#E9EBEE] bg-[#FFFFFF]/95 px-4 backdrop-blur-md lg:hidden print:hidden">
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
@@ -217,7 +217,7 @@ export function PanelSidebar({
 
         {/* Exam Countdown Bar (MSÜ / TYT / AYT) + Today's Date (Fixed at top of page, scrolls naturally) */}
         {isAdmin ? (
-          <div className="border-b border-[#E9EBEE] bg-[#FFFFFF] px-3 py-1.5 sm:px-6 lg:px-10">
+          <div className="border-b border-[#E9EBEE] bg-[#FFFFFF] px-3 py-1.5 sm:px-6 lg:px-10 print:hidden">
             <div className="flex flex-wrap items-center justify-between gap-1.5 sm:gap-2">
               <div className="flex items-center gap-2 text-[11px] font-medium text-[#203B5C]">
                 <CalendarClock className="h-3.5 w-3.5 text-[#B18A52]" />
@@ -263,7 +263,7 @@ export function PanelSidebar({
             </div>
           </div>
         ) : (
-          <div className="border-b border-[#E9EBEE] bg-[#FFFFFF] px-3 py-2 sm:px-6 sm:py-4 lg:px-10 lg:py-5">
+          <div className="border-b border-[#E9EBEE] bg-[#FFFFFF] px-3 py-2 sm:px-6 sm:py-4 lg:px-10 lg:py-5 print:hidden">
             <div className="flex flex-col gap-2 sm:gap-3 xl:flex-row xl:items-center xl:justify-between">
               <div className="flex flex-wrap items-center justify-between gap-2 xl:flex-col xl:items-start xl:justify-center xl:gap-1.5">
                 <div className="flex items-center gap-2 text-xs font-medium text-[#203B5C] sm:text-sm">
@@ -324,7 +324,7 @@ export function PanelSidebar({
           </div>
         )}
 
-        <main className="flex-1 p-3 sm:p-6 lg:p-10">{children}</main>
+        <main className="flex-1 p-3 sm:p-6 lg:p-10 print:p-0">{children}</main>
       </div>
     </div>
   );
