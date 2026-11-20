@@ -212,9 +212,9 @@ export function PanelSidebar({
           </span>
         </header>
 
-        {/* Persistent Exam Countdown Bar (MSÜ / TYT / AYT) + Today's Date */}
+        {/* Exam Countdown Bar (MSÜ / TYT / AYT) + Today's Date (Fixed at top of page, scrolls naturally) */}
         {isAdmin ? (
-          <div className="border-b border-[#DCE4EE] bg-white/95 px-3 py-1.5 backdrop-blur-md sm:px-6 lg:sticky lg:top-0 lg:z-20 lg:px-10">
+          <div className="border-b border-[#DCE4EE] bg-white/95 px-3 py-1.5 backdrop-blur-md sm:px-6 lg:px-10">
             <div className="flex flex-wrap items-center justify-between gap-1.5 sm:gap-2">
               <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#11284B]">
                 <CalendarClock className="h-3.5 w-3.5 text-[#B18A52]" />
@@ -255,7 +255,7 @@ export function PanelSidebar({
             </div>
           </div>
         ) : (
-          <div className="border-b border-[#DCE4EE] bg-white/95 px-3 py-2 shadow-2xs backdrop-blur-md sm:px-6 sm:py-4 lg:sticky lg:top-0 lg:z-20 lg:px-10 lg:py-5 lg:shadow-sm">
+          <div className="border-b border-[#DCE4EE] bg-white/95 px-3 py-2 shadow-2xs backdrop-blur-md sm:px-6 sm:py-4 lg:px-10 lg:py-5 lg:shadow-sm">
             <div className="flex flex-col gap-2 sm:gap-3 xl:flex-row xl:items-center xl:justify-between">
               <div className="flex flex-wrap items-center justify-between gap-2 xl:flex-col xl:items-start xl:justify-center xl:gap-2">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-[#11284B] sm:gap-2.5 sm:text-base lg:text-lg">
