@@ -38,14 +38,30 @@ const MONTH_ORDER: Record<string, number> = {
   Haziran: 10,
 };
 
-const SUBJECT_CARDS = [
+const TYT_SUBJECT_CARDS = [
   { key: "Matematik", maxQuestions: 40 },
   { key: "Türkçe", maxQuestions: 40 },
   { key: "Fen Bilimleri", maxQuestions: 20 },
   { key: "Sosyal Bilimler", maxQuestions: 20 },
 ] as const;
 
-type MetricFilter = "Toplam" | (typeof SUBJECT_CARDS)[number]["key"];
+const AYT_SUBJECT_MAX: Record<string, number> = {
+  Matematik: 40,
+  Fizik: 14,
+  Kimya: 13,
+  Biyoloji: 13,
+  Edebiyat: 24,
+  "Türk Dili ve Edebiyatı": 24,
+  "Tarih-1": 10,
+  "Coğrafya-1": 6,
+  "Tarih-2": 11,
+  "Coğrafya-2": 11,
+  "Felsefe Grubu": 12,
+  "Din Kültürü": 6,
+  "Sosyal-2": 40,
+};
+
+type MetricFilter = string;
 
 function extractMonthShort(dateStr: string): { label: string; order: number } {
   const parts = dateStr.trim().split(/\s+/);
@@ -63,54 +79,97 @@ function extractMonthShort(dateStr: string): { label: string; order: number } {
 export function StudentNetCharts({
   exams,
   chartType = "line",
+  examType: controlledExamType,
+  onExamTypeChange,
 }: {
   exams: StudentExamRecord[];
   chartType?: "line" | "bar";
+  examType?: "TYT" | "AYT";
+  onExamTypeChange?: (type: "TYT" | "AYT") => void;
 }) {
   const [mounted, setMounted] = useState(false);
+  const [internalExamType, setInternalExamType] = useState<"TYT" | "AYT">("TYT");
+  const activeExamType = controlledExamType ?? internalExamType;
+  const setActiveExamType = (type: "TYT" | "AYT") => {
+    if (onExamTypeChange) onExamTypeChange(type);
+    else setInternalExamType(type);
+  };
   const [metric, setMetric] = useState<MetricFilter>("Toplam");
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  const activeSubjectDefs = useMemo(() => {
+    if (activeExamType === "TYT") {
+      return TYT_SUBJECT_CARDS.map((s) => ({
+        key: s.key as string,
+        maxQuestions: s.maxQuestions as number,
+      }));
+    }
+    const aytExams = exams.filter((e) => e.type === "AYT");
+    const names = Array.from(
+      new Set(aytExams.flatMap((ex) => ex.subjects.map((s) => s.name)))
+    );
+    if (names.length === 0) {
+      return [
+        { key: "Matematik", maxQuestions: 40 },
+        { key: "Fizik", maxQuestions: 14 },
+        { key: "Kimya", maxQuestions: 13 },
+        { key: "Biyoloji", maxQuestions: 13 },
+      ];
+    }
+    return names.slice(0, 4).map((name) => ({
+      key: name,
+      maxQuestions: AYT_SUBJECT_MAX[name] ?? 20,
+    }));
+  }, [exams, activeExamType]);
+
+  useEffect(() => {
+    if (
+      metric !== "Toplam" &&
+      !activeSubjectDefs.some((s) => s.key === metric)
+    ) {
+      setMetric("Toplam");
+    }
+  }, [activeSubjectDefs, metric]);
+
   const monthlyData = useMemo(() => {
-    const tytExams = exams.filter((e) => e.type === "TYT");
-    const source = tytExams.length > 0 ? tytExams : exams;
+    const filteredByType = exams.filter((e) => e.type === activeExamType);
 
-    const rows = source.map((ex) => {
+    const rows = filteredByType.map((ex) => {
       const { label, order } = extractMonthShort(ex.date);
-      const getNet = (name: string) =>
-        ex.subjects.find((s) =>
-          s.name.toLowerCase().includes(name.toLowerCase().split(" ")[0])
-        )?.net ?? 0;
-
-      return {
+      const row: Record<string, string | number> = {
         month: label,
         order,
         Toplam: ex.totalNet,
-        Matematik: getNet("Matematik"),
-        Türkçe: getNet("Türkçe"),
-        "Fen Bilimleri": getNet("Fen"),
-        "Sosyal Bilimler": getNet("Sosyal"),
       };
+      activeSubjectDefs.forEach((def) => {
+        const found = ex.subjects.find(
+          (s) =>
+            s.name.toLowerCase() === def.key.toLowerCase() ||
+            s.name.toLowerCase().includes(def.key.toLowerCase().split(" ")[0])
+        );
+        row[def.key] = found?.net ?? 0;
+      });
+      return row;
     });
 
-    const sorted = rows.sort((a, b) => a.order - b.order);
+    const sorted = rows.sort((a, b) => Number(a.order) - Number(b.order));
     if (sorted.length === 1) {
       return [{ ...sorted[0], month: "Başlangıç", order: 0 }, sorted[0]];
     }
     return sorted;
-  }, [exams]);
+  }, [exams, activeExamType, activeSubjectDefs]);
 
   const subjectCards = useMemo(() => {
     if (monthlyData.length === 0) return [];
     const first = monthlyData[0];
     const last = monthlyData[monthlyData.length - 1];
 
-    return SUBJECT_CARDS.map((meta) => {
-      const current = Number(last[meta.key]);
-      const start = Number(first[meta.key]);
+    return activeSubjectDefs.map((meta) => {
+      const current = Number(last[meta.key] ?? 0);
+      const start = Number(first[meta.key] ?? 0);
       const diff = Number((current - start).toFixed(2));
       const pct = Math.min(100, Math.round((current / meta.maxQuestions) * 100));
       return {
@@ -120,31 +179,28 @@ export function StudentNetCharts({
         pct,
       };
     });
-  }, [monthlyData]);
+  }, [monthlyData, activeSubjectDefs]);
 
   const { yDomain, yTicks } = useMemo(() => {
-    const maxCapMap: Record<MetricFilter, number> = {
-      Toplam: 120,
-      Matematik: 40,
-      Türkçe: 40,
-      "Fen Bilimleri": 20,
-      "Sosyal Bilimler": 20,
-    };
-    const maxCap = maxCapMap[metric] ?? 120;
+    const totalCap = activeExamType === "TYT" ? 120 : 80;
+    const matchedSub = activeSubjectDefs.find((s) => s.key === metric);
+    const maxCap = metric === "Toplam" ? totalCap : matchedSub?.maxQuestions ?? 40;
 
     if (monthlyData.length === 0) {
       return {
         yDomain: [0, maxCap] as [number, number],
         yTicks:
-          maxCap === 120
-            ? [0, 30, 60, 90, 120]
+          maxCap >= 80
+            ? maxCap === 120
+              ? [0, 30, 60, 90, 120]
+              : [0, 20, 40, 60, 80]
             : maxCap === 40
             ? [0, 10, 20, 30, 40]
             : [0, 5, 10, 15, 20],
       };
     }
 
-    const vals = monthlyData.map((d) => Number(d[metric]));
+    const vals = monthlyData.map((d) => Number(d[metric] ?? 0));
     const minVal = Math.min(...vals);
     const maxVal = Math.max(...vals);
     const pad = metric === "Toplam" ? 10 : 5;
@@ -152,9 +208,9 @@ export function StudentNetCharts({
     const rawMax = Math.min(maxCap, maxVal + pad);
     const span = Math.max(10, rawMax - rawMin);
     const tickStep =
-      maxCap === 20
+      maxCap <= 20
         ? 5
-        : maxCap === 40
+        : maxCap <= 40
         ? span > 20
           ? 10
           : 5
@@ -173,9 +229,9 @@ export function StudentNetCharts({
       ticks.push(t);
     }
     return { yDomain: [start, end] as [number, number], yTicks: ticks };
-  }, [monthlyData, metric]);
+  }, [monthlyData, metric, activeExamType, activeSubjectDefs]);
 
-  if (monthlyData.length === 0) {
+  if (exams.length === 0) {
     return null;
   }
 
@@ -197,35 +253,59 @@ export function StudentNetCharts({
             </p>
           </div>
 
-          {/* Metric Selector Pills */}
-          <div className="flex max-w-full flex-nowrap gap-1 overflow-x-auto rounded-lg border border-[#DCE8E2] bg-[#FCFBF8] p-1">
-            {(
-              [
-                "Toplam",
-                "Matematik",
-                "Türkçe",
-                "Fen Bilimleri",
-                "Sosyal Bilimler",
-              ] as MetricFilter[]
-            ).map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => setMetric(tab)}
-                className={`whitespace-nowrap rounded-md px-2.5 py-1 text-[11px] font-semibold transition-all sm:px-3 sm:text-xs ${
-                  metric === tab
-                    ? "bg-[#135D43] text-white shadow-xs"
-                    : "text-[#4E5E57] hover:text-[#135D43]"
-                }`}
-              >
-                {tab === "Toplam" ? "Genel Toplam" : tab}
-              </button>
-            ))}
+          {/* Exam Type (TYT / AYT) + Metric Selector Pills */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex rounded-lg border border-[#203B5C]/20 bg-[#EEF3F9] p-0.5">
+              {(["TYT", "AYT"] as const).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setActiveExamType(t)}
+                  className={`rounded-md px-3 py-1 text-[11px] font-bold transition-all sm:text-xs ${
+                    activeExamType === t
+                      ? "bg-[#203B5C] text-white shadow-xs"
+                      : "text-[#203B5C] hover:bg-white/60"
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex max-w-full flex-nowrap gap-1 overflow-x-auto rounded-lg border border-[#DCE8E2] bg-[#FCFBF8] p-1">
+              {(["Toplam", ...activeSubjectDefs.map((s) => s.key)] as MetricFilter[]).map(
+                (tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setMetric(tab)}
+                    className={`whitespace-nowrap rounded-md px-2.5 py-1 text-[11px] font-semibold transition-all sm:px-3 sm:text-xs ${
+                      metric === tab
+                        ? "bg-[#135D43] text-white shadow-xs"
+                        : "text-[#4E5E57] hover:text-[#135D43]"
+                    }`}
+                  >
+                    {tab === "Toplam" ? "Genel Toplam" : tab}
+                  </button>
+                )
+              )}
+            </div>
           </div>
         </div>
 
         {/* Chart Container */}
-        {chartType === "bar" ? (
+        {monthlyData.length === 0 ? (
+          <div className="flex h-[185px] items-center justify-center rounded-lg border border-dashed border-[#DCE8E2] bg-[#FCFBF8] text-center sm:h-[260px]">
+            <div>
+              <p className="text-sm font-semibold text-[#203B5C]">
+                Henüz {activeExamType} deneme sonucu bulunmuyor.
+              </p>
+              <p className="mt-1 text-xs text-[#737B86]">
+                Diğer sınav türünü görmek için yukarıdan {activeExamType === "TYT" ? "AYT" : "TYT"} butonunu seçebilirsiniz.
+              </p>
+            </div>
+          </div>
+        ) : chartType === "bar" ? (
           <div key={`bar-${metric}`} className="h-[195px] w-full sm:h-[260px]">
             {mounted && (
               <ResponsiveContainer width="100%" height="100%">

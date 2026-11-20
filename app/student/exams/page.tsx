@@ -9,6 +9,7 @@ import {
   ChevronUp,
   FileBarChart2,
   FileDown,
+  Search,
 } from "lucide-react";
 import { useCampus } from "@/lib/campus-store";
 import { StudentNetCharts } from "@/components/student-net-charts";
@@ -16,12 +17,29 @@ import { StudentNetCharts } from "@/components/student-net-charts";
 export default function StudentExamsPage() {
   const { activeStudent } = useCampus();
   const [filter, setFilter] = useState<"Tümü" | "TYT" | "AYT">("Tümü");
+  const [chartExamType, setChartExamType] = useState<"TYT" | "AYT">("TYT");
+  const [searchQuery, setSearchQuery] = useState("");
   const [expandedExamIds, setExpandedExamIds] = useState<Record<string, boolean>>({});
   const [printingExamId, setPrintingExamId] = useState<string | null>(null);
 
-  const filteredExams = activeStudent.exams.filter((e) =>
-    filter === "Tümü" ? true : e.type === filter
-  );
+  const handleFilterChange = (tab: "Tümü" | "TYT" | "AYT") => {
+    setFilter(tab);
+    if (tab === "TYT" || tab === "AYT") {
+      setChartExamType(tab);
+    }
+  };
+
+  const filteredExams = activeStudent.exams.filter((e) => {
+    const matchesType = filter === "Tümü" ? true : e.type === filter;
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return matchesType;
+    const matchesSearch =
+      e.title.toLowerCase().includes(q) ||
+      e.date.toLowerCase().includes(q) ||
+      e.type.toLowerCase().includes(q) ||
+      e.subjects.some((s) => s.name.toLowerCase().includes(q));
+    return matchesType && matchesSearch;
+  });
 
   const printingExam =
     activeStudent.exams.find((e) => e.id === printingExamId) ??
@@ -73,27 +91,55 @@ export default function StudentExamsPage() {
           </h1>
         </div>
 
-        <div className="inline-flex w-fit rounded-md border border-[#E5DEC9] bg-white p-1">
-          {(["Tümü", "TYT", "AYT"] as const).map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setFilter(tab)}
-              className={`rounded px-3 py-1 text-xs font-semibold transition-colors sm:px-3.5 sm:py-1.5 ${
-                filter === tab
-                  ? "bg-[#203B5C] text-white"
-                  : "text-[#737B86] hover:text-[#203B5C]"
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="relative">
+            <Search className="pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-[#737B86]" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Deneme veya tarih ara..."
+              className="w-full rounded-md border border-[#E5DEC9] bg-white py-1.5 pr-3 pl-8 text-xs text-[#203B5C] placeholder:text-[#737B86] focus:border-[#135D43] focus:outline-none sm:w-52"
+            />
+          </div>
+
+          <div className="inline-flex w-fit rounded-md border border-[#E5DEC9] bg-white p-1">
+            {(["Tümü", "TYT", "AYT"] as const).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => handleFilterChange(tab)}
+                className={`rounded px-3 py-1 text-xs font-semibold transition-colors sm:px-3.5 sm:py-1.5 ${
+                  filter === tab
+                    ? "bg-[#203B5C] text-white"
+                    : "text-[#737B86] hover:text-[#203B5C]"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      <StudentNetCharts exams={activeStudent.exams} chartType="bar" />
+      <StudentNetCharts
+        exams={activeStudent.exams}
+        chartType="bar"
+        examType={chartExamType}
+        onExamTypeChange={setChartExamType}
+      />
 
       <div className="space-y-3 sm:space-y-5">
+        {filteredExams.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-[#DCE4EE] bg-white p-8 text-center">
+            <p className="text-sm font-semibold text-[#203B5C]">
+              Aramanızla eşleşen deneme sonucu bulunamadı.
+            </p>
+            <p className="mt-1 text-xs text-[#737B86]">
+              Farklı bir anahtar kelime deneyebilir veya Tümü filtresine dönebilirsiniz.
+            </p>
+          </div>
+        ) : null}
         {filteredExams.map((exam, index) => {
           const defaultOpen = index === 0;
           const isMobileOpen = expandedExamIds[exam.id] ?? defaultOpen;
