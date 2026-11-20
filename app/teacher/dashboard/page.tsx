@@ -41,6 +41,7 @@ export default function TeacherDashboardPage() {
   const { activeTeacher, students, announcements } = useCampus();
   const [todayDay, setTodayDay] = useState<WeekDay | null>(null);
   const [nowMinutes, setNowMinutes] = useState<number | null>(null);
+  const [studentSort, setStudentSort] = useState<"tyt" | "ayt" | "name">("tyt");
 
   useEffect(() => {
     const updateClock = () => {
@@ -94,6 +95,26 @@ export default function TeacherDashboardPage() {
       todaySlots.find((s) => parseEndMinutes(s.time) > nowMinutes) ?? null
     );
   }, [todaySlots, nowMinutes]);
+
+  const sortedStudents = useMemo(() => {
+    const getLatestNet = (
+      stu: (typeof students)[number],
+      type: "TYT" | "AYT"
+    ) => {
+      const ex = stu.exams.filter((e) => e.type === type).at(-1);
+      return ex ? ex.totalNet : -1;
+    };
+
+    return [...students].sort((a, b) => {
+      if (studentSort === "tyt") {
+        return getLatestNet(b, "TYT") - getLatestNet(a, "TYT");
+      }
+      if (studentSort === "ayt") {
+        return getLatestNet(b, "AYT") - getLatestNet(a, "AYT");
+      }
+      return a.name.localeCompare(b.name, "tr");
+    });
+  }, [students, studentSort]);
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -287,14 +308,39 @@ export default function TeacherDashboardPage() {
 
       {/* 2. ÖĞRENCİLER & NET DURUMLARI */}
       <section className="rounded-xl border border-[#E9EBEE] bg-white p-4 sm:p-6">
-        <h2 className="font-editorial flex items-center gap-2 border-b border-[#E9EBEE] pb-3 text-xl font-medium text-[#203B5C] sm:text-2xl">
-          <Users className="h-5 w-5 text-[#135D43]" />
-          <span>Öğrenciler &amp; Güncel Net Durumları</span>
-        </h2>
+        <div className="flex flex-col justify-between gap-3 border-b border-[#E9EBEE] pb-3 sm:flex-row sm:items-center">
+          <h2 className="font-editorial flex items-center gap-2 text-xl font-medium text-[#203B5C] sm:text-2xl">
+            <Users className="h-5 w-5 text-[#135D43]" />
+            <span>Öğrenciler &amp; Güncel Net Durumları</span>
+          </h2>
+
+          <div className="inline-flex w-fit flex-wrap items-center gap-1 rounded-lg border border-[#DCE4EE] bg-[#FCFBF8] p-1">
+            {(
+              [
+                { key: "tyt", label: "TYT Netine Göre" },
+                { key: "ayt", label: "AYT Netine Göre" },
+                { key: "name", label: "İsme Göre (A–Z)" },
+              ] as const
+            ).map((opt) => (
+              <button
+                key={opt.key}
+                type="button"
+                onClick={() => setStudentSort(opt.key)}
+                className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors sm:px-3 sm:text-xs ${
+                  studentSort === opt.key
+                    ? "bg-[#203B5C] text-white shadow-2xs"
+                    : "text-[#64748B] hover:text-[#203B5C]"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Mobile Cards */}
         <div className="mt-3 space-y-2 md:hidden">
-          {students.slice(0, 6).map((s) => {
+          {sortedStudents.slice(0, 8).map((s) => {
             const tyt = s.exams.filter((e) => e.type === "TYT").at(-1);
             const ayt = s.exams.filter((e) => e.type === "AYT").at(-1);
             return (
@@ -333,7 +379,7 @@ export default function TeacherDashboardPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E9EBEE]">
-              {students.map((s) => {
+              {sortedStudents.map((s) => {
                 const tyt = s.exams.filter((e) => e.type === "TYT").at(-1);
                 const ayt = s.exams.filter((e) => e.type === "AYT").at(-1);
                 return (
