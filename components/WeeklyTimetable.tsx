@@ -138,6 +138,7 @@ export interface TimetableItem {
 const BADGE_STYLES: Record<string, string> = {
   "Konu Anlatımı": "bg-[#EEF3F9] text-[#11284B] border-[#C9D8EA]",
   "Sınıf Dersi": "bg-[#EEF3F9] text-[#11284B] border-[#C9D8EA]",
+  "Sınıf Dolu": "border-l-4 border-l-[#D97706] border-[#FDE68A] bg-[#FFFBEB] text-[#92400E]",
   "Soru Çözümü": "bg-[#EAF6F0] text-[#0E4D3A] border-[#BBE0CE]",
   Etüt: "border-l-4 border-l-[#7C3AED] border-[#DDD6FE] bg-[#F5F3FF] text-[#4C1D95]",
   Birebir: "border-l-4 border-l-[#7C3AED] border-[#DDD6FE] bg-[#F5F3FF] text-[#4C1D95]",

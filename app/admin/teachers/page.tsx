@@ -82,6 +82,46 @@ export default function AdminTeachersPage() {
     ? schSubject
     : teacherAllowedSubjects[0];
 
+  const selectedClassObj = useMemo(
+    () => classes.find((c) => c.name === schClass),
+    [classes, schClass]
+  );
+
+  const selectedClassOtherSlots = useMemo(() => {
+    if (!selectedClassObj || !selectedTeacher) return [];
+    return selectedClassObj.schedule.filter((cSlot) => {
+      // Skip if this exact slot is already in selectedTeacher.schedule
+      if (cSlot.teacher === selectedTeacher.name) return false;
+      return true;
+    });
+  }, [selectedClassObj, selectedTeacher]);
+
+  const slotConflictMessage = useMemo(() => {
+    if (!selectedTeacher) return null;
+    const teacherBusyClass = selectedTeacher.schedule.find(
+      (s) => s.day === schDay && s.time.trim() === schTime.trim()
+    );
+    if (teacherBusyClass) {
+      return `Öğretmen bu saatte zaten ${teacherBusyClass.classGroup} sınıfında (${teacherBusyClass.subject}) derste.`;
+    }
+    const teacherBusyOneOnOne = selectedTeacher.oneOnOneSlots.find(
+      (o) => o.day === schDay && o.time.trim() === schTime.trim()
+    );
+    if (teacherBusyOneOnOne) {
+      return `Öğretmenin bu saatte ${teacherBusyOneOnOne.studentName} ile birebir etüdü var.`;
+    }
+    const classBusy = selectedClassOtherSlots.find((cSlot) => {
+      if (cSlot.day !== schDay) return false;
+      if (cSlot.blockPeriod === "morning") return schTime < "12:00";
+      if (cSlot.blockPeriod === "afternoon") return schTime >= "12:00";
+      return cSlot.time.trim() === schTime.trim();
+    });
+    if (classBusy) {
+      return `${schClass} sınıfının bu saatte başka bir dersi var: ${classBusy.subject} (${classBusy.teacher}).`;
+    }
+    return null;
+  }, [selectedTeacher, selectedClassOtherSlots, schClass, schDay, schTime]);
+
   const occupancyData = useMemo(() => {
     if (!selectedTeacher) return [];
     return DAYS.map((day) => ({
@@ -296,6 +336,11 @@ export default function AdminTeachersPage() {
                   Derse Ekle
                 </button>
               </form>
+              {slotConflictMessage && (
+                <p className="mt-2.5 rounded-lg border border-[#FDE68A] bg-[#FFFBEB] px-3 py-2 text-[11px] font-semibold text-[#92400E]">
+                  ⚠ Çakışma Uyarısı: {slotConflictMessage}
+                </p>
+              )}
             </div>
 
             {/* 1-on-1 Summary & Deep-Link to One-on-One Planner */}
@@ -360,13 +405,18 @@ export default function AdminTeachersPage() {
                   Haftalık Ders &amp; Birebir Programı Tablosu
                 </h3>
                 <p className="text-xs text-[#737B86]">
-                  Tablodan bir hücreye tıklayarak yukarıdaki formlar için gün ve saati hızlıca seçebilirsiniz.
+                  Tablodan bir hücreye tıklayarak yukarıdaki formlar için gün ve saati hızlıca seçebilirsiniz. Seçili sınıfın (<strong>{schClass}</strong>) mevcut dersleri de çakışma olmaması için tabloda gösterilir.
                 </p>
               </div>
-              <span className="inline-flex items-center gap-1.5 rounded-lg border border-[#0E4D3A]/30 bg-[#EAF6F0] px-3 py-1.5 text-xs font-bold text-[#0E4D3A]">
-                <Check className="h-3.5 w-3.5" />
-                Seçili Slot: {schDay} • {schTime}
-              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-[#FDE68A] bg-[#FFFBEB] px-3 py-1.5 text-xs font-bold text-[#92400E]">
+                  Sınıf: {schClass} ({selectedClassOtherSlots.length} mevcut ders)
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-[#0E4D3A]/30 bg-[#EAF6F0] px-3 py-1.5 text-xs font-bold text-[#0E4D3A]">
+                  <Check className="h-3.5 w-3.5" />
+                  Seçili Slot: {schDay} • {schTime}
+                </span>
+              </div>
             </div>
             <WeeklyTimetable
               editable
@@ -401,6 +451,16 @@ export default function AdminTeachersPage() {
                     badge: "Birebir",
                     onDelete: () =>
                       removeOneOnOneSlot(selectedTeacher.id, slot.id),
+                  })),
+                  ...selectedClassOtherSlots.map((cSlot) => ({
+                    id: `cls-${cSlot.id}`,
+                    day: cSlot.day,
+                    time: cSlot.time,
+                    title: `${cSlot.subject}`,
+                    subtitle: `${schClass} · ${cSlot.teacher}`,
+                    meta: cSlot.room,
+                    badge: cSlot.type === "Deneme" ? "Deneme" : "Sınıf Dolu",
+                    blockPeriod: cSlot.blockPeriod,
                   })),
                 ] satisfies TimetableItem[]
               }
