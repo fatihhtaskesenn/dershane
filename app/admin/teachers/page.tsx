@@ -453,13 +453,19 @@ export default function AdminTeachersPage() {
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <div>
                 <h3 className="font-editorial text-xl font-medium text-[#203B5C]">
-                  Haftalık Ders &amp; Birebir Programı Tablosu
+                  <span className="font-semibold text-[#0D2558]">
+                    {selectedTeacher.name}
+                  </span>{" "}
+                  — Haftalık Ders &amp; Birebir Programı Tablosu
                 </h3>
                 <p className="text-xs text-[#737B86]">
                   Tablodan bir hücreye tıklayarak yukarıdaki formlar için gün ve saati hızlıca seçebilirsiniz. Seçili sınıfın (<strong>{schClass}</strong>) mevcut dersleri de çakışma olmaması için tabloda gösterilir.
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-[#C9D8EA] bg-[#EEF3F9] px-3 py-1.5 text-xs font-bold text-[#0D2558]">
+                  Öğretmen: {selectedTeacher.name}
+                </span>
                 <span className="inline-flex items-center gap-1.5 rounded-lg border border-[#FDE68A] bg-[#FFFBEB] px-3 py-1.5 text-xs font-bold text-[#92400E]">
                   Sınıf: {schClass} ({selectedClassOtherSlots.length} mevcut ders)
                 </span>
