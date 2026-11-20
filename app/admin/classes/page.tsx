@@ -770,7 +770,6 @@ export default function AdminClassesPage() {
                 >
                   <option value="Konu Anlatımı">Konu Anlatımı</option>
                   <option value="Soru Çözümü">Soru Çözümü</option>
-                  <option value="Etüt">Etüt</option>
                   <option value="Deneme">Deneme</option>
                 </select>
               </div>
