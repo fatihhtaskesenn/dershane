@@ -68,10 +68,10 @@ body {
 
 @keyframes marquee {
   0% {
-    transform: translateX(0%);
+    transform: translate3d(0%, 0, 0);
   }
   100% {
-    transform: translateX(-50%);
+    transform: translate3d(-50%, 0, 0);
   }
 }
 
@@ -84,6 +84,18 @@ body {
   animation: marquee 28s linear infinite;
 }
 
-.animate-marquee:hover {
-  animation-play-state: paused;
+.animate-honor-marquee {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  width: max-content;
+  will-change: transform;
+  animation: marquee 16s linear infinite;
+}
+
+@media (hover: hover) {
+  .animate-marquee:hover,
+  .animate-honor-marquee:hover {
+    animation-play-state: paused;
+  }
 }

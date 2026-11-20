@@ -180,7 +180,7 @@ export default function HomePage() {
 
             {/* Mobile Continuous Marquee Strip (< md) */}
             <div className="relative -mx-5 mt-7 overflow-hidden py-2 md:hidden">
-              <div className="animate-marquee items-stretch">
+              <div className="animate-honor-marquee items-stretch">
                 {[...siteContent.honorStudents, ...siteContent.honorStudents].map(
                   (student, idx) => (
                     <div
