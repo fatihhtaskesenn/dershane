@@ -7,7 +7,7 @@ import { useCampus } from "@/lib/campus-store";
 
 const TEACHER_NAV: SidebarNavItem[] = [
   {
-    label: "Ders Programı & Birebirler",
+    label: "Genel Bakış",
     href: "/teacher/dashboard",
     icon: LayoutDashboard,
   },
