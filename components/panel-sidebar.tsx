@@ -20,24 +20,27 @@ const EXAM_COUNTDOWNS = [
     dateIso: "2027-02-28",
     dateLabel: "28 Şub 2027",
     cardClass:
-      "border-[#11284B]/20 bg-gradient-to-br from-[#EEF3F9] to-white text-[#11284B]",
-    tagClass: "bg-[#11284B] text-white",
+      "border-[#DCE4EE] border-t-2 border-t-[#203B5C] bg-[#FCFBF8] text-[#203B5C]",
+    tagClass: "text-[#203B5C]",
+    numberClass: "text-[#203B5C]",
   },
   {
     label: "TYT",
     dateIso: "2027-06-19",
     dateLabel: "19 Haz 2027",
     cardClass:
-      "border-[#0E4D3A]/25 bg-gradient-to-br from-[#EAF6F0] to-white text-[#0E4D3A]",
-    tagClass: "bg-[#0E4D3A] text-white",
+      "border-[#D5E6DD] border-t-2 border-t-[#135D43] bg-[#FCFBF8] text-[#135D43]",
+    tagClass: "text-[#135D43]",
+    numberClass: "text-[#135D43]",
   },
   {
     label: "AYT",
     dateIso: "2027-06-20",
     dateLabel: "20 Haz 2027",
     cardClass:
-      "border-[#B8860B]/30 bg-gradient-to-br from-[#FEF7E6] to-white text-[#8A6508]",
-    tagClass: "bg-[#B8860B] text-white",
+      "border-[#E5DEC9] border-t-2 border-t-[#B18A52] bg-[#FCFBF8] text-[#8A6508]",
+    tagClass: "text-[#9A7438]",
+    numberClass: "text-[#8A6508]",
   },
 ] as const;
 
@@ -214,14 +217,16 @@ export function PanelSidebar({
 
         {/* Exam Countdown Bar (MSÜ / TYT / AYT) + Today's Date (Fixed at top of page, scrolls naturally) */}
         {isAdmin ? (
-          <div className="border-b border-[#DCE4EE] bg-white/95 px-3 py-1.5 backdrop-blur-md sm:px-6 lg:px-10">
+          <div className="border-b border-[#E9EBEE] bg-[#FFFFFF] px-3 py-1.5 sm:px-6 lg:px-10">
             <div className="flex flex-wrap items-center justify-between gap-1.5 sm:gap-2">
-              <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#11284B]">
+              <div className="flex items-center gap-2 text-[11px] font-medium text-[#203B5C]">
                 <CalendarClock className="h-3.5 w-3.5 text-[#B18A52]" />
-                <span>Sınavlara Kalan</span>
+                <span className="tracking-[0.06em] uppercase text-[#737B86]">
+                  Sınav Takvimi
+                </span>
                 {todayLabel && (
-                  <span className="rounded-md border border-[#E5DEC9] bg-[#FAF8F5] px-1.5 py-0.5 text-[10px] font-medium text-[#203B5C] sm:px-2">
-                    📅 {todayLabel}
+                  <span className="rounded border border-[#E5DEC9] bg-[#FCFBF8] px-2 py-0.5 text-[10px] font-medium text-[#203B5C]">
+                    {todayLabel}
                   </span>
                 )}
               </div>
@@ -233,20 +238,23 @@ export function PanelSidebar({
                     <div
                       key={exam.label}
                       className={cn(
-                        "inline-flex items-center gap-1 rounded-lg border px-1.5 py-0.5 text-[10px] sm:gap-1.5 sm:px-2 sm:text-[11px]",
+                        "inline-flex items-baseline gap-1.5 rounded-md border px-2.5 py-0.5 text-[11px]",
                         exam.cardClass
                       )}
                     >
                       <span
                         className={cn(
-                          "rounded px-1 py-0.5 text-[9px] font-extrabold tracking-wider sm:px-1.5",
+                          "text-[10px] font-semibold tracking-[0.12em] uppercase",
                           exam.tagClass
                         )}
                       >
                         {exam.label}
                       </span>
-                      <span className="font-extrabold">
-                        {days !== null ? `${days} Gün` : "—"}
+                      <span className={cn("font-editorial text-sm font-semibold", exam.numberClass)}>
+                        {days !== null ? days : "—"}
+                      </span>
+                      <span className="text-[9px] font-medium tracking-[0.08em] uppercase text-[#737B86]">
+                        gün
                       </span>
                     </div>
                   );
@@ -255,16 +263,18 @@ export function PanelSidebar({
             </div>
           </div>
         ) : (
-          <div className="border-b border-[#DCE4EE] bg-white/95 px-3 py-2 shadow-2xs backdrop-blur-md sm:px-6 sm:py-4 lg:px-10 lg:py-5 lg:shadow-sm">
+          <div className="border-b border-[#E9EBEE] bg-[#FFFFFF] px-3 py-2 sm:px-6 sm:py-4 lg:px-10 lg:py-5">
             <div className="flex flex-col gap-2 sm:gap-3 xl:flex-row xl:items-center xl:justify-between">
-              <div className="flex flex-wrap items-center justify-between gap-2 xl:flex-col xl:items-start xl:justify-center xl:gap-2">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-[#11284B] sm:gap-2.5 sm:text-base lg:text-lg">
-                  <CalendarClock className="h-4 w-4 text-[#B18A52] sm:h-6 sm:w-6" />
-                  <span>Sınavlara Kalan Süre</span>
+              <div className="flex flex-wrap items-center justify-between gap-2 xl:flex-col xl:items-start xl:justify-center xl:gap-1.5">
+                <div className="flex items-center gap-2 text-xs font-medium text-[#203B5C] sm:text-sm">
+                  <CalendarClock className="h-4 w-4 text-[#B18A52] sm:h-4.5 sm:w-4.5" />
+                  <span className="tracking-[0.12em] uppercase text-[#737B86]">
+                    Sınavlara Kalan Süre
+                  </span>
                 </div>
                 {todayLabel && (
-                  <span className="inline-flex items-center rounded-lg border border-[#E5DEC9] bg-[#FAF8F5] px-2 py-0.5 text-[10px] font-semibold text-[#203B5C] sm:rounded-xl sm:px-3.5 sm:py-1.5 sm:text-sm">
-                    📅 {todayLabel}
+                  <span className="inline-flex items-center rounded-md border border-[#E5DEC9] bg-[#FCFBF8] px-2.5 py-0.5 text-[10px] font-medium text-[#203B5C] sm:px-3 sm:py-1 sm:text-xs">
+                    {todayLabel}
                   </span>
                 )}
               </div>
@@ -276,29 +286,34 @@ export function PanelSidebar({
                     <div
                       key={exam.label}
                       className={cn(
-                        "flex flex-col items-center justify-between gap-1 rounded-xl border px-2 py-1.5 shadow-2xs sm:flex-row sm:gap-5 sm:rounded-2xl sm:border-2 sm:px-6 sm:py-4 sm:shadow-sm xl:min-w-[215px] xl:px-7 xl:py-5",
+                        "flex flex-col items-center justify-between gap-0.5 rounded-lg border px-2 py-1.5 sm:flex-row sm:gap-5 sm:px-6 sm:py-3.5 xl:min-w-[215px] xl:px-7 xl:py-4",
                         exam.cardClass
                       )}
                     >
-                      <div className="flex flex-col items-center gap-0.5 sm:items-start sm:gap-1">
+                      <div className="flex flex-col items-center gap-0.5 sm:items-start">
                         <span
                           className={cn(
-                            "rounded px-1.5 py-0.5 text-[10px] font-extrabold tracking-wider sm:rounded-lg sm:px-3 sm:py-1 sm:text-sm lg:text-base",
+                            "text-[10px] font-semibold tracking-[0.16em] uppercase sm:text-xs",
                             exam.tagClass
                           )}
                         >
                           {exam.label}
                         </span>
-                        <span className="hidden text-xs font-semibold opacity-80 sm:inline">
+                        <span className="hidden text-[11px] font-normal text-[#737B86] sm:inline">
                           {exam.dateLabel}
                         </span>
                       </div>
                       <div className="flex items-baseline gap-1 sm:gap-1.5">
-                        <span className="text-base font-black leading-none tracking-tight sm:text-4xl lg:text-[42px]">
+                        <span
+                          className={cn(
+                            "font-editorial text-lg font-semibold leading-none tracking-tight sm:text-4xl lg:text-[42px]",
+                            exam.numberClass
+                          )}
+                        >
                           {days !== null ? days : "—"}
                         </span>
-                        <span className="text-[10px] font-bold uppercase opacity-80 sm:text-sm lg:text-base">
-                          Gün
+                        <span className="text-[9px] font-medium tracking-[0.12em] uppercase text-[#737B86] sm:text-xs">
+                          gün
                         </span>
                       </div>
                     </div>
