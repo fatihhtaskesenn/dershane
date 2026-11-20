@@ -177,6 +177,7 @@ export default function AdminTeachersPage() {
       <div className="flex flex-wrap gap-2">
         {teachers.map((t) => {
           const active = selectedTeacher?.id === t.id;
+          const totalHours = t.schedule.length + t.oneOnOneSlots.length;
           return (
             <button
               key={t.id}
@@ -188,13 +189,24 @@ export default function AdminTeachersPage() {
                   : "border-[#DCE4EE] bg-white text-[#203B5C] hover:border-[#B18A52]"
               }`}
             >
-              <p className="font-semibold">{t.name}</p>
+              <div className="flex items-center justify-between gap-3">
+                <p className="font-semibold">{t.name}</p>
+                <span
+                  className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
+                    active
+                      ? "bg-white/15 text-[#E8C483]"
+                      : "bg-[#EEF3F9] text-[#11284B]"
+                  }`}
+                >
+                  {totalHours} Saat/Hf
+                </span>
+              </div>
               <p
-                className={`text-[10px] ${
+                className={`mt-0.5 text-[10px] ${
                   active ? "text-white/80" : "text-[#737B86]"
                 }`}
               >
-                {t.role} • {t.branch}
+                {t.role} • {t.branch} · {t.schedule.length} Ders + {t.oneOnOneSlots.length} Birebir
               </p>
             </button>
           );

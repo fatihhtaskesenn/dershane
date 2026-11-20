@@ -324,6 +324,8 @@ export default function AdminStudentsPage() {
               const ayts = s.exams.filter((e) => e.type === "AYT");
               const tyt = tyts[tyts.length - 1];
               const ayt = ayts[ayts.length - 1];
+              const stuClass = classes.find((c) => c.id === s.classId);
+              const weeklyHours = (stuClass?.schedule.length ?? 0) + s.schedule.length;
 
               return (
                 <button
@@ -362,6 +364,9 @@ export default function AdminStudentsPage() {
                     <span className="rounded bg-white px-2 py-0.5 font-semibold text-[#203B5C]">
                       AYT: {ayt ? `${ayt.totalNet}` : "—"}
                     </span>
+                    <span className="rounded bg-[#EEF3F9] px-2 py-0.5 font-semibold text-[#11284B]">
+                      {weeklyHours} Saat/Hf
+                    </span>
                     <span className="rounded bg-white px-2 py-0.5 text-[11px] text-[#64748B]">
                       {s.advisorName}
                     </span>
@@ -381,6 +386,7 @@ export default function AdminStudentsPage() {
                 <th className="px-4 py-3">Sınıf &amp; Alan</th>
                 <th className="px-4 py-3">Son TYT</th>
                 <th className="px-4 py-3">Son AYT</th>
+                <th className="px-4 py-3">Haftalık Ders</th>
                 <th className="px-4 py-3">Danışman</th>
                 <th className="px-4 py-3 text-right">İşlem</th>
               </tr>
@@ -389,7 +395,7 @@ export default function AdminStudentsPage() {
               {filtered.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={8}
                     className="px-4 py-8 text-center text-xs text-[#737B86]"
                   >
                     Aramanızla eşleşen öğrenci bulunamadı.
@@ -402,6 +408,9 @@ export default function AdminStudentsPage() {
                   const ayts = s.exams.filter((e) => e.type === "AYT");
                   const tyt = tyts[tyts.length - 1];
                   const ayt = ayts[ayts.length - 1];
+                  const stuClass = classes.find((c) => c.id === s.classId);
+                  const classHrs = stuClass?.schedule.length ?? 0;
+                  const oneOnOneHrs = s.schedule.length;
 
                   return (
                     <tr
@@ -428,6 +437,14 @@ export default function AdminStudentsPage() {
                       </td>
                       <td className="px-4 py-3 font-semibold text-[#203B5C]">
                         {ayt ? `${ayt.totalNet} Net` : "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-[#EEF3F9] px-2 py-0.5 text-[11px] font-bold text-[#11284B]">
+                          {classHrs + oneOnOneHrs} Saat
+                        </span>
+                        <span className="ml-1 text-[10px] text-[#64748B]">
+                          ({classHrs}+{oneOnOneHrs})
+                        </span>
                       </td>
                       <td className="px-4 py-3 text-[#64748B]">
                         {s.advisorName}
@@ -655,10 +672,15 @@ export default function AdminStudentsPage() {
 
           {/* Student's Full Weekly Timetable */}
           <div className="rounded-xl border border-[#E9EBEE] bg-white p-5">
-            <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-[#203B5C]">
-              <CalendarDays className="h-4 w-4 text-[#135D43]" />
-              <span>Aktif Ders Programı &amp; Birebirler</span>
-            </h3>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-[#203B5C]">
+                <CalendarDays className="h-4 w-4 text-[#135D43]" />
+                <span>Aktif Ders Programı &amp; Birebirler</span>
+              </h3>
+              <span className="rounded-md border border-[#CCE3D8] bg-[#F7FAF8] px-2.5 py-1 text-xs font-bold text-[#135D43]">
+                Haftalık Toplam: {combinedSchedule.length} Saat ({myClass?.schedule.length ?? 0} Sınıf + {selectedStudent.schedule.length} Birebir)
+              </span>
+            </div>
             <WeeklyTimetable
               items={combinedSchedule.map((item) => ({
                 id: item.id,

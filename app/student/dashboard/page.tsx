@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   CalendarDays,
   CheckCircle2,
   Circle,
   ClipboardList,
+  Clock,
   FileDown,
   Megaphone,
   Plus,
@@ -30,12 +31,38 @@ export default function StudentDashboardPage() {
 
   const [noteTitle, setNoteTitle] = useState("");
   const [noteContent, setNoteContent] = useState("");
+  const [todayDay, setTodayDay] = useState<string | null>(null);
+  const [nowMinutes, setNowMinutes] = useState<number | null>(null);
+
+  useEffect(() => {
+    const days = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
+    const updateClock = () => {
+      const now = new Date();
+      setTodayDay(days[now.getDay()] ?? "Pazartesi");
+      setNowMinutes(now.getHours() * 60 + now.getMinutes());
+    };
+    updateClock();
+    const timer = setInterval(updateClock, 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   const myClass = classes.find((c) => c.id === activeStudent.classId);
+  const classLessonsCount = myClass?.schedule.length ?? 0;
+  const personalOneOnOneCount = activeStudent.schedule.length;
   const combinedSchedule = [
     ...(myClass?.schedule ?? []),
     ...activeStudent.schedule,
   ];
+  const remainingTodayLessons =
+    todayDay && nowMinutes !== null
+      ? combinedSchedule.filter((slot) => {
+          if (slot.day !== todayDay) return false;
+          const matches = slot.time.match(/(\d{1,2}):(\d{2})/g);
+          if (!matches || matches.length === 0) return false;
+          const [h, m] = matches[matches.length - 1].split(":").map(Number);
+          return h * 60 + m > nowMinutes;
+        }).length
+      : null;
   const latestTyt = activeStudent.exams.filter((e) => e.type === "TYT").at(-1);
   const latestAyt = activeStudent.exams.filter((e) => e.type === "AYT").at(-1);
 
@@ -100,6 +127,29 @@ export default function StudentDashboardPage() {
               <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />%{activeStudent.attendance}
             </p>
           </div>
+        </div>
+
+        {/* Weekly Hours Summary Strip for Student */}
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#CCE3D8] border-l-4 border-l-[#135D43] bg-gradient-to-r from-[#F7FAF8] to-white px-4 py-3 shadow-2xs">
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#135D43] text-[#E8C483]">
+              <Clock className="h-4 w-4" />
+            </span>
+            <div>
+              <p className="text-[11px] font-bold tracking-wider text-[#135D43] uppercase">
+                Haftalık Ders Saatiniz
+              </p>
+              <p className="text-xs text-[#4E5E57]">
+                <strong className="text-[#203B5C]">{combinedSchedule.length} Saat</strong>{" "}
+                ({classLessonsCount} Sınıf Dersi + {personalOneOnOneCount} Birebir Etüt)
+              </p>
+            </div>
+          </div>
+          {remainingTodayLessons !== null && (
+            <span className="rounded-lg border border-[#DCE8E2] bg-white px-3 py-1.5 text-xs font-bold text-[#135D43]">
+              Bugün Kalan ({todayDay}): {remainingTodayLessons} Saat
+            </span>
+          )}
         </div>
 
         <StudentNetCharts exams={activeStudent.exams} />

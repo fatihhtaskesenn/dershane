@@ -107,42 +107,67 @@ export default function TeacherDashboardPage() {
         </h1>
       </div>
 
-      {/* 4 Overview KPI Cards */}
+      {/* 4 Eye-Catching Overview KPI Cards */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <div className="rounded-xl border border-[#DCE4EE] bg-white p-4 shadow-2xs sm:p-5">
-          <div className="flex items-center justify-between text-xs font-semibold text-[#64748B]">
-            <span>Haftalık Ders Saati</span>
-            <BookOpen className="h-4 w-4 text-[#11284B]" />
+        <div className="relative overflow-hidden rounded-2xl border border-[#DCE4EE] border-t-[3px] border-t-[#11284B] bg-gradient-to-br from-white via-[#F8FAFC] to-[#EEF3F9]/70 p-4 shadow-[0_8px_24px_rgba(17,40,75,0.06)] sm:p-5">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <p className="text-[11px] font-bold tracking-[0.08em] text-[#475569] uppercase">
+                Haftalık Ders Saati
+              </p>
+              <p className="font-editorial mt-2 text-3xl font-semibold text-[#11284B] sm:text-4xl">
+                {activeTeacher.schedule.length}
+                <span className="ml-1.5 text-sm font-medium text-[#64748B]">Saat</span>
+              </p>
+            </div>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#11284B] text-[#E8C483] shadow-xs">
+              <BookOpen className="h-5 w-5" />
+            </span>
           </div>
-          <p className="font-editorial mt-2 text-2xl font-semibold text-[#11284B] sm:text-3xl">
-            {activeTeacher.schedule.length}{" "}
-            <span className="text-sm font-normal text-[#737B86]">Saat</span>
-          </p>
-          <p className="mt-1 text-[11px] text-[#737B86]">Haftalık sınıf dersleri</p>
+          <div className="mt-3 flex items-center justify-between border-t border-[#E2E8F0]/80 pt-2 text-[11px] font-medium text-[#475569]">
+            <span>Sınıf dersleri</span>
+            <span className="rounded bg-white px-2 py-0.5 font-bold text-[#11284B]">
+              Toplam: {activeTeacher.schedule.length + activeTeacher.oneOnOneSlots.length} Saat
+            </span>
+          </div>
         </div>
 
-        <div className="rounded-xl border border-[#DDD6FE] bg-[#F5F3FF]/50 p-4 shadow-2xs sm:p-5">
-          <div className="flex items-center justify-between text-xs font-semibold text-[#5B21B6]">
-            <span>Haftalık Birebir</span>
-            <Sparkles className="h-4 w-4 text-[#7C3AED]" />
+        <div className="relative overflow-hidden rounded-2xl border border-[#DDD6FE] border-t-[3px] border-t-[#7C3AED] bg-gradient-to-br from-white via-[#FAF8FF] to-[#F5F3FF] p-4 shadow-[0_8px_24px_rgba(124,58,237,0.08)] sm:p-5">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <p className="text-[11px] font-bold tracking-[0.08em] text-[#5B21B6] uppercase">
+                Haftalık Birebir
+              </p>
+              <p className="font-editorial mt-2 text-3xl font-semibold text-[#4C1D95] sm:text-4xl">
+                {activeTeacher.oneOnOneSlots.length}
+                <span className="ml-1.5 text-sm font-medium text-[#6D28D9]">Saat</span>
+              </p>
+            </div>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#7C3AED] text-white shadow-xs">
+              <Sparkles className="h-5 w-5" />
+            </span>
           </div>
-          <p className="font-editorial mt-2 text-2xl font-semibold text-[#4C1D95] sm:text-3xl">
-            {activeTeacher.oneOnOneSlots.length}{" "}
-            <span className="text-sm font-normal text-[#6D28D9]">Saat</span>
-          </p>
-          <p className="mt-1 text-[11px] text-[#6D28D9]">Öğrenci birebir etütleri</p>
+          <div className="mt-3 border-t border-[#DDD6FE]/70 pt-2 text-[11px] font-medium text-[#6D28D9]">
+            Öğrenci birebir etütleri
+          </div>
         </div>
 
-        <div className="rounded-xl border border-[#DCE8E2] bg-[#F7FAF8] p-4 shadow-2xs sm:p-5">
-          <div className="flex items-center justify-between text-xs font-semibold text-[#135D43]">
-            <span>Bugün Kalan Ders</span>
-            <Clock className="h-4 w-4 text-[#135D43]" />
+        <div className="relative overflow-hidden rounded-2xl border border-[#CCE3D8] border-t-[3px] border-t-[#135D43] bg-gradient-to-br from-white via-[#F6FBF8] to-[#EAF6F0] p-4 shadow-[0_8px_24px_rgba(19,93,67,0.08)] sm:p-5">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <p className="text-[11px] font-bold tracking-[0.08em] text-[#135D43] uppercase">
+                Bugün Kalan Ders
+              </p>
+              <p className="font-editorial mt-2 text-3xl font-semibold text-[#0E4D3A] sm:text-4xl">
+                {todayDay === null ? "—" : remainingTodayCount}
+                <span className="ml-1.5 text-sm font-medium text-[#4E5E57]">Saat</span>
+              </p>
+            </div>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#135D43] text-[#E8C483] shadow-xs">
+              <Clock className="h-5 w-5" />
+            </span>
           </div>
-          <p className="font-editorial mt-2 text-2xl font-semibold text-[#135D43] sm:text-3xl">
-            {todayDay === null ? "—" : remainingTodayCount}{" "}
-            <span className="text-sm font-normal text-[#4E5E57]">Saat</span>
-          </p>
-          <p className="mt-1 truncate text-[11px] text-[#4E5E57]">
+          <p className="mt-3 truncate border-t border-[#CCE3D8]/70 pt-2 text-[11px] font-medium text-[#135D43]">
             {nextTodaySlot
               ? `Sıradaki: ${nextTodaySlot.time} (${nextTodaySlot.title})`
               : todayDay
@@ -151,20 +176,27 @@ export default function TeacherDashboardPage() {
           </p>
         </div>
 
-        <div className="rounded-xl border border-[#E5DEC9] bg-[#FCFBF8] p-4 shadow-2xs sm:p-5">
-          <div className="flex items-center justify-between text-xs font-semibold text-[#8A6508]">
-            <span>Takip Edilen Öğrenci</span>
-            <Users className="h-4 w-4 text-[#B18A52]" />
+        <div className="relative overflow-hidden rounded-2xl border border-[#E5DEC9] border-t-[3px] border-t-[#B18A52] bg-gradient-to-br from-white via-[#FCFBF8] to-[#FAF4E8] p-4 shadow-[0_8px_24px_rgba(177,138,82,0.08)] sm:p-5">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <p className="text-[11px] font-bold tracking-[0.08em] text-[#8A6508] uppercase">
+                Takip Edilen Öğrenci
+              </p>
+              <p className="font-editorial mt-2 text-3xl font-semibold text-[#203B5C] sm:text-4xl">
+                {students.length}
+                <span className="ml-1.5 text-sm font-medium text-[#737B86]">Kişi</span>
+              </p>
+            </div>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#B18A52] text-white shadow-xs">
+              <Users className="h-5 w-5" />
+            </span>
           </div>
-          <p className="font-editorial mt-2 text-2xl font-semibold text-[#203B5C] sm:text-3xl">
-            {students.length}
-          </p>
           <Link
             href="/teacher/students"
-            className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-[#135D43] hover:underline"
+            className="mt-3 inline-flex w-full items-center justify-between border-t border-[#E5DEC9]/80 pt-2 text-[11px] font-bold text-[#135D43] hover:underline"
           >
             <span>Öğrencileri incele</span>
-            <ArrowRight className="h-3 w-3" />
+            <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
       </div>
