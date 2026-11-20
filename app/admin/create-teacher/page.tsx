@@ -5,6 +5,23 @@ import Link from "next/link";
 import { GraduationCap, Plus } from "lucide-react";
 import { useCampus, type TeacherRole } from "@/lib/campus-store";
 
+const TEACHER_BRANCHES = [
+  "Matematik & Geometri",
+  "Matematik",
+  "Geometri",
+  "Türkçe & Edebiyat",
+  "Türkçe",
+  "Edebiyat",
+  "Fizik",
+  "Kimya",
+  "Biyoloji",
+  "Tarih",
+  "Coğrafya",
+  "Felsefe",
+  "Din Kültürü",
+  "Rehberlik & Danışmanlık",
+] as const;
+
 const TEACHER_ROLES: TeacherRole[] = [
   "Branş Öğretmeni",
   "Akademik Danışman",
@@ -91,14 +108,18 @@ export default function AdminCreateTeacherPage() {
           }}
           className="rounded-md border border-[#DCE4EE] bg-[#F8FAFC] px-3 py-2.5 text-xs"
         />
-        <input
-          type="text"
+        <select
           required
-          placeholder="Branş (ör. Fizik)"
           value={tchBranch}
           onChange={(e) => setTchBranch(e.target.value)}
-          className="rounded-md border border-[#DCE4EE] bg-[#F8FAFC] px-3 py-2.5 text-xs"
-        />
+          className="rounded-md border border-[#DCE4EE] bg-[#F8FAFC] px-3 py-2.5 text-xs font-medium text-[#203B5C]"
+        >
+          {TEACHER_BRANCHES.map((branch) => (
+            <option key={branch} value={branch}>
+              Branş: {branch}
+            </option>
+          ))}
+        </select>
         <select
           value={tchRole}
           onChange={(e) => setTchRole(e.target.value as TeacherRole)}
