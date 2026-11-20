@@ -81,7 +81,7 @@ export default function AdminDashboardPage() {
           }
         });
       },
-      { threshold: 0.2 }
+      { threshold: 0.45 }
     );
 
     if (rowEl) observer.observe(rowEl);
@@ -414,40 +414,44 @@ export default function AdminDashboardPage() {
                   <TrendingUp className="h-4 w-4 text-[#0E4D3A]/70 sm:h-5 sm:w-5" />
                 </div>
                 <div className="h-48 w-full sm:h-64 [&_.recharts-wrapper]:outline-none [&_svg]:outline-none">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={showRowData ? subjectRowData : []}
-                      layout="vertical"
-                      margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" horizontal={false} />
-                      <XAxis type="number" tick={{ fontSize: 11, fill: "#475569" }} domain={[0, 40]} />
-                      <YAxis
-                        dataKey="subject"
-                        type="category"
-                        tick={{ fontSize: 11, fill: "#11284B", fontWeight: 600 }}
-                        width={90}
-                      />
-                      <Tooltip
-                        cursor={false}
-                        formatter={(value) => [`${value} Net`, "Kurum Ortalaması"]}
-                        contentStyle={{
-                          borderRadius: "10px",
-                          border: "1px solid #E2E8F0",
-                          boxShadow: "0 8px 20px rgba(17,40,75,0.08)",
-                          fontSize: "12px",
-                        }}
-                      />
-                      <Bar
-                        dataKey="ortalamaNet"
-                        fill="#0E4D3A"
-                        activeBar={{ fill: "#146B50" }}
-                        radius={[0, 6, 6, 0]}
-                        isAnimationActive={!isDuplicate}
-                        animationDuration={1000}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {showRowData ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={subjectRowData}
+                        layout="vertical"
+                        margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" horizontal={false} />
+                        <XAxis type="number" tick={{ fontSize: 11, fill: "#475569" }} domain={[0, 40]} />
+                        <YAxis
+                          dataKey="subject"
+                          type="category"
+                          tick={{ fontSize: 11, fill: "#11284B", fontWeight: 600 }}
+                          width={90}
+                        />
+                        <Tooltip
+                          cursor={false}
+                          formatter={(value) => [`${value} Net`, "Kurum Ortalaması"]}
+                          contentStyle={{
+                            borderRadius: "10px",
+                            border: "1px solid #E2E8F0",
+                            boxShadow: "0 8px 20px rgba(17,40,75,0.08)",
+                            fontSize: "12px",
+                          }}
+                        />
+                        <Bar
+                          dataKey="ortalamaNet"
+                          fill="#0E4D3A"
+                          activeBar={{ fill: "#146B50" }}
+                          radius={[0, 6, 6, 0]}
+                          isAnimationActive={!isDuplicate}
+                          animationDuration={1000}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full w-full" aria-hidden="true" />
+                  )}
                 </div>
               </div>
 
@@ -469,37 +473,41 @@ export default function AdminDashboardPage() {
                   <PieChartIcon className="h-4 w-4 text-[#B8860B] sm:h-5 sm:w-5" />
                 </div>
                 <div className="h-44 w-full sm:h-52 [&_.recharts-wrapper]:outline-none [&_svg]:outline-none">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={showPieData ? successBandPie : []}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={48}
-                        outerRadius={80}
-                        paddingAngle={3}
-                        isAnimationActive={!isDuplicate}
-                        animationDuration={900}
-                      >
-                        {successBandPie.map((band) => (
-                          <Cell key={band.name} fill={band.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        formatter={(value, _, item) => [
-                          `${value} Öğrenci (%${item?.payload?.percent ?? 0})`,
-                          item?.payload?.name || "Seviye",
-                        ]}
-                        contentStyle={{
-                          borderRadius: "10px",
-                          border: "1px solid #E2E8F0",
-                          fontSize: "12px",
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+                  {showPieData ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={successBandPie}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={48}
+                          outerRadius={80}
+                          paddingAngle={3}
+                          isAnimationActive={!isDuplicate}
+                          animationDuration={900}
+                        >
+                          {successBandPie.map((band) => (
+                            <Cell key={band.name} fill={band.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          formatter={(value, _, item) => [
+                            `${value} Öğrenci (%${item?.payload?.percent ?? 0})`,
+                            item?.payload?.name || "Seviye",
+                          ]}
+                          contentStyle={{
+                            borderRadius: "10px",
+                            border: "1px solid #E2E8F0",
+                            fontSize: "12px",
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full w-full" aria-hidden="true" />
+                  )}
                 </div>
                 <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5">
                   {successBandPie.map((band) => (
