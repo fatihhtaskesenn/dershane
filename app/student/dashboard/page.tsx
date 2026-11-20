@@ -53,6 +53,13 @@ export default function StudentDashboardPage() {
     ...(myClass?.schedule ?? []),
     ...activeStudent.schedule,
   ];
+  const subjectHourSummary = Array.from(
+    combinedSchedule.reduce((map, slot) => {
+      const key = slot.subject.replace(/\s*\(Birebir\)\s*$/i, "").trim();
+      map.set(key, (map.get(key) ?? 0) + 1);
+      return map;
+    }, new Map<string, number>())
+  ).sort((a, b) => b[1] - a[1]);
   const remainingTodayLessons =
     todayDay && nowMinutes !== null
       ? combinedSchedule.filter((slot) => {
@@ -129,26 +136,41 @@ export default function StudentDashboardPage() {
           </div>
         </div>
 
-        {/* Weekly Hours Summary Strip for Student */}
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#CCE3D8] border-l-4 border-l-[#135D43] bg-gradient-to-r from-[#F7FAF8] to-white px-4 py-3 shadow-2xs">
-          <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#135D43] text-[#E8C483]">
-              <Clock className="h-4 w-4" />
-            </span>
-            <div>
-              <p className="text-[11px] font-bold tracking-wider text-[#135D43] uppercase">
-                Haftalık Ders Saatiniz
-              </p>
-              <p className="text-xs text-[#4E5E57]">
-                <strong className="text-[#203B5C]">{combinedSchedule.length} Saat</strong>{" "}
-                ({classLessonsCount} Sınıf Dersi + {personalOneOnOneCount} Birebir Etüt)
-              </p>
+        {/* Weekly Hours & Subject Breakdown Slim Strip */}
+        <div className="flex flex-col gap-2.5 rounded-xl border border-[#CCE3D8] border-l-4 border-l-[#135D43] bg-gradient-to-r from-[#F7FAF8] via-white to-[#F5F3FF]/60 px-4 py-3 shadow-2xs">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-[#135D43] px-2.5 py-1 font-bold text-white">
+                <Clock className="h-3.5 w-3.5 text-[#E8C483]" />
+                Haftalık {combinedSchedule.length} Saat
+              </span>
+              <span className="rounded-md border border-[#C9D8EA] bg-[#EEF3F9] px-2 py-0.5 font-semibold text-[#11284B]">
+                Sınıf: {classLessonsCount} Saat
+              </span>
+              <span className="rounded-md border border-[#DDD6FE] bg-[#F5F3FF] px-2 py-0.5 font-semibold text-[#4C1D95]">
+                ✦ Birebir: {personalOneOnOneCount} Saat
+              </span>
             </div>
+            {remainingTodayLessons !== null && (
+              <span className="rounded-md border border-[#DCE8E2] bg-white px-2.5 py-1 text-[11px] font-bold text-[#135D43]">
+                Bugün Kalan ({todayDay}): {remainingTodayLessons} Saat
+              </span>
+            )}
           </div>
-          {remainingTodayLessons !== null && (
-            <span className="rounded-lg border border-[#DCE8E2] bg-white px-3 py-1.5 text-xs font-bold text-[#135D43]">
-              Bugün Kalan ({todayDay}): {remainingTodayLessons} Saat
-            </span>
+          {subjectHourSummary.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 border-t border-[#E2ECE7] pt-2">
+              <span className="mr-1 text-[10px] font-bold tracking-wider text-[#64748B] uppercase">
+                Aldığın Dersler:
+              </span>
+              {subjectHourSummary.map(([subj, count]) => (
+                <span
+                  key={subj}
+                  className="rounded-md border border-[#E5DEC9] bg-white px-2 py-0.5 text-[11px] font-medium text-[#203B5C]"
+                >
+                  {subj} <strong className="text-[#135D43]">· {count}</strong>
+                </span>
+              ))}
+            </div>
           )}
         </div>
 

@@ -215,6 +215,45 @@ export default function AdminTeachersPage() {
 
       {selectedTeacher && (
         <div className="space-y-6">
+          {/* Slim Eye-Catching Weekly Hours & Class Breakdown Strip */}
+          {(() => {
+            const classCount = selectedTeacher.schedule.length;
+            const oneOnOneCount = selectedTeacher.oneOnOneSlots.length;
+            const classBreakdown = Array.from(
+              selectedTeacher.schedule.reduce((map, slot) => {
+                const key = `${slot.classGroup} (${slot.subject})`;
+                map.set(key, (map.get(key) ?? 0) + 1);
+                return map;
+              }, new Map<string, number>())
+            ).sort((a, b) => b[1] - a[1]);
+
+            return (
+              <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-xl border border-[#DCE4EE] border-l-4 border-l-[#0D2558] bg-gradient-to-r from-[#EEF3F9]/80 via-white to-[#F5F3FF]/70 px-4 py-2.5 shadow-2xs">
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  <span className="rounded-md bg-[#0D2558] px-2.5 py-1 font-bold text-[#E8C483]">
+                    Haftalık {classCount + oneOnOneCount} Saat
+                  </span>
+                  <span className="rounded-md border border-[#C9D8EA] bg-white px-2 py-0.5 font-semibold text-[#11284B]">
+                    Sınıf Dersi: {classCount} Saat
+                  </span>
+                  <span className="rounded-md border border-[#DDD6FE] bg-[#F5F3FF] px-2 py-0.5 font-semibold text-[#4C1D95]">
+                    ✦ Birebir: {oneOnOneCount} Saat
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {classBreakdown.map(([label, count]) => (
+                    <span
+                      key={label}
+                      className="rounded-md border border-[#DCE4EE] bg-white px-2 py-0.5 text-[11px] font-medium text-[#203B5C]"
+                    >
+                      {label} <strong className="text-[#0D2558]">· {count}</strong>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Teacher Occupancy Chart */}
           <div className="rounded-xl border border-[#DCE4EE] bg-white p-6">
             <div className="flex flex-col justify-between gap-2 border-b border-[#E9EBEE] pb-4 sm:flex-row sm:items-center">
