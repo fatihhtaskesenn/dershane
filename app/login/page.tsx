@@ -64,115 +64,98 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-112px)] items-center justify-center bg-gradient-to-b from-[#FCFBF8] via-[#F4F7FA] to-[#EAF1F8] px-4 py-10 sm:px-6 lg:py-14">
+    <div className="relative flex min-h-[calc(100vh-112px)] items-center justify-center overflow-hidden bg-[#FCFBF8] px-4 py-10 sm:px-6 lg:py-14">
+      {/* Subtle Ambient Editorial Backdrop */}
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(19,93,67,0.06),transparent_45%),radial-gradient(circle_at_80%_80%,rgba(13,37,88,0.08),transparent_50%)]"
+        aria-hidden="true"
+      />
+
       <motion.div
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-        className="grid w-full max-w-4xl grid-cols-1 overflow-hidden rounded-2xl border border-[#DCE4EE] bg-white shadow-[0_24px_60px_rgba(13,37,88,0.12)] lg:grid-cols-12"
+        className="relative grid w-full max-w-4xl grid-cols-1 overflow-hidden rounded-2xl border border-[#E5DEC9] bg-white shadow-[0_28px_70px_rgba(11,31,68,0.12)] lg:grid-cols-12"
       >
-        {/* Left Navy Brand Panel with Prominent DERSHANE Logo */}
-        <div className="relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-[#0D2558] via-[#163B82] to-[#1D4E9E] p-8 text-white sm:p-10 lg:col-span-5">
-          {/* Subtle Gold Top Accent */}
+        {/* Left Midnight Navy Editorial Brand Panel */}
+        <div className="relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-[#091A3A] via-[#0D2558] to-[#133372] p-8 text-white sm:p-11 lg:col-span-5">
           <div
-            className="pointer-events-none absolute top-0 right-0 left-0 h-1 bg-gradient-to-r from-[#D4AF7A]/40 via-[#E8C483] to-[#D4AF7A]/40"
+            className="pointer-events-none absolute top-0 right-0 left-0 h-[2px] bg-gradient-to-r from-transparent via-[#E8C483] to-transparent"
             aria-hidden="true"
           />
           <div
-            className="pointer-events-none absolute -right-16 -bottom-16 h-56 w-56 rounded-full bg-[#E8C483]/15 blur-3xl"
+            className="pointer-events-none absolute -right-16 -bottom-16 h-60 w-60 rounded-full bg-[#E8C483]/12 blur-3xl"
             aria-hidden="true"
           />
 
           <div>
-            {/* Prominent White DERSHANE Logo */}
-            <div className="inline-flex rounded-xl border border-white/15 bg-white/10 px-5 py-3.5 backdrop-blur-sm">
-              <Image
-                src="/images/logo-light.png"
-                alt="DERSHANE Özel Öğretim Kursu"
-                width={280}
-                height={144}
-                className="h-16 w-auto object-contain sm:h-20"
-                priority
-              />
-            </div>
+            <Image
+              src="/images/logo-light.png"
+              alt="DERSHANE Özel Öğretim Kursu"
+              width={260}
+              height={134}
+              className="h-14 w-auto object-contain sm:h-16"
+              priority
+            />
 
-            <div className="mt-8 flex items-center gap-2.5">
+            <div className="mt-10 flex items-center gap-2.5">
               <span className="h-px w-6 bg-[#E8C483]" aria-hidden="true" />
-              <span className="text-[11px] font-semibold tracking-[0.2em] text-[#E8C483] uppercase">
+              <span className="text-[10px] font-semibold tracking-[0.22em] text-[#E8C483] uppercase">
                 Kampüs Portalı
               </span>
             </div>
 
-            <h2 className="font-editorial mt-3 text-2xl leading-snug font-medium text-white sm:text-3xl">
-              Eğitim süreciniz{" "}
-              <span className="italic text-[#E8C483]">tek ekranda.</span>
+            <h2 className="font-editorial mt-3 text-3xl leading-tight font-medium text-white">
+              Akademik takip,{" "}
+              <span className="italic text-[#E8C483]">tek merkezde.</span>
             </h2>
-            <p className="mt-3 text-xs leading-relaxed text-white/80 sm:text-sm">
-              Öğrenciler ders programlarını, deneme netlerini, ödevlerini ve
-              rehberlik notlarını; öğretmenler ise ders ve birebir etüt
-              saatlerini takip eder.
-            </p>
           </div>
 
-          <div className="mt-8 space-y-2 rounded-xl border border-white/15 bg-white/10 p-4 text-[11px] backdrop-blur-xs">
-            <p className="font-semibold tracking-wide text-[#E8C483] uppercase">
-              Hazır Demo Hesapları
-            </p>
-            <p className="text-white/90">
-              <span className="font-semibold">Öğrenci:</span>{" "}
-              <span className="font-mono">kerem.yilmaz</span> · Şifre:{" "}
-              <span className="font-mono">123456</span>
-            </p>
-            <p className="text-white/90">
-              <span className="font-semibold">Öğretmen:</span>{" "}
-              <span className="font-mono">selin.kaya</span> · Şifre:{" "}
-              <span className="font-mono">123456</span>
+          <div className="mt-10 border-t border-white/15 pt-5">
+            <p className="text-[11px] font-medium tracking-[0.14em] text-white/65 uppercase">
+              DERSHANE Özel Öğretim Kursu
             </p>
           </div>
         </div>
 
         {/* Right Form Panel */}
-        <div className="flex flex-col justify-center p-7 sm:p-10 lg:col-span-7">
-          <div className="border-b border-[#E9EBEE] pb-5">
-            <p className="text-[11px] font-semibold tracking-[0.18em] text-[#135D43] uppercase">
-              Öğrenci &amp; Öğretmen Girişi
+        <div className="flex flex-col justify-center p-7 sm:p-11 lg:col-span-7">
+          <div>
+            <p className="text-[10px] font-bold tracking-[0.2em] text-[#135D43] uppercase">
+              Öğrenci &amp; Öğretmen
             </p>
             <h1 className="font-editorial mt-1.5 text-3xl font-medium tracking-tight text-[#0D2558]">
               Kampüse Giriş
             </h1>
-            <p className="mt-1 text-sm text-[#5E6A78]">
-              Yönetici tarafından tanımlanan kullanıcı adı ve şifrenizle giriş
-              yapın.
-            </p>
           </div>
 
           {/* Role Selector: Öğrenci / Öğretmen */}
-          <div className="mt-6 grid grid-cols-2 gap-1.5 rounded-lg border border-[#DCE4EE] bg-[#F4F7FA] p-1">
+          <div className="mt-6 grid grid-cols-2 gap-1.5 rounded-xl border border-[#E5DEC9] bg-[#FCFBF8] p-1">
             <button
               type="button"
               onClick={() => handleRoleChange("student")}
               className={cn(
-                "flex items-center justify-center gap-2 rounded-md py-2.5 text-xs font-semibold transition-all sm:text-sm",
+                "flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-all sm:text-sm",
                 role === "student"
                   ? "bg-[#0D2558] text-white shadow-sm"
                   : "text-[#5E6A78] hover:text-[#0D2558]"
               )}
             >
               <GraduationCap className="h-4 w-4" />
-              <span>Öğrenci Girişi</span>
+              <span>Öğrenci</span>
             </button>
             <button
               type="button"
               onClick={() => handleRoleChange("teacher")}
               className={cn(
-                "flex items-center justify-center gap-2 rounded-md py-2.5 text-xs font-semibold transition-all sm:text-sm",
+                "flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-all sm:text-sm",
                 role === "teacher"
                   ? "bg-[#0D2558] text-white shadow-sm"
                   : "text-[#5E6A78] hover:text-[#0D2558]"
               )}
             >
               <BookOpenCheck className="h-4 w-4" />
-              <span>Öğretmen Girişi</span>
+              <span>Öğretmen</span>
             </button>
           </div>
 
@@ -184,7 +167,7 @@ export default function LoginPage() {
               >
                 {role === "student"
                   ? "Kullanıcı Adı veya Öğrenci No"
-                  : "Öğretmen Kullanıcı Adı"}
+                  : "Kullanıcı Adı"}
               </label>
               <div className="relative mt-1.5">
                 <User className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-[#5E6A78]" />
@@ -195,9 +178,9 @@ export default function LoginPage() {
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   placeholder={
-                    role === "student" ? "ör. kerem.yilmaz" : "ör. selin.kaya"
+                    role === "student" ? "kerem.yilmaz" : "selin.kaya"
                   }
-                  className="w-full rounded-lg border border-[#DCE4EE] bg-[#F8FAFC] py-3 pr-4 pl-10 text-sm text-[#17241F] outline-none transition-colors focus:border-[#163B82] focus:bg-white"
+                  className="w-full rounded-xl border border-[#DCE4EE] bg-[#F8FAFC] py-3 pr-4 pl-10 text-sm text-[#17241F] outline-none transition-all focus:border-[#0D2558] focus:bg-white focus:ring-2 focus:ring-[#0D2558]/10"
                 />
               </div>
             </div>
@@ -217,7 +200,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-lg border border-[#DCE4EE] bg-[#F8FAFC] py-3 pr-11 pl-10 text-sm text-[#17241F] outline-none transition-colors focus:border-[#163B82] focus:bg-white"
+                  className="w-full rounded-xl border border-[#DCE4EE] bg-[#F8FAFC] py-3 pr-11 pl-10 text-sm text-[#17241F] outline-none transition-all focus:border-[#0D2558] focus:bg-white focus:ring-2 focus:ring-[#0D2558]/10"
                 />
                 <button
                   type="button"
@@ -235,7 +218,7 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <p className="rounded-md border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs font-medium text-rose-700">
+              <p className="rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs font-medium text-rose-700">
                 {error}
               </p>
             )}
@@ -243,7 +226,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="group mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#0D2558] to-[#163B82] px-4 py-3.5 text-sm font-semibold text-white shadow-md transition-all hover:brightness-110 disabled:opacity-60"
+              className="group mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#091A3A] via-[#0D2558] to-[#163B82] px-4 py-3.5 text-sm font-semibold text-white shadow-md transition-all hover:brightness-110 disabled:opacity-60"
             >
               <span>
                 {isLoading

@@ -42,18 +42,22 @@ export default function AdminLoginPage() {
         transition={{ duration: 0.45 }}
         className="w-full max-w-md overflow-hidden rounded-2xl border border-white/15 bg-white text-[#17241F] shadow-2xl"
       >
-        <div className="bg-gradient-to-r from-[#0D2558] to-[#163B82] px-8 py-7 text-center text-white">
+        <div className="relative bg-gradient-to-br from-[#091A3A] via-[#0D2558] to-[#133372] px-8 py-7 text-center text-white">
+          <div
+            className="pointer-events-none absolute top-0 right-0 left-0 h-[2px] bg-gradient-to-r from-transparent via-[#E8C483] to-transparent"
+            aria-hidden="true"
+          />
           <Image
             src="/images/logo-light.png"
             alt="DERSHANE Özel Öğretim Kursu"
             width={240}
             height={124}
-            className="mx-auto h-16 w-auto object-contain"
+            className="mx-auto h-14 w-auto object-contain"
             priority
           />
           <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-[#E8C483]/40 bg-white/10 px-3 py-1 text-[10px] font-semibold tracking-[0.18em] text-[#E8C483] uppercase">
             <ShieldCheck className="h-3.5 w-3.5" />
-            Yönetici Portalı (/admin)
+            Yönetici Portalı
           </div>
           <h1 className="font-editorial mt-3 text-2xl font-medium">
             Kurum Yönetim Girişi
@@ -66,7 +70,7 @@ export default function AdminLoginPage() {
               htmlFor="admin-email"
               className="block text-xs font-semibold text-[#17241F]"
             >
-              Yönetici E-posta veya Kullanıcı Adı
+              Kullanıcı Adı veya E-posta
             </label>
             <div className="relative mt-1.5">
               <Mail className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-[#5E6A78]" />
@@ -76,7 +80,7 @@ export default function AdminLoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-lg border border-[#DCE4EE] bg-[#F8FAFC] py-2.5 pr-4 pl-10 text-sm text-[#17241F] outline-none focus:border-[#163B82] focus:bg-white"
+                className="w-full rounded-xl border border-[#DCE4EE] bg-[#F8FAFC] py-2.5 pr-4 pl-10 text-sm text-[#17241F] outline-none transition-all focus:border-[#0D2558] focus:bg-white focus:ring-2 focus:ring-[#0D2558]/10"
               />
             </div>
           </div>
@@ -86,7 +90,7 @@ export default function AdminLoginPage() {
               htmlFor="admin-password"
               className="block text-xs font-semibold text-[#17241F]"
             >
-              Yönetici Şifresi
+              Şifre
             </label>
             <div className="relative mt-1.5">
               <Lock className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-[#5E6A78]" />
@@ -96,13 +100,13 @@ export default function AdminLoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg border border-[#DCE4EE] bg-[#F8FAFC] py-2.5 pr-4 pl-10 text-sm text-[#17241F] outline-none focus:border-[#163B82] focus:bg-white"
+                className="w-full rounded-xl border border-[#DCE4EE] bg-[#F8FAFC] py-2.5 pr-4 pl-10 text-sm text-[#17241F] outline-none transition-all focus:border-[#0D2558] focus:bg-white focus:ring-2 focus:ring-[#0D2558]/10"
               />
             </div>
           </div>
 
           {error && (
-            <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
+            <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
               {error}
             </p>
           )}
@@ -110,18 +114,13 @@ export default function AdminLoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#0D2558] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#163B82] disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#091A3A] via-[#0D2558] to-[#163B82] px-4 py-3 text-sm font-semibold text-white shadow-md transition-all hover:brightness-110 disabled:opacity-60"
           >
             <span>{loading ? "Giriş Yapılıyor..." : "Yönetici Paneline Gir"}</span>
             <ArrowRight className="h-4 w-4 text-[#E8C483]" />
           </button>
 
-          <div className="border-t border-[#E9EBEE] pt-4 text-center text-xs text-[#5E6A78]">
-            Demo Yönetici: <span className="font-mono">yonetici@dershane.edu.tr</span> ·{" "}
-            <span className="font-mono">123456</span>
-          </div>
-
-          <div className="text-center">
+          <div className="border-t border-[#E9EBEE] pt-4 text-center">
             <Link
               href="/"
               className="inline-flex items-center gap-1.5 text-xs font-medium text-[#5E6A78] hover:text-[#0D2558]"
