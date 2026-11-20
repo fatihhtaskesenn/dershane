@@ -178,8 +178,53 @@ export default function HomePage() {
               </div>
             </motion.div>
 
-            {/* Large Eye-Catching Honor Cards — 2-up on Mobile, 5-up on Desktop */}
-            <div className="mt-8 grid grid-cols-2 gap-3.5 sm:mt-10 sm:gap-5 md:grid-cols-3 lg:grid-cols-5 lg:gap-6">
+            {/* Mobile Continuous Marquee Strip (< md) */}
+            <div className="relative -mx-5 mt-7 overflow-hidden py-2 md:hidden">
+              <div className="animate-marquee items-stretch">
+                {[...siteContent.honorStudents, ...siteContent.honorStudents].map(
+                  (student, idx) => (
+                    <div
+                      key={`mobile-marquee-${idx}-${student.rank}-${student.name}`}
+                      className="mr-3.5 flex w-[210px] shrink-0 flex-col overflow-hidden rounded-xl border border-[#DCE8E2] bg-white shadow-[0_10px_28px_rgba(14,59,43,0.06)]"
+                    >
+                      <div className="h-1.5 w-full bg-gradient-to-r from-[#135D43] via-[#C58B3B] to-[#135D43]" />
+                      <div className="relative aspect-[4/4.2] w-full overflow-hidden bg-gradient-to-b from-[#EDF5F1] via-[#F7FAF8] to-[#FFFFFF]">
+                        <div className="absolute top-2.5 right-2.5 left-2.5 z-10 flex items-center justify-between gap-1.5">
+                          <span className="rounded-md bg-[#0E3B2B] px-2 py-0.5 text-[10px] font-bold tracking-wide text-[#E8C483] shadow-sm">
+                            {student.rank}
+                          </span>
+                          <span className="rounded-md border border-[#DCE8E2] bg-white/90 px-1.5 py-0.5 text-[10px] font-bold text-[#135D43] backdrop-blur-sm">
+                            {student.track}
+                          </span>
+                        </div>
+                        <Image
+                          src={student.image}
+                          alt={student.name}
+                          fill
+                          className="object-cover object-top pt-3"
+                          sizes="210px"
+                        />
+                        <div
+                          className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white to-transparent"
+                          aria-hidden="true"
+                        />
+                      </div>
+                      <div className="flex flex-1 flex-col justify-between border-t border-[#DCE8E2]/60 bg-white px-3 pt-2.5 pb-3.5 text-center">
+                        <h3 className="font-editorial text-base font-semibold tracking-tight text-[#0E3B2B]">
+                          {student.name}
+                        </h3>
+                        <p className="mt-1 line-clamp-1 text-xs font-semibold text-[#C58B3B]">
+                          {student.department}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
+
+            {/* Large Eye-Catching Honor Cards — 3-up on Tablet, 5-up on Desktop */}
+            <div className="mt-8 hidden gap-5 sm:mt-10 md:grid md:grid-cols-3 lg:grid-cols-5 lg:gap-6">
               {siteContent.honorStudents.map((student, idx) => (
                 <motion.div
                   key={`${student.rank}-${student.name}`}
