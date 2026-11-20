@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   BarChart,
@@ -53,6 +53,42 @@ export default function AdminDashboardPage() {
   const [annFileName, setAnnFileName] = useState("");
   const [annFileDataUrl, setAnnFileDataUrl] = useState("");
   const [annFileSize, setAnnFileSize] = useState("");
+
+  // Mobile marquee: animate each chart once when it first enters the viewport
+  const [mobileChartSeen, setMobileChartSeen] = useState({
+    bar: true,
+    row: false,
+    pie: false,
+  });
+  const mobileRowRef = useRef<HTMLDivElement | null>(null);
+  const mobilePieRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const rowEl = mobileRowRef.current;
+    const pieEl = mobilePieRef.current;
+    if (!rowEl && !pieEl) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          if (entry.target === rowEl) {
+            setMobileChartSeen((prev) => (prev.row ? prev : { ...prev, row: true }));
+            observer.unobserve(rowEl);
+          } else if (entry.target === pieEl) {
+            setMobileChartSeen((prev) => (prev.pie ? prev : { ...prev, pie: true }));
+            observer.unobserve(pieEl);
+          }
+        });
+      },
+      { threshold: 0.2 }
+    );
+
+    if (rowEl) observer.observe(rowEl);
+    if (pieEl) observer.observe(pieEl);
+
+    return () => observer.disconnect();
+  }, []);
 
   // Student latest TYT net bar chart data (sorted descending)
   const studentBarData = useMemo(() => {
@@ -302,168 +338,187 @@ export default function AdminDashboardPage() {
 
       {/* 3 Animated Charts: Infinite Marquee on Mobile (< lg), 3-col Grid on Desktop */}
       {(() => {
-        const renderChartCards = (prefix: string, cardClass: string) => (
-          <>
-            {/* Column Chart */}
-            <div key={`${prefix}-bar`} className={cardClass}>
-              <div className="mb-3 flex items-center justify-between sm:mb-4">
-                <div>
-                  <h2 className="text-sm font-bold text-[#11284B] sm:text-base">
-                    Öğrenci Son TYT Netleri
-                  </h2>
-                  <p className="text-[11px] text-[#64748B] sm:text-xs">
-                    Büyükten küçüğe başarı sıralaması
-                  </p>
-                </div>
-                <BarChart3 className="h-4 w-4 text-[#11284B]/60 sm:h-5 sm:w-5" />
-              </div>
-              <div className="h-48 w-full sm:h-64 [&_.recharts-wrapper]:outline-none [&_svg]:outline-none">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={studentBarData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
-                    <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#475569" }} />
-                    <YAxis tick={{ fontSize: 11, fill: "#475569" }} domain={[0, 120]} />
-                    <Tooltip
-                      cursor={false}
-                      formatter={(value) => [`${value} Net`, "TYT Toplam"]}
-                      labelFormatter={(label, payload) => {
-                        const p = payload?.[0]?.payload;
-                        return p ? `${p.rank}. ${p.fullName} (${p.className})` : String(label);
-                      }}
-                      contentStyle={{
-                        borderRadius: "10px",
-                        border: "1px solid #E2E8F0",
-                        boxShadow: "0 8px 20px rgba(17,40,75,0.08)",
-                        fontSize: "12px",
-                      }}
-                    />
-                    <Bar
-                      dataKey="net"
-                      fill="#11284B"
-                      activeBar={{ fill: "#1E4075" }}
-                      radius={[6, 6, 0, 0]}
-                      isAnimationActive={true}
-                      animationDuration={900}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
+        const renderChartCards = (
+          prefix: string,
+          cardClass: string,
+          options?: { isMobilePrimary?: boolean; isMobileDuplicate?: boolean }
+        ) => {
+          const isPrimary = options?.isMobilePrimary ?? false;
+          const isDuplicate = options?.isMobileDuplicate ?? false;
+          const showRowData = !isPrimary || mobileChartSeen.row;
+          const showPieData = !isPrimary || mobileChartSeen.pie;
 
-            {/* Horizontal Row Chart */}
-            <div key={`${prefix}-row`} className={cardClass}>
-              <div className="mb-3 flex items-center justify-between sm:mb-4">
-                <div>
-                  <h2 className="text-sm font-bold text-[#11284B] sm:text-base">
-                    Ders Bazlı Net Ortalaması
-                  </h2>
-                  <p className="text-[11px] text-[#64748B] sm:text-xs">
-                    En düşükten yükseğe satır grafiği
-                  </p>
-                </div>
-                <TrendingUp className="h-4 w-4 text-[#0E4D3A]/70 sm:h-5 sm:w-5" />
-              </div>
-              <div className="h-48 w-full sm:h-64 [&_.recharts-wrapper]:outline-none [&_svg]:outline-none">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={subjectRowData}
-                    layout="vertical"
-                    margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" horizontal={false} />
-                    <XAxis type="number" tick={{ fontSize: 11, fill: "#475569" }} domain={[0, 40]} />
-                    <YAxis
-                      dataKey="subject"
-                      type="category"
-                      tick={{ fontSize: 11, fill: "#11284B", fontWeight: 600 }}
-                      width={90}
-                    />
-                    <Tooltip
-                      cursor={false}
-                      formatter={(value) => [`${value} Net`, "Kurum Ortalaması"]}
-                      contentStyle={{
-                        borderRadius: "10px",
-                        border: "1px solid #E2E8F0",
-                        boxShadow: "0 8px 20px rgba(17,40,75,0.08)",
-                        fontSize: "12px",
-                      }}
-                    />
-                    <Bar
-                      dataKey="ortalamaNet"
-                      fill="#0E4D3A"
-                      activeBar={{ fill: "#146B50" }}
-                      radius={[0, 6, 6, 0]}
-                      isAnimationActive={true}
-                      animationDuration={1000}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* Pie Chart: Student Performance Bands */}
-            <div key={`${prefix}-pie`} className={cardClass}>
-              <div className="mb-3 flex items-center justify-between sm:mb-4">
-                <div>
-                  <h2 className="text-sm font-bold text-[#11284B] sm:text-base">
-                    Kurum Başarı Bandı Dağılımı
-                  </h2>
-                  <p className="text-[11px] text-[#64748B] sm:text-xs">
-                    Son TYT netlerine göre öğrenci seviye grupları
-                  </p>
-                </div>
-                <PieChartIcon className="h-4 w-4 text-[#B8860B] sm:h-5 sm:w-5" />
-              </div>
-              <div className="h-44 w-full sm:h-52 [&_.recharts-wrapper]:outline-none [&_svg]:outline-none">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={successBandPie}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={48}
-                      outerRadius={80}
-                      paddingAngle={3}
-                      isAnimationActive={true}
-                      animationDuration={900}
-                    >
-                      {successBandPie.map((band) => (
-                        <Cell key={band.name} fill={band.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(value, _, item) => [
-                        `${value} Öğrenci (%${item?.payload?.percent ?? 0})`,
-                        item?.payload?.name || "Seviye",
-                      ]}
-                      contentStyle={{
-                        borderRadius: "10px",
-                        border: "1px solid #E2E8F0",
-                        fontSize: "12px",
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5">
-                {successBandPie.map((band) => (
-                  <div key={band.name} className="flex items-center justify-between text-[11px] text-[#475569]">
-                    <span className="flex items-center gap-1.5 truncate">
-                      <span
-                        className="h-2.5 w-2.5 shrink-0 rounded-full"
-                        style={{ backgroundColor: band.color }}
-                      />
-                      <span className="truncate">{band.name}</span>
-                    </span>
-                    <span className="ml-1 font-bold text-[#11284B]">{band.value}</span>
+          return (
+            <>
+              {/* Column Chart */}
+              <div key={`${prefix}-bar`} className={cardClass}>
+                <div className="mb-3 flex items-center justify-between sm:mb-4">
+                  <div>
+                    <h2 className="text-sm font-bold text-[#11284B] sm:text-base">
+                      Öğrenci Son TYT Netleri
+                    </h2>
+                    <p className="text-[11px] text-[#64748B] sm:text-xs">
+                      Büyükten küçüğe başarı sıralaması
+                    </p>
                   </div>
-                ))}
+                  <BarChart3 className="h-4 w-4 text-[#11284B]/60 sm:h-5 sm:w-5" />
+                </div>
+                <div className="h-48 w-full sm:h-64 [&_.recharts-wrapper]:outline-none [&_svg]:outline-none">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={studentBarData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
+                      <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#475569" }} />
+                      <YAxis tick={{ fontSize: 11, fill: "#475569" }} domain={[0, 120]} />
+                      <Tooltip
+                        cursor={false}
+                        formatter={(value) => [`${value} Net`, "TYT Toplam"]}
+                        labelFormatter={(label, payload) => {
+                          const p = payload?.[0]?.payload;
+                          return p ? `${p.rank}. ${p.fullName} (${p.className})` : String(label);
+                        }}
+                        contentStyle={{
+                          borderRadius: "10px",
+                          border: "1px solid #E2E8F0",
+                          boxShadow: "0 8px 20px rgba(17,40,75,0.08)",
+                          fontSize: "12px",
+                        }}
+                      />
+                      <Bar
+                        dataKey="net"
+                        fill="#11284B"
+                        activeBar={{ fill: "#1E4075" }}
+                        radius={[6, 6, 0, 0]}
+                        isAnimationActive={!isDuplicate}
+                        animationDuration={900}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
-            </div>
-          </>
-        );
+
+              {/* Horizontal Row Chart */}
+              <div
+                key={`${prefix}-row`}
+                ref={isPrimary ? mobileRowRef : undefined}
+                className={cardClass}
+              >
+                <div className="mb-3 flex items-center justify-between sm:mb-4">
+                  <div>
+                    <h2 className="text-sm font-bold text-[#11284B] sm:text-base">
+                      Ders Bazlı Net Ortalaması
+                    </h2>
+                    <p className="text-[11px] text-[#64748B] sm:text-xs">
+                      En düşükten yükseğe satır grafiği
+                    </p>
+                  </div>
+                  <TrendingUp className="h-4 w-4 text-[#0E4D3A]/70 sm:h-5 sm:w-5" />
+                </div>
+                <div className="h-48 w-full sm:h-64 [&_.recharts-wrapper]:outline-none [&_svg]:outline-none">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={showRowData ? subjectRowData : []}
+                      layout="vertical"
+                      margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" horizontal={false} />
+                      <XAxis type="number" tick={{ fontSize: 11, fill: "#475569" }} domain={[0, 40]} />
+                      <YAxis
+                        dataKey="subject"
+                        type="category"
+                        tick={{ fontSize: 11, fill: "#11284B", fontWeight: 600 }}
+                        width={90}
+                      />
+                      <Tooltip
+                        cursor={false}
+                        formatter={(value) => [`${value} Net`, "Kurum Ortalaması"]}
+                        contentStyle={{
+                          borderRadius: "10px",
+                          border: "1px solid #E2E8F0",
+                          boxShadow: "0 8px 20px rgba(17,40,75,0.08)",
+                          fontSize: "12px",
+                        }}
+                      />
+                      <Bar
+                        dataKey="ortalamaNet"
+                        fill="#0E4D3A"
+                        activeBar={{ fill: "#146B50" }}
+                        radius={[0, 6, 6, 0]}
+                        isAnimationActive={!isDuplicate}
+                        animationDuration={1000}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Pie Chart: Student Performance Bands */}
+              <div
+                key={`${prefix}-pie`}
+                ref={isPrimary ? mobilePieRef : undefined}
+                className={cardClass}
+              >
+                <div className="mb-3 flex items-center justify-between sm:mb-4">
+                  <div>
+                    <h2 className="text-sm font-bold text-[#11284B] sm:text-base">
+                      Kurum Başarı Bandı Dağılımı
+                    </h2>
+                    <p className="text-[11px] text-[#64748B] sm:text-xs">
+                      Son TYT netlerine göre öğrenci seviye grupları
+                    </p>
+                  </div>
+                  <PieChartIcon className="h-4 w-4 text-[#B8860B] sm:h-5 sm:w-5" />
+                </div>
+                <div className="h-44 w-full sm:h-52 [&_.recharts-wrapper]:outline-none [&_svg]:outline-none">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={showPieData ? successBandPie : []}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={48}
+                        outerRadius={80}
+                        paddingAngle={3}
+                        isAnimationActive={!isDuplicate}
+                        animationDuration={900}
+                      >
+                        {successBandPie.map((band) => (
+                          <Cell key={band.name} fill={band.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value, _, item) => [
+                          `${value} Öğrenci (%${item?.payload?.percent ?? 0})`,
+                          item?.payload?.name || "Seviye",
+                        ]}
+                        contentStyle={{
+                          borderRadius: "10px",
+                          border: "1px solid #E2E8F0",
+                          fontSize: "12px",
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5">
+                  {successBandPie.map((band) => (
+                    <div key={band.name} className="flex items-center justify-between text-[11px] text-[#475569]">
+                      <span className="flex items-center gap-1.5 truncate">
+                        <span
+                          className="h-2.5 w-2.5 shrink-0 rounded-full"
+                          style={{ backgroundColor: band.color }}
+                        />
+                        <span className="truncate">{band.name}</span>
+                      </span>
+                      <span className="ml-1 font-bold text-[#11284B]">{band.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          );
+        };
 
         return (
           <>
@@ -472,11 +527,13 @@ export default function AdminDashboardPage() {
               <div className="animate-marquee items-stretch">
                 {renderChartCards(
                   "m1",
-                  "mr-3.5 w-[84vw] shrink-0 rounded-2xl border border-[#11284B]/10 bg-white p-4 shadow-sm sm:w-[48vw]"
+                  "mr-3.5 w-[84vw] shrink-0 rounded-2xl border border-[#11284B]/10 bg-white p-4 shadow-sm sm:w-[48vw]",
+                  { isMobilePrimary: true }
                 )}
                 {renderChartCards(
                   "m2",
-                  "mr-3.5 w-[84vw] shrink-0 rounded-2xl border border-[#11284B]/10 bg-white p-4 shadow-sm sm:w-[48vw]"
+                  "mr-3.5 w-[84vw] shrink-0 rounded-2xl border border-[#11284B]/10 bg-white p-4 shadow-sm sm:w-[48vw]",
+                  { isMobileDuplicate: true }
                 )}
               </div>
             </div>
