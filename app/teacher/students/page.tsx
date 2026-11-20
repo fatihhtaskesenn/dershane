@@ -28,6 +28,15 @@ const SUBJECT_MAX_QUESTIONS: Record<string, number> = {
   Fizik: 14,
   Kimya: 13,
   Biyoloji: 13,
+  Edebiyat: 24,
+  "Türk Dili ve Edebiyatı": 24,
+  "Tarih-1": 10,
+  "Coğrafya-1": 6,
+  "Tarih-2": 11,
+  "Coğrafya-2": 11,
+  "Felsefe Grubu": 12,
+  "Din Kültürü": 6,
+  "Sosyal-2": 40,
 };
 
 function getWeakestSubject(exam?: StudentExamRecord) {

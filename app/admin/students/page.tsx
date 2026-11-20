@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   CalendarDays,
@@ -104,27 +104,61 @@ export default function AdminStudentsPage() {
     ...(selectedStudent?.schedule ?? []),
   ];
 
+  const examSubjectSchema = useMemo(() => {
+    if (examType === "TYT") {
+      return [
+        { name: "Türkçe", maxQ: 40 },
+        { name: "Matematik", maxQ: 40 },
+        { name: "Sosyal Bilimler", maxQ: 20 },
+        { name: "Fen Bilimleri", maxQ: 20 },
+      ];
+    }
+    if (selectedStudent?.track === "Eşit Ağırlık") {
+      return [
+        { name: "Matematik", maxQ: 40 },
+        { name: "Edebiyat", maxQ: 24 },
+        { name: "Tarih-1", maxQ: 10 },
+        { name: "Coğrafya-1", maxQ: 6 },
+      ];
+    }
+    if (selectedStudent?.track === "Sözel") {
+      return [
+        { name: "Edebiyat", maxQ: 24 },
+        { name: "Tarih-1", maxQ: 10 },
+        { name: "Coğrafya-1", maxQ: 6 },
+        { name: "Sosyal-2", maxQ: 40 },
+      ];
+    }
+    return [
+      { name: "Matematik", maxQ: 40 },
+      { name: "Fizik", maxQ: 14 },
+      { name: "Kimya", maxQ: 13 },
+      { name: "Biyoloji", maxQ: 13 },
+    ];
+  }, [examType, selectedStudent?.track]);
+
   const handleAddExam = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedStudent) return;
     const calc = (c: number, w: number) => Number((c - w / 4).toFixed(2));
-    const names =
-      examType === "TYT"
-        ? ["Türkçe", "Matematik", "Sosyal Bilimler", "Fen Bilimleri"]
-        : ["Matematik", "Fizik", "Kimya", "Biyoloji"];
     const pairs = [
       [Number(sub1C) || 0, Number(sub1W) || 0],
       [Number(sub2C) || 0, Number(sub2W) || 0],
       [Number(sub3C) || 0, Number(sub3W) || 0],
       [Number(sub4C) || 0, Number(sub4W) || 0],
     ];
-    const subjects = names.map((n, i) => ({
-      name: n,
-      correct: pairs[i][0],
-      wrong: pairs[i][1],
-      empty: 0,
-      net: calc(pairs[i][0], pairs[i][1]),
-    }));
+    const subjects = examSubjectSchema.map((schema, i) => {
+      const correct = Math.min(schema.maxQ, Math.max(0, pairs[i][0]));
+      const wrong = Math.min(schema.maxQ - correct, Math.max(0, pairs[i][1]));
+      const empty = Math.max(0, schema.maxQ - correct - wrong);
+      return {
+        name: schema.name,
+        correct,
+        wrong,
+        empty,
+        net: calc(correct, wrong),
+      };
+    });
     const totalNet = Number(
       subjects.reduce((acc, s) => acc + s.net, 0).toFixed(2)
     );
@@ -528,16 +562,19 @@ export default function AdminStudentsPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                     {[
-                      { l: examType === "TYT" ? "Türkçe" : "Mat", c: sub1C, sc: setSub1C, w: sub1W, sw: setSub1W },
-                      { l: examType === "TYT" ? "Matematik" : "Fizik", c: sub2C, sc: setSub2C, w: sub2W, sw: setSub2W },
-                      { l: examType === "TYT" ? "Sosyal" : "Kimya", c: sub3C, sc: setSub3C, w: sub3W, sw: setSub3W },
-                      { l: examType === "TYT" ? "Fen" : "Biyoloji", c: sub4C, sc: setSub4C, w: sub4W, sw: setSub4W },
+                      { ...examSubjectSchema[0], c: sub1C, sc: setSub1C, w: sub1W, sw: setSub1W },
+                      { ...examSubjectSchema[1], c: sub2C, sc: setSub2C, w: sub2W, sw: setSub2W },
+                      { ...examSubjectSchema[2], c: sub3C, sc: setSub3C, w: sub3W, sw: setSub3W },
+                      { ...examSubjectSchema[3], c: sub4C, sc: setSub4C, w: sub4W, sw: setSub4W },
                     ].map((x) => (
-                      <div key={x.l} className="rounded border border-[#E9EBEE] bg-white p-2 text-xs">
-                        <p className="font-semibold text-[#203B5C]">{x.l}</p>
+                      <div key={x.name} className="rounded border border-[#E9EBEE] bg-white p-2 text-xs">
+                        <div className="flex items-center justify-between gap-1">
+                          <p className="truncate font-semibold text-[#203B5C]">{x.name}</p>
+                          <span className="shrink-0 text-[10px] text-[#737B86]">{x.maxQ}S</span>
+                        </div>
                         <div className="mt-1 flex gap-1">
-                          <input type="number" value={x.c} onChange={(e) => x.sc(e.target.value)} className="w-1/2 rounded border px-1.5 py-1" placeholder="D" />
-                          <input type="number" value={x.w} onChange={(e) => x.sw(e.target.value)} className="w-1/2 rounded border px-1.5 py-1" placeholder="Y" />
+                          <input type="number" min={0} max={x.maxQ} value={x.c} onChange={(e) => x.sc(e.target.value)} className="w-1/2 rounded border px-1.5 py-1" placeholder="D" />
+                          <input type="number" min={0} max={x.maxQ} value={x.w} onChange={(e) => x.sw(e.target.value)} className="w-1/2 rounded border px-1.5 py-1" placeholder="Y" />
                         </div>
                       </div>
                     ))}

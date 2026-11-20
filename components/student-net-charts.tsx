@@ -115,19 +115,51 @@ export function StudentNetCharts({ exams }: { exams: StudentExamRecord[] }) {
   }, [monthlyData]);
 
   const { yDomain, yTicks } = useMemo(() => {
+    const maxCapMap: Record<MetricFilter, number> = {
+      Toplam: 120,
+      Matematik: 40,
+      Türkçe: 40,
+      "Fen Bilimleri": 20,
+      "Sosyal Bilimler": 20,
+    };
+    const maxCap = maxCapMap[metric] ?? 120;
+
     if (monthlyData.length === 0) {
-      return { yDomain: [0, 120] as [number, number], yTicks: [0, 30, 60, 90, 120] };
+      return {
+        yDomain: [0, maxCap] as [number, number],
+        yTicks:
+          maxCap === 120
+            ? [0, 30, 60, 90, 120]
+            : maxCap === 40
+            ? [0, 10, 20, 30, 40]
+            : [0, 5, 10, 15, 20],
+      };
     }
+
     const vals = monthlyData.map((d) => Number(d[metric]));
     const minVal = Math.min(...vals);
     const maxVal = Math.max(...vals);
     const pad = metric === "Toplam" ? 10 : 5;
     const rawMin = Math.max(0, minVal - pad);
-    const rawMax = maxVal + pad;
+    const rawMax = Math.min(maxCap, maxVal + pad);
     const span = Math.max(10, rawMax - rawMin);
-    const tickStep = span > 50 ? 20 : span > 25 ? 10 : 5;
-    const start = Math.max(0, Math.floor(rawMin / tickStep) * tickStep);
-    const end = Math.ceil(rawMax / tickStep) * tickStep;
+    const tickStep =
+      maxCap === 20
+        ? 5
+        : maxCap === 40
+        ? span > 20
+          ? 10
+          : 5
+        : span > 50
+        ? 20
+        : 10;
+
+    const end = Math.min(maxCap, Math.ceil(rawMax / tickStep) * tickStep);
+    let start = Math.max(0, Math.floor(rawMin / tickStep) * tickStep);
+    if (start >= end) {
+      start = Math.max(0, end - tickStep * 2);
+    }
+
     const ticks: number[] = [];
     for (let t = start; t <= end; t += tickStep) {
       ticks.push(t);
