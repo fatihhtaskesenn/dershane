@@ -119,10 +119,10 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="font-editorial max-w-3xl border-l-2 border-[#D4AF7A] pl-3.5 text-2xl leading-tight font-medium tracking-tight text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)] sm:pl-4 sm:text-4xl lg:text-[42px]"
+            className="font-editorial inline-block max-w-3xl rounded-xl border border-white/15 border-l-[3px] border-l-[#E8C483] bg-[#091834]/60 px-4 py-2.5 text-2xl leading-tight font-medium tracking-tight text-white shadow-[0_12px_36px_rgba(0,0,0,0.25)] backdrop-blur-md sm:px-6 sm:py-3.5 sm:text-4xl lg:text-[42px]"
           >
             {siteContent.heroTitlePrefix}{" "}
-            <span className="italic text-[#E2BD82]">
+            <span className="italic text-[#F2CF8D]">
               {siteContent.heroTitleAccent}
             </span>{" "}
             {siteContent.heroTitleSuffix}

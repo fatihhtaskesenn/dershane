@@ -102,9 +102,9 @@ export function PanelSidebar({
             <Image
               src="/images/logo-dark.png"
               alt="DERSHANE Özel Öğretim Kursu"
-              width={160}
-              height={82}
-              className="h-9 w-auto object-contain object-left"
+              width={240}
+              height={123}
+              className="h-[54px] w-auto object-contain object-left"
             />
             <p className="text-[10px] font-semibold tracking-[0.14em] text-[#B18A52] uppercase">
               {portalName}
