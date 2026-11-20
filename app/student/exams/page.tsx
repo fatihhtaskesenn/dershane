@@ -91,7 +91,7 @@ export default function StudentExamsPage() {
         </div>
       </div>
 
-      <StudentNetCharts exams={activeStudent.exams} />
+      <StudentNetCharts exams={activeStudent.exams} chartType="bar" />
 
       <div className="space-y-3 sm:space-y-5">
         {filteredExams.map((exam, index) => {

@@ -5,6 +5,8 @@ import { motion } from "framer-motion";
 import {
   Area,
   AreaChart,
+  Bar,
+  BarChart,
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
@@ -58,7 +60,13 @@ function extractMonthShort(dateStr: string): { label: string; order: number } {
   return { label: dateStr, order: 99 };
 }
 
-export function StudentNetCharts({ exams }: { exams: StudentExamRecord[] }) {
+export function StudentNetCharts({
+  exams,
+  chartType = "line",
+}: {
+  exams: StudentExamRecord[];
+  chartType?: "line" | "bar";
+}) {
   const [mounted, setMounted] = useState(false);
   const [metric, setMetric] = useState<MetricFilter>("Toplam");
 
@@ -173,13 +181,20 @@ export function StudentNetCharts({ exams }: { exams: StudentExamRecord[] }) {
 
   return (
     <div className="space-y-4">
-      {/* Main Wavy Area Chart Card — Sweeps Left-to-Right on Entry */}
+      {/* Main Chart Card */}
       <div className="rounded-xl border border-[#DCE8E2] bg-white p-5 shadow-[0_12px_32px_rgba(19,93,67,0.06)] sm:p-6">
         <div className="flex flex-col justify-between gap-3 pb-4 sm:flex-row sm:items-center">
           <div>
             <h2 className="font-editorial text-xl font-semibold text-[#17241F] sm:text-2xl">
-              Deneme Net Gelişimi
+              {chartType === "bar"
+                ? "Deneme Bazlı Net Karşılaştırması"
+                : "Deneme Net Gelişimi"}
             </h2>
+            <p className="mt-0.5 text-xs text-[#4E5E57]">
+              {chartType === "bar"
+                ? "Her denemedeki net performansını sütunlar halinde yan yana karşılaştırır."
+                : "Aylara göre genel net artış trendini ve gelişim ivmeni gösterir."}
+            </p>
           </div>
 
           {/* Metric Selector Pills */}
@@ -209,75 +224,130 @@ export function StudentNetCharts({ exams }: { exams: StudentExamRecord[] }) {
           </div>
         </div>
 
-        {/* Left-to-Right Animated Reveal Container */}
-        <motion.div
-          key={metric}
-          initial={{ clipPath: "inset(0 100% 0 0)", opacity: 0.4 }}
-          animate={{ clipPath: "inset(0 0% 0 0)", opacity: 1 }}
-          transition={{ duration: 1.05, ease: [0.22, 1, 0.36, 1] }}
-          className="h-[185px] w-full sm:h-[260px]"
-        >
-          {mounted && (
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
-                data={monthlyData}
-                margin={{ top: 12, right: 14, left: 4, bottom: 0 }}
-              >
-                <defs>
-                  <linearGradient id="emeraldWaveFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#135D43" stopOpacity={0.34} />
-                    <stop offset="65%" stopColor="#135D43" stopOpacity={0.12} />
-                    <stop offset="100%" stopColor="#135D43" stopOpacity={0.01} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid
-                  strokeDasharray="4 4"
-                  stroke="#E4ECE7"
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="month"
-                  tick={{ fill: "#4E5E57", fontSize: 12, fontWeight: 500 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  width={54}
-                  domain={yDomain}
-                  ticks={yTicks}
-                  tickFormatter={(v) => `${v} Net`}
-                  tick={{ fill: "#4E5E57", fontSize: 11, fontWeight: 500 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#0E3B2B",
-                    border: "none",
-                    borderRadius: "8px",
-                    color: "#FFFFFF",
-                    fontSize: "12px",
-                  }}
-                  itemStyle={{ color: "#E8C483", fontWeight: 600 }}
-                  labelStyle={{ color: "#FFFFFF", fontWeight: 600 }}
-                  formatter={(value) => [`${value} Net`, metric]}
-                />
-                <Area
-                  type="natural"
-                  dataKey={metric}
-                  stroke="#135D43"
-                  strokeWidth={2.8}
-                  fill="url(#emeraldWaveFill)"
-                  fillOpacity={1}
-                  dot={{ r: 3.5, fill: "#135D43", strokeWidth: 0 }}
-                  activeDot={{ r: 6, fill: "#C58B3B", stroke: "#FFFFFF", strokeWidth: 2 }}
-                  isAnimationActive={true}
-                  animationDuration={1100}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          )}
-        </motion.div>
+        {/* Chart Container */}
+        {chartType === "bar" ? (
+          <div key={`bar-${metric}`} className="h-[195px] w-full sm:h-[260px]">
+            {mounted && (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={monthlyData}
+                  margin={{ top: 12, right: 14, left: 4, bottom: 0 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="4 4"
+                    stroke="#E4ECE7"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fill: "#4E5E57", fontSize: 12, fontWeight: 500 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    width={54}
+                    domain={yDomain}
+                    ticks={yTicks}
+                    tickFormatter={(v) => `${v} Net`}
+                    tick={{ fill: "#4E5E57", fontSize: 11, fontWeight: 500 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "rgba(19, 93, 67, 0.06)" }}
+                    contentStyle={{
+                      backgroundColor: "#0E3B2B",
+                      border: "none",
+                      borderRadius: "8px",
+                      color: "#FFFFFF",
+                      fontSize: "12px",
+                    }}
+                    itemStyle={{ color: "#E8C483", fontWeight: 600 }}
+                    labelStyle={{ color: "#FFFFFF", fontWeight: 600 }}
+                    formatter={(value) => [`${value} Net`, metric]}
+                  />
+                  <Bar
+                    dataKey={metric}
+                    fill="#135D43"
+                    radius={[6, 6, 0, 0]}
+                    maxBarSize={52}
+                    isAnimationActive={true}
+                    animationDuration={900}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        ) : (
+          <motion.div
+            key={metric}
+            initial={{ clipPath: "inset(0 100% 0 0)", opacity: 0.4 }}
+            animate={{ clipPath: "inset(0 0% 0 0)", opacity: 1 }}
+            transition={{ duration: 1.05, ease: [0.22, 1, 0.36, 1] }}
+            className="h-[185px] w-full sm:h-[260px]"
+          >
+            {mounted && (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={monthlyData}
+                  margin={{ top: 12, right: 14, left: 4, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient id="emeraldWaveFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#135D43" stopOpacity={0.34} />
+                      <stop offset="65%" stopColor="#135D43" stopOpacity={0.12} />
+                      <stop offset="100%" stopColor="#135D43" stopOpacity={0.01} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid
+                    strokeDasharray="4 4"
+                    stroke="#E4ECE7"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fill: "#4E5E57", fontSize: 12, fontWeight: 500 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    width={54}
+                    domain={yDomain}
+                    ticks={yTicks}
+                    tickFormatter={(v) => `${v} Net`}
+                    tick={{ fill: "#4E5E57", fontSize: 11, fontWeight: 500 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#0E3B2B",
+                      border: "none",
+                      borderRadius: "8px",
+                      color: "#FFFFFF",
+                      fontSize: "12px",
+                    }}
+                    itemStyle={{ color: "#E8C483", fontWeight: 600 }}
+                    labelStyle={{ color: "#FFFFFF", fontWeight: 600 }}
+                    formatter={(value) => [`${value} Net`, metric]}
+                  />
+                  <Area
+                    type="natural"
+                    dataKey={metric}
+                    stroke="#135D43"
+                    strokeWidth={2.8}
+                    fill="url(#emeraldWaveFill)"
+                    fillOpacity={1}
+                    dot={{ r: 3.5, fill: "#135D43", strokeWidth: 0 }}
+                    activeDot={{ r: 6, fill: "#C58B3B", stroke: "#FFFFFF", strokeWidth: 2 }}
+                    isAnimationActive={true}
+                    animationDuration={1100}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+          </motion.div>
+        )}
       </div>
 
       {/* 4 Clean Subject Cards with Emerald + Gold Animated Bars */}
