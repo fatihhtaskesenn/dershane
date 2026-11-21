@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { BarChart3, CalendarDays, CalendarPlus, Check, Clock, Pencil, Trash2, X } from "lucide-react";
+import { BarChart3, CalendarDays, CalendarPlus, Check, Clock, Pencil, Search, Trash2, X } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -39,6 +39,7 @@ export default function AdminTeachersPage() {
   } = useCampus();
 
   const [mounted, setMounted] = useState(false);
+  const [teacherSearch, setTeacherSearch] = useState("");
   const [selectedTeacherId, setSelectedTeacherId] = useState(
     teachers[0]?.id ?? ""
   );
@@ -75,6 +76,17 @@ export default function AdminTeachersPage() {
       setSelectedTeacherId(idParam);
     }
   }, [teachers]);
+
+  const filteredTeachers = useMemo(() => {
+    const q = teacherSearch.trim().toLowerCase();
+    if (!q) return teachers;
+    return teachers.filter(
+      (t) =>
+        t.name.toLowerCase().includes(q) ||
+        t.branch.toLowerCase().includes(q) ||
+        t.role.toLowerCase().includes(q)
+    );
+  }, [teachers, teacherSearch]);
 
   const selectedTeacher =
     teachers.find((t) => t.id === selectedTeacherId) ?? teachers[0];
@@ -184,44 +196,138 @@ export default function AdminTeachersPage() {
         </p>
       </div>
 
-      {/* Teacher Selector Pills */}
-      <div className="flex flex-wrap gap-2">
-        {teachers.map((t) => {
-          const active = selectedTeacher?.id === t.id;
-          const totalHours = t.schedule.length + t.oneOnOneSlots.length;
-          return (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setSelectedTeacherId(t.id)}
-              className={`rounded-lg border px-4 py-2.5 text-left text-xs transition-all ${
-                active
-                  ? "border-[#0D2558] bg-[#0D2558] text-white shadow-xs"
-                  : "border-[#DCE4EE] bg-white text-[#203B5C] hover:border-[#B18A52]"
-              }`}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <p className="font-semibold">{t.name}</p>
-                <span
-                  className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
-                    active
-                      ? "bg-white/15 text-[#E8C483]"
-                      : "bg-[#EEF3F9] text-[#11284B]"
+      {/* Searchable Teacher Directory Table / List */}
+      <div className="overflow-hidden rounded-xl border border-[#DCE4EE] bg-white shadow-2xs">
+        <div className="flex flex-col justify-between gap-2.5 border-b border-[#E9EBEE] bg-[#FCFBF8] px-4 py-3 sm:flex-row sm:items-center">
+          <div className="relative flex-1 sm:max-w-sm">
+            <Search className="pointer-events-none absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-[#737B86]" />
+            <input
+              type="text"
+              value={teacherSearch}
+              onChange={(e) => setTeacherSearch(e.target.value)}
+              placeholder="Öğretmen adı, branş veya rol ara..."
+              className="w-full rounded-lg border border-[#DCE4EE] bg-white py-1.5 pr-3 pl-8 text-xs text-[#203B5C] placeholder:text-[#737B86] focus:border-[#0D2558] focus:outline-none"
+            />
+          </div>
+          <span className="text-[11px] text-[#737B86]">
+            Yönetmek istediğiniz öğretmen satırına tıklayın ({filteredTeachers.length} öğretmen)
+          </span>
+        </div>
+
+        {/* Mobile List */}
+        <div className="max-h-[300px] divide-y divide-[#F1F5F9] overflow-y-auto md:hidden">
+          {filteredTeachers.length === 0 ? (
+            <p className="py-6 text-center text-xs text-[#737B86]">
+              Aramanızla eşleşen öğretmen bulunamadı.
+            </p>
+          ) : (
+            filteredTeachers.map((t) => {
+              const active = selectedTeacher?.id === t.id;
+              const totalHours = t.schedule.length + t.oneOnOneSlots.length;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setSelectedTeacherId(t.id)}
+                  className={`flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-xs transition ${
+                    active ? "bg-[#EEF3F9]" : "hover:bg-[#FAF8F5]"
                   }`}
                 >
-                  {totalHours} Saat/Hf
-                </span>
-              </div>
-              <p
-                className={`mt-0.5 text-[10px] ${
-                  active ? "text-white/80" : "text-[#737B86]"
-                }`}
-              >
-                {t.role} • {t.branch} · {t.schedule.length} Ders + {t.oneOnOneSlots.length} Birebir
-              </p>
-            </button>
-          );
-        })}
+                  <div className="min-w-0">
+                    <p className="truncate font-bold text-[#0D2558]">{t.name}</p>
+                    <p className="truncate text-[11px] text-[#64748B]">
+                      {t.role} · {t.branch}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <span className="rounded bg-[#EEF3F9] px-2 py-0.5 text-[11px] font-bold text-[#0D2558]">
+                      {totalHours} Saat
+                    </span>
+                    <span
+                      className={`rounded px-2.5 py-1 text-[11px] font-bold ${
+                        active
+                          ? "bg-[#0D2558] text-white"
+                          : "border border-[#DCE4EE] bg-white text-[#203B5C]"
+                      }`}
+                    >
+                      {active ? "Seçili" : "Yönet"}
+                    </span>
+                  </div>
+                </button>
+              );
+            })
+          )}
+        </div>
+
+        {/* Desktop Table */}
+        <div className="hidden max-h-[320px] overflow-x-auto overflow-y-auto md:block">
+          <table className="w-full text-left text-xs">
+            <thead className="sticky top-0 z-10 border-b border-[#E2E8F0] bg-[#FAF8F5] text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
+              <tr>
+                <th className="px-4 py-2.5">Öğretmen</th>
+                <th className="px-4 py-2.5">Rol</th>
+                <th className="px-4 py-2.5">Branş</th>
+                <th className="px-4 py-2.5 text-center">Sınıf Dersi</th>
+                <th className="px-4 py-2.5 text-center">Birebir</th>
+                <th className="px-4 py-2.5 text-center">Haftalık Toplam</th>
+                <th className="px-4 py-2.5 text-right">İşlem</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#F1F5F9]">
+              {filteredTeachers.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-6 text-center text-xs text-[#737B86]">
+                    Aramanızla eşleşen öğretmen bulunamadı.
+                  </td>
+                </tr>
+              ) : (
+                filteredTeachers.map((t) => {
+                  const active = selectedTeacher?.id === t.id;
+                  const totalHours = t.schedule.length + t.oneOnOneSlots.length;
+                  return (
+                    <tr
+                      key={t.id}
+                      onClick={() => setSelectedTeacherId(t.id)}
+                      className={`cursor-pointer transition-colors ${
+                        active ? "bg-[#EEF3F9]" : "hover:bg-[#FAF8F5]"
+                      }`}
+                    >
+                      <td className="px-4 py-2.5 font-bold text-[#0D2558]">
+                        {t.name}
+                      </td>
+                      <td className="px-4 py-2.5 text-[#4B5563]">{t.role}</td>
+                      <td className="px-4 py-2.5 font-medium text-[#203B5C]">
+                        {t.branch}
+                      </td>
+                      <td className="px-4 py-2.5 text-center font-semibold text-[#11284B]">
+                        {t.schedule.length} Saat
+                      </td>
+                      <td className="px-4 py-2.5 text-center font-semibold text-[#4C1D95]">
+                        {t.oneOnOneSlots.length} Saat
+                      </td>
+                      <td className="px-4 py-2.5 text-center">
+                        <span className="rounded bg-[#EEF3F9] px-2 py-0.5 font-bold text-[#0D2558]">
+                          {totalHours} Saat/Hf
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 text-right">
+                        <span
+                          className={`inline-block rounded-md px-3 py-1 text-[11px] font-bold ${
+                            active
+                              ? "bg-[#0D2558] text-white"
+                              : "border border-[#DCE4EE] bg-white text-[#203B5C]"
+                          }`}
+                        >
+                          {active ? "Seçili" : "Yönet"}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {selectedTeacher && (
