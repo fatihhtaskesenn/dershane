@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { BarChart3, CalendarDays, CalendarPlus, Check, Clock } from "lucide-react";
+import { BarChart3, CalendarDays, CalendarPlus, Check, Clock, Pencil, Trash2, X } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -12,7 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useCampus, type WeekDay } from "@/lib/campus-store";
+import { useCampus, type TeacherRole, type WeekDay } from "@/lib/campus-store";
 import {
   ALL_PRESET_TIME_SLOTS,
   doesTeacherMatchSubject,
@@ -30,6 +30,8 @@ export default function AdminTeachersPage() {
     teachers,
     students,
     classes,
+    updateTeacher,
+    deleteTeacher,
     addScheduleToTeacher,
     removeTeacherScheduleSlot,
     createOneOnOneSession,
@@ -40,6 +42,15 @@ export default function AdminTeachersPage() {
   const [selectedTeacherId, setSelectedTeacherId] = useState(
     teachers[0]?.id ?? ""
   );
+  const [editingTeacher, setEditingTeacher] = useState(false);
+  const [confirmDeleteTeacher, setConfirmDeleteTeacher] = useState(false);
+  const [editTchName, setEditTchName] = useState("");
+  const [editTchBranch, setEditTchBranch] = useState("");
+  const [editTchRole, setEditTchRole] = useState<TeacherRole>("Branş Öğretmeni");
+  const [editTchUser, setEditTchUser] = useState("");
+  const [editTchPass, setEditTchPass] = useState("");
+  const [editTchEmail, setEditTchEmail] = useState("");
+  const [editTchPhone, setEditTchPhone] = useState("");
 
   // Schedule Form
   const [schDay, setSchDay] = useState<WeekDay>("Pazartesi");
@@ -268,8 +279,96 @@ export default function AdminTeachersPage() {
                   </span>
                 </p>
               </div>
-              <BarChart3 className="h-5 w-5 text-[#135D43]" />
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditTchName(selectedTeacher.name);
+                    setEditTchBranch(selectedTeacher.branch);
+                    setEditTchRole(selectedTeacher.role);
+                    setEditTchUser(selectedTeacher.username);
+                    setEditTchPass(selectedTeacher.password);
+                    setEditTchEmail(selectedTeacher.email);
+                    setEditTchPhone(selectedTeacher.phone);
+                    setEditingTeacher((prev) => !prev);
+                    setConfirmDeleteTeacher(false);
+                  }}
+                  className="inline-flex items-center gap-1 rounded-md border border-[#DCE4EE] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#203B5C] hover:bg-[#F8FAFC]"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  <span>Düzenle</span>
+                </button>
+                {confirmDeleteTeacher ? (
+                  <div className="inline-flex items-center gap-1 rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        deleteTeacher(selectedTeacher.id);
+                        setConfirmDeleteTeacher(false);
+                        setEditingTeacher(false);
+                      }}
+                      className="font-bold text-rose-700 hover:underline"
+                    >
+                      Silmeyi Onayla
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteTeacher(false)}
+                      className="text-[#64748B]"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDeleteTeacher(true)}
+                    className="inline-flex items-center gap-1 rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span>Sil</span>
+                  </button>
+                )}
+                <BarChart3 className="h-5 w-5 text-[#135D43]" />
+              </div>
             </div>
+
+            {editingTeacher && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  updateTeacher(selectedTeacher.id, {
+                    name: editTchName.trim(),
+                    branch: editTchBranch.trim(),
+                    role: editTchRole,
+                    username: editTchUser.trim(),
+                    password: editTchPass.trim(),
+                    email: editTchEmail.trim(),
+                    phone: editTchPhone.trim(),
+                  });
+                  setEditingTeacher(false);
+                }}
+                className="mt-3 grid grid-cols-1 gap-2 rounded-xl border border-[#DCE4EE] bg-[#F8FAFC] p-3.5 text-xs sm:grid-cols-3"
+              >
+                <input type="text" required value={editTchName} onChange={(e) => setEditTchName(e.target.value)} placeholder="Ad Soyad" className="rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5" />
+                <input type="text" required value={editTchBranch} onChange={(e) => setEditTchBranch(e.target.value)} placeholder="Branş" className="rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5" />
+                <select value={editTchRole} onChange={(e) => setEditTchRole(e.target.value as TeacherRole)} className="rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5">
+                  <option value="Branş Öğretmeni">Branş Öğretmeni</option>
+                  <option value="Akademik Danışman">Akademik Danışman</option>
+                  <option value="Rehberlik Uzmanı">Rehberlik Uzmanı</option>
+                  <option value="Zümre Başkanı">Zümre Başkanı</option>
+                  <option value="Etüt Öğretmeni">Etüt Öğretmeni</option>
+                </select>
+                <input type="text" required value={editTchUser} onChange={(e) => setEditTchUser(e.target.value)} placeholder="Kullanıcı Adı" className="rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5" />
+                <input type="text" required value={editTchPass} onChange={(e) => setEditTchPass(e.target.value)} placeholder="Şifre" className="rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5" />
+                <input type="email" value={editTchEmail} onChange={(e) => setEditTchEmail(e.target.value)} placeholder="E-posta" className="rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5" />
+                <input type="text" value={editTchPhone} onChange={(e) => setEditTchPhone(e.target.value)} placeholder="Telefon" className="rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5" />
+                <div className="flex justify-end gap-2 sm:col-span-2">
+                  <button type="button" onClick={() => setEditingTeacher(false)} className="rounded border border-[#DCE4EE] bg-white px-3 py-1.5 font-semibold text-[#64748B]">Vazgeç</button>
+                  <button type="submit" className="rounded bg-[#135D43] px-4 py-1.5 font-semibold text-white">Değişiklikleri Kaydet</button>
+                </div>
+              </form>
+            )}
 
             <div className="mt-4 h-[220px] w-full">
               {mounted && (

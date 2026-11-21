@@ -9,9 +9,11 @@ import {
   Clock,
   Coffee,
   GraduationCap,
+  Pencil,
   Search,
   Trash2,
   UserCheck,
+  X,
 } from "lucide-react";
 import { useCampus, type WeekDay } from "@/lib/campus-store";
 import {
@@ -31,8 +33,15 @@ export default function AdminOneOnOnePage() {
     teachers,
     classes,
     createOneOnOneSession,
+    updateOneOnOneSlot,
     removeOneOnOneSlot,
   } = useCampus();
+
+  const [editingSlotId, setEditingSlotId] = useState<string | null>(null);
+  const [editOoDay, setEditOoDay] = useState<WeekDay>("Salı");
+  const [editOoTime, setEditOoTime] = useState("15:20 - 16:00");
+  const [editOoSubject, setEditOoSubject] = useState("");
+  const [editOoNote, setEditOoNote] = useState("");
 
   const [studentSearch, setStudentSearch] = useState("");
   const [studentClassFilter, setStudentClassFilter] = useState("ALL");
@@ -924,6 +933,157 @@ export default function AdminOneOnOnePage() {
           />
         )}
       </div>
+
+      {/* Active 1-on-1 Sessions List with Edit & Delete CRUD */}
+      {selectedTeacher && (
+        <div className="space-y-3 rounded-2xl border border-[#DDD6FE] bg-white p-5 shadow-xs">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E9EBEE] pb-3">
+            <div>
+              <h3 className="text-base font-bold text-[#4C1D95]">
+                {selectedTeacher.name} — Aktif Birebir Oturumları ({selectedTeacher.oneOnOneSlots.length})
+              </h3>
+              <p className="text-xs text-[#64748B]">
+                Yanlış girilen birebir oturumlarını buradan düzenleyebilir veya silebilirsiniz.
+              </p>
+            </div>
+          </div>
+
+          {selectedTeacher.oneOnOneSlots.length === 0 ? (
+            <p className="py-4 text-center text-xs text-[#64748B]">
+              Bu öğretmen için henüz birebir oturumu bulunmuyor.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
+              {selectedTeacher.oneOnOneSlots.map((slot) => {
+                const isEditing = editingSlotId === slot.id;
+                return (
+                  <div
+                    key={slot.id}
+                    className="rounded-xl border border-[#DDD6FE] border-l-4 border-l-[#7C3AED] bg-[#F5F3FF]/60 p-3.5 text-xs"
+                  >
+                    {isEditing ? (
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          updateOneOnOneSlot(selectedTeacher.id, slot.id, {
+                            day: editOoDay,
+                            time: editOoTime,
+                            subject: editOoSubject.trim(),
+                            note: editOoNote.trim(),
+                          });
+                          setEditingSlotId(null);
+                        }}
+                        className="space-y-2"
+                      >
+                        <div className="flex items-center justify-between font-bold text-[#4C1D95]">
+                          <span>{slot.studentName}</span>
+                          <button
+                            type="button"
+                            onClick={() => setEditingSlotId(null)}
+                            className="text-[#64748B]"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          <select
+                            value={editOoDay}
+                            onChange={(e) => setEditOoDay(e.target.value as WeekDay)}
+                            className="rounded border border-[#DDD6FE] bg-white px-2 py-1"
+                          >
+                            {TIMETABLE_DAYS.map((d) => (
+                              <option key={d} value={d}>{d}</option>
+                            ))}
+                          </select>
+                          <select
+                            value={editOoTime}
+                            onChange={(e) => setEditOoTime(e.target.value)}
+                            className="rounded border border-[#DDD6FE] bg-white px-2 py-1"
+                          >
+                            {ALL_PRESET_TIME_SLOTS.map((t) => (
+                              <option key={t} value={t}>{t}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <input
+                          type="text"
+                          required
+                          value={editOoSubject}
+                          onChange={(e) => setEditOoSubject(e.target.value)}
+                          placeholder="Konu / Ders"
+                          className="w-full rounded border border-[#DDD6FE] bg-white px-2 py-1"
+                        />
+                        <input
+                          type="text"
+                          value={editOoNote}
+                          onChange={(e) => setEditOoNote(e.target.value)}
+                          placeholder="Not..."
+                          className="w-full rounded border border-[#DDD6FE] bg-white px-2 py-1"
+                        />
+                        <div className="flex justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setEditingSlotId(null)}
+                            className="rounded border bg-white px-2.5 py-1 font-semibold text-[#64748B]"
+                          >
+                            İptal
+                          </button>
+                          <button
+                            type="submit"
+                            className="rounded bg-[#7C3AED] px-3 py-1 font-semibold text-white"
+                          >
+                            Güncelle
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="font-bold text-[#4C1D95]">
+                            {slot.studentName} · {slot.day} ({slot.time})
+                          </p>
+                          <p className="mt-0.5 font-semibold text-[#203B5C]">
+                            {slot.subject}
+                          </p>
+                          {slot.note && (
+                            <p className="mt-0.5 text-[11px] text-[#5B21B6]">
+                              {slot.note}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex shrink-0 items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingSlotId(slot.id);
+                              setEditOoDay(slot.day);
+                              setEditOoTime(slot.time);
+                              setEditOoSubject(slot.subject);
+                              setEditOoNote(slot.note);
+                            }}
+                            title="Düzenle"
+                            className="rounded border border-[#DDD6FE] bg-white p-1.5 text-[#4C1D95] hover:bg-[#EDE9FE]"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removeOneOnOneSlot(selectedTeacher.id, slot.id)}
+                            title="Sil"
+                            className="rounded border border-rose-200 bg-white p-1.5 text-rose-600 hover:bg-rose-50"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

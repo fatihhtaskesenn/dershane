@@ -10,8 +10,11 @@ import {
   FileUp,
   Loader2,
   MessageSquareHeart,
+  Pencil,
   Search,
+  Trash2,
   UserCheck,
+  X,
 } from "lucide-react";
 import { useCampus, type WeekDay } from "@/lib/campus-store";
 import { StudentNetCharts } from "@/components/student-net-charts";
@@ -36,9 +39,16 @@ export default function AdminStudentsPage() {
   const {
     students,
     classes,
+    updateStudent,
+    deleteStudent,
     addExamToStudent,
+    deleteStudentExam,
+    removeStudentScheduleSlot,
     addHomeworkToStudent,
+    toggleHomeworkStatus,
+    deleteHomeworkFromStudent,
     addGuidanceToStudent,
+    deleteGuidanceSession,
   } = useCampus();
 
   const [search, setSearch] = useState("");
@@ -47,6 +57,17 @@ export default function AdminStudentsPage() {
     students[0]?.id ?? ""
   );
   const [activeTab, setActiveTab] = useState<DetailTab>("exam");
+  const [editingStudent, setEditingStudent] = useState(false);
+  const [confirmDeleteStudent, setConfirmDeleteStudent] = useState(false);
+  const [editStuName, setEditStuName] = useState("");
+  const [editStuNo, setEditStuNo] = useState("");
+  const [editStuClassId, setEditStuClassId] = useState("");
+  const [editStuTrack, setEditStuTrack] = useState<"Sayısal" | "Eşit Ağırlık" | "Sözel">("Sayısal");
+  const [editStuTarget, setEditStuTarget] = useState("");
+  const [editStuAdvisor, setEditStuAdvisor] = useState("");
+  const [editStuParent, setEditStuParent] = useState("");
+  const [editStuUser, setEditStuUser] = useState("");
+  const [editStuPass, setEditStuPass] = useState("");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -507,8 +528,102 @@ export default function AdminStudentsPage() {
                   <CalendarPlus className="h-3.5 w-3.5" />
                   <span>Birebir Planla</span>
                 </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditStuName(selectedStudent.name);
+                    setEditStuNo(selectedStudent.studentNo);
+                    setEditStuClassId(selectedStudent.classId);
+                    setEditStuTrack(selectedStudent.track);
+                    setEditStuTarget(selectedStudent.target);
+                    setEditStuAdvisor(selectedStudent.advisorName);
+                    setEditStuParent(selectedStudent.parentName);
+                    setEditStuUser(selectedStudent.username);
+                    setEditStuPass(selectedStudent.password);
+                    setEditingStudent((prev) => !prev);
+                    setConfirmDeleteStudent(false);
+                  }}
+                  className="inline-flex items-center gap-1 rounded-md border border-[#DCE4EE] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#203B5C] hover:bg-[#F8FAFC]"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  <span>Düzenle</span>
+                </button>
+                {confirmDeleteStudent ? (
+                  <div className="inline-flex items-center gap-1 rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        deleteStudent(selectedStudent.id);
+                        setConfirmDeleteStudent(false);
+                        setEditingStudent(false);
+                      }}
+                      className="font-bold text-rose-700 hover:underline"
+                    >
+                      Silmeyi Onayla
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteStudent(false)}
+                      className="text-[#64748B] hover:text-[#203B5C]"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDeleteStudent(true)}
+                    className="inline-flex items-center gap-1 rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span>Sil</span>
+                  </button>
+                )}
               </div>
             </div>
+
+            {editingStudent && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  updateStudent(selectedStudent.id, {
+                    name: editStuName.trim(),
+                    studentNo: editStuNo.trim(),
+                    classId: editStuClassId,
+                    track: editStuTrack,
+                    target: editStuTarget.trim(),
+                    advisorName: editStuAdvisor.trim(),
+                    parentName: editStuParent.trim(),
+                    username: editStuUser.trim(),
+                    password: editStuPass.trim(),
+                  });
+                  setEditingStudent(false);
+                }}
+                className="mt-3 grid grid-cols-1 gap-2 rounded-xl border border-[#DCE4EE] bg-[#F8FAFC] p-3.5 text-xs sm:grid-cols-3"
+              >
+                <input type="text" required value={editStuName} onChange={(e) => setEditStuName(e.target.value)} placeholder="Ad Soyad" className="rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5" />
+                <input type="text" required value={editStuNo} onChange={(e) => setEditStuNo(e.target.value)} placeholder="Öğrenci No" className="rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5" />
+                <select value={editStuClassId} onChange={(e) => setEditStuClassId(e.target.value)} className="rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5">
+                  {classes.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                <select value={editStuTrack} onChange={(e) => setEditStuTrack(e.target.value as "Sayısal" | "Eşit Ağırlık" | "Sözel")} className="rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5">
+                  <option value="Sayısal">Sayısal</option>
+                  <option value="Eşit Ağırlık">Eşit Ağırlık</option>
+                  <option value="Sözel">Sözel</option>
+                </select>
+                <input type="text" value={editStuTarget} onChange={(e) => setEditStuTarget(e.target.value)} placeholder="Hedef Bölüm" className="rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5" />
+                <input type="text" value={editStuAdvisor} onChange={(e) => setEditStuAdvisor(e.target.value)} placeholder="Danışman" className="rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5" />
+                <input type="text" value={editStuParent} onChange={(e) => setEditStuParent(e.target.value)} placeholder="Veli Adı" className="rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5" />
+                <input type="text" required value={editStuUser} onChange={(e) => setEditStuUser(e.target.value)} placeholder="Kullanıcı Adı" className="rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5" />
+                <input type="text" required value={editStuPass} onChange={(e) => setEditStuPass(e.target.value)} placeholder="Şifre" className="rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5" />
+                <div className="flex justify-end gap-2 sm:col-span-3">
+                  <button type="button" onClick={() => setEditingStudent(false)} className="rounded border border-[#DCE4EE] bg-white px-3 py-1.5 font-semibold text-[#64748B]">Vazgeç</button>
+                  <button type="submit" className="rounded bg-[#135D43] px-4 py-1.5 font-semibold text-white">Değişiklikleri Kaydet</button>
+                </div>
+              </form>
+            )}
 
             {/* Slim Eye-Catching Weekly Hours & Subject Breakdown Strip */}
             <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2.5 rounded-xl border border-[#CCE3D8] border-l-4 border-l-[#135D43] bg-gradient-to-r from-[#F7FAF8] via-white to-[#F5F3FF]/60 px-3.5 py-2.5 shadow-2xs">
@@ -699,9 +814,44 @@ export default function AdminStudentsPage() {
             </div>
           </div>
 
-          {/* Student's Animated Charts */}
+          {/* Student's Animated Charts & Registered Exams CRUD */}
           {selectedStudent.exams.length > 0 && (
-            <StudentNetCharts exams={selectedStudent.exams} />
+            <div className="space-y-4">
+              <StudentNetCharts exams={selectedStudent.exams} />
+              <div className="rounded-xl border border-[#E9EBEE] bg-white p-4">
+                <p className="mb-2.5 text-xs font-bold text-[#203B5C]">
+                  Kayıtlı Deneme Sonuçları ({selectedStudent.exams.length})
+                </p>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {selectedStudent.exams.map((ex) => (
+                    <div
+                      key={ex.id}
+                      className="flex items-center justify-between gap-2 rounded-lg border border-[#E9EBEE] bg-[#FCFBF8] px-3 py-2 text-xs"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-[#203B5C]">
+                          <span className="mr-1.5 rounded bg-[#203B5C] px-1.5 py-0.5 text-[10px] text-[#E8C483]">
+                            {ex.type}
+                          </span>
+                          {ex.title}
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-[#737B86]">
+                          {ex.date} · <strong className="text-[#135D43]">{ex.totalNet} Net</strong> (#{ex.rank})
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => deleteStudentExam(selectedStudent.id, ex.id)}
+                        title="Deneme Kaydını Sil"
+                        className="shrink-0 rounded p-1.5 text-rose-600 hover:bg-rose-50"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Student's Full Weekly Timetable */}
@@ -716,16 +866,30 @@ export default function AdminStudentsPage() {
               </span>
             </div>
             <WeeklyTimetable
-              items={combinedSchedule.map((item) => ({
-                id: item.id,
-                day: item.day,
-                time: item.time,
-                title: item.subject,
-                subtitle: item.teacher,
-                meta: item.room,
-                badge: item.type,
-                blockPeriod: item.blockPeriod,
-              }))}
+              items={[
+                ...(myClass?.schedule ?? []).map((item) => ({
+                  id: item.id,
+                  day: item.day,
+                  time: item.time,
+                  title: item.subject,
+                  subtitle: item.teacher,
+                  meta: item.room,
+                  badge: item.type,
+                  blockPeriod: item.blockPeriod,
+                })),
+                ...selectedStudent.schedule.map((item) => ({
+                  id: item.id,
+                  day: item.day,
+                  time: item.time,
+                  title: item.subject,
+                  subtitle: item.teacher,
+                  meta: item.room,
+                  badge: item.type,
+                  blockPeriod: item.blockPeriod,
+                  onDelete: () =>
+                    removeStudentScheduleSlot(selectedStudent.id, item.id),
+                })),
+              ]}
             />
           </div>
 
@@ -741,15 +905,34 @@ export default function AdminStudentsPage() {
                 {selectedStudent.homework.map((hw) => (
                   <div
                     key={hw.id}
-                    className="rounded border border-[#E9EBEE] bg-[#FCFBF8] p-3 text-xs"
+                    className="flex items-start justify-between gap-2 rounded border border-[#E9EBEE] bg-[#FCFBF8] p-3 text-xs"
                   >
-                    <p className="font-semibold text-[#9A743E]">
-                      {hw.subject} • {hw.status}
-                    </p>
-                    <p className="mt-0.5 font-semibold text-[#203B5C]">
-                      {hw.title}
-                    </p>
-                    <p className="text-[#737B86]">Teslim: {hw.dueDate}</p>
+                    <div>
+                      <p className="font-semibold text-[#9A743E]">
+                        {hw.subject} • {hw.status}
+                      </p>
+                      <p className="mt-0.5 font-semibold text-[#203B5C]">
+                        {hw.title}
+                      </p>
+                      <p className="text-[#737B86]">Teslim: {hw.dueDate}</p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => toggleHomeworkStatus(selectedStudent.id, hw.id)}
+                        className="rounded border border-[#DCE4EE] bg-white px-2 py-1 text-[10px] font-semibold text-[#135D43] hover:bg-[#EAF6F0]"
+                      >
+                        {hw.status === "Tamamlandı" ? "Bekliyor Yap" : "Tamamla"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteHomeworkFromStudent(selectedStudent.id, hw.id)}
+                        title="Ödevi Sil"
+                        className="rounded p-1 text-rose-600 hover:bg-rose-50"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -767,15 +950,25 @@ export default function AdminStudentsPage() {
                 {selectedStudent.guidanceSessions.map((gs) => (
                   <div
                     key={gs.id}
-                    className="rounded border border-[#E9EBEE] bg-[#FCFBF8] p-3 text-xs"
+                    className="flex items-start justify-between gap-2 rounded border border-[#E9EBEE] bg-[#FCFBF8] p-3 text-xs"
                   >
-                    <p className="font-semibold text-[#135D43]">
-                      {gs.date} • {gs.time}
-                    </p>
-                    <p className="mt-0.5 font-semibold text-[#203B5C]">
-                      {gs.topic}
-                    </p>
-                    <p className="mt-0.5 text-[#737B86]">{gs.note}</p>
+                    <div>
+                      <p className="font-semibold text-[#135D43]">
+                        {gs.date} • {gs.time}
+                      </p>
+                      <p className="mt-0.5 font-semibold text-[#203B5C]">
+                        {gs.topic}
+                      </p>
+                      <p className="mt-0.5 text-[#737B86]">{gs.note}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => deleteGuidanceSession(selectedStudent.id, gs.id)}
+                      title="Görüşmeyi Sil"
+                      className="shrink-0 rounded p-1 text-rose-600 hover:bg-rose-50"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 ))}
               </div>

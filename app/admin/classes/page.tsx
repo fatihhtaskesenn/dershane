@@ -6,10 +6,13 @@ import {
   Check,
   Layers,
   MapPin,
+  Pencil,
   Plus,
   Search,
+  Trash2,
   UserPlus,
   Users,
+  X,
 } from "lucide-react";
 import {
   useCampus,
@@ -34,6 +37,8 @@ export default function AdminClassesPage() {
     students,
     teachers,
     addClass,
+    updateClass,
+    deleteClass,
     assignStudentToClass,
     addScheduleToClass,
     addBulkScheduleToClass,
@@ -71,6 +76,11 @@ export default function AdminClassesPage() {
     "morning"
   );
   const [denemeTitle, setDenemeTitle] = useState("TYT Genel Deneme");
+  const [editingClass, setEditingClass] = useState(false);
+  const [confirmDeleteClass, setConfirmDeleteClass] = useState(false);
+  const [editClsName, setEditClsName] = useState("");
+  const [editClsTrack, setEditClsTrack] = useState<ClassroomRecord["track"]>("Sayısal");
+  const [editClsRoom, setEditClsRoom] = useState("");
 
   const selectedClass =
     classes.find((c) => c.id === selectedClassId) ?? classes[0];
@@ -525,6 +535,51 @@ export default function AdminClassesPage() {
                   {classStudents.length} Kişi
                 </p>
               </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditClsName(selectedClass.name);
+                  setEditClsTrack(selectedClass.track);
+                  setEditClsRoom(selectedClass.room);
+                  setEditingClass((prev) => !prev);
+                  setConfirmDeleteClass(false);
+                }}
+                className="inline-flex items-center gap-1 rounded-lg border border-[#DCE4EE] bg-white px-3 py-2 text-xs font-semibold text-[#11284B] hover:bg-[#F8FAFC]"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                <span>Sınıfı Düzenle</span>
+              </button>
+              {confirmDeleteClass ? (
+                <div className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      deleteClass(selectedClass.id);
+                      setConfirmDeleteClass(false);
+                      setEditingClass(false);
+                    }}
+                    className="font-bold text-rose-700 hover:underline"
+                  >
+                    Silmeyi Onayla
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDeleteClass(false)}
+                    className="text-[#64748B]"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmDeleteClass(true)}
+                  className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span>Sınıfı Sil</span>
+                </button>
+              )}
               <div className="rounded-xl border border-[#11284B]/10 bg-[#FAF8F5] px-4 py-2.5 text-center">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
                   Haftalık Ders
@@ -535,6 +590,34 @@ export default function AdminClassesPage() {
               </div>
             </div>
           </div>
+
+          {editingClass && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                updateClass(selectedClass.id, {
+                  name: editClsName.trim(),
+                  track: editClsTrack,
+                  room: editClsRoom.trim(),
+                });
+                setEditingClass(false);
+              }}
+              className="grid grid-cols-1 gap-2 rounded-xl border border-[#DCE4EE] bg-[#F8FAFC] p-4 text-xs sm:grid-cols-4"
+            >
+              <input type="text" required value={editClsName} onChange={(e) => setEditClsName(e.target.value)} placeholder="Sınıf Adı" className="rounded border border-[#DCE4EE] bg-white px-3 py-2" />
+              <select value={editClsTrack} onChange={(e) => setEditClsTrack(e.target.value as ClassroomRecord["track"])} className="rounded border border-[#DCE4EE] bg-white px-3 py-2">
+                <option value="Sayısal">Sayısal</option>
+                <option value="Eşit Ağırlık">Eşit Ağırlık</option>
+                <option value="Sözel">Sözel</option>
+                <option value="YKS Hazırlık">YKS Hazırlık</option>
+              </select>
+              <input type="text" required value={editClsRoom} onChange={(e) => setEditClsRoom(e.target.value)} placeholder="Derslik" className="rounded border border-[#DCE4EE] bg-white px-3 py-2" />
+              <div className="flex gap-2">
+                <button type="submit" className="flex-1 rounded bg-[#135D43] px-3 py-2 font-semibold text-white">Kaydet</button>
+                <button type="button" onClick={() => setEditingClass(false)} className="rounded border border-[#DCE4EE] bg-white px-3 py-2 font-semibold text-[#64748B]">İptal</button>
+              </div>
+            </form>
+          )}
 
           {/* Class Students & Quick Assign */}
           <div className="space-y-4 rounded-xl border border-[#11284B]/10 bg-[#FAF8F5]/70 p-5">

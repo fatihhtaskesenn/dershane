@@ -1396,7 +1396,38 @@ interface CampusContextValue {
   addTeacher: (
     payload: Omit<TeacherAccount, "id" | "schedule" | "oneOnOneSlots">
   ) => string;
+  updateStudent: (
+    studentId: string,
+    patch: Partial<
+      Pick<
+        StudentAccount,
+        | "name"
+        | "studentNo"
+        | "classId"
+        | "className"
+        | "track"
+        | "target"
+        | "advisorName"
+        | "parentName"
+        | "username"
+        | "password"
+        | "attendance"
+      >
+    >
+  ) => void;
+  deleteStudent: (studentId: string) => void;
+  updateTeacher: (
+    teacherId: string,
+    patch: Partial<
+      Pick<
+        TeacherAccount,
+        "name" | "role" | "branch" | "username" | "password" | "email" | "phone"
+      >
+    >
+  ) => void;
+  deleteTeacher: (teacherId: string) => void;
   addExamToStudent: (studentId: string, exam: Omit<StudentExamRecord, "id">) => void;
+  deleteStudentExam: (studentId: string, examId: string) => void;
   addBulkExamsToStudents: (
     entries: { studentId: string; exam: Omit<StudentExamRecord, "id"> }[]
   ) => void;
@@ -1404,25 +1435,34 @@ interface CampusContextValue {
     studentId: string,
     slot: Omit<StudentScheduleSlot, "id">
   ) => void;
+  removeStudentScheduleSlot: (studentId: string, slotId: string) => void;
   addHomeworkToStudent: (
     studentId: string,
     hw: Omit<HomeworkItem, "id">
   ) => void;
   toggleHomeworkStatus: (studentId: string, hwId: string) => void;
+  deleteHomeworkFromStudent: (studentId: string, hwId: string) => void;
   addStudyPlanToStudent: (
     studentId: string,
     plan: Omit<StudyPlanItem, "id">
   ) => void;
   toggleStudyPlanItem: (studentId: string, planId: string) => void;
+  deleteStudyPlanItem: (studentId: string, planId: string) => void;
   addGuidanceToStudent: (
     studentId: string,
     session: Omit<GuidanceSession, "id">
   ) => void;
+  deleteGuidanceSession: (studentId: string, sessionId: string) => void;
   addPersonalNote: (studentId: string, title: string, content: string) => void;
   deletePersonalNote: (studentId: string, noteId: string) => void;
   addScheduleToTeacher: (
     teacherId: string,
     slot: Omit<TeacherScheduleSlot, "id">
+  ) => void;
+  updateTeacherScheduleSlot: (
+    teacherId: string,
+    slotId: string,
+    patch: Partial<Omit<TeacherScheduleSlot, "id">>
   ) => void;
   removeTeacherScheduleSlot: (teacherId: string, slotId: string) => void;
   createOneOnOneSession: (
@@ -1433,15 +1473,30 @@ interface CampusContextValue {
     subject: string,
     note: string
   ) => void;
+  updateOneOnOneSlot: (
+    teacherId: string,
+    slotId: string,
+    patch: Partial<Pick<OneOnOneSlot, "day" | "time" | "subject" | "note">>
+  ) => void;
   removeOneOnOneSlot: (teacherId: string, slotId: string) => void;
   addClass: (
     payload: Omit<ClassroomRecord, "id" | "schedule">,
     initialStudentIds?: string[]
   ) => string;
+  updateClass: (
+    classId: string,
+    patch: Partial<Pick<ClassroomRecord, "name" | "track" | "room">>
+  ) => void;
+  deleteClass: (classId: string) => void;
   assignStudentToClass: (studentId: string, classId: string) => void;
   addScheduleToClass: (
     classId: string,
     slot: Omit<StudentScheduleSlot, "id">
+  ) => void;
+  updateClassScheduleSlot: (
+    classId: string,
+    slotId: string,
+    patch: Partial<Omit<StudentScheduleSlot, "id">>
   ) => void;
   addBulkScheduleToClass: (
     classId: string,
@@ -1456,6 +1511,7 @@ interface CampusContextValue {
     msg: Omit<ContactMessage, "id" | "createdAt" | "status">
   ) => void;
   toggleContactMessageStatus: (id: string) => void;
+  deleteContactMessage: (id: string) => void;
   updateSiteContent: (patch: Partial<SiteContentConfig>) => void;
   updatePackage: (slug: string, patch: Partial<CoursePackage>) => void;
 }
@@ -1621,6 +1677,323 @@ export function CampusProvider({ children }: { children: React.ReactNode }) {
       ],
     }));
     return id;
+  };
+
+  const updateStudent: CampusContextValue["updateStudent"] = (
+    studentId,
+    patch
+  ) => {
+    persist((prev) => {
+      const targetClass = patch.classId
+        ? prev.classes.find((c) => c.id === patch.classId)
+        : undefined;
+      return {
+        ...prev,
+        students: prev.students.map((s) =>
+          s.id === studentId
+            ? {
+                ...s,
+                ...patch,
+                className: targetClass
+                  ? targetClass.name
+                  : patch.className ?? s.className,
+              }
+            : s
+        ),
+        teachers: prev.teachers.map((t) => ({
+          ...t,
+          oneOnOneSlots: t.oneOnOneSlots.map((oo) =>
+            oo.studentId === studentId && patch.name
+              ? { ...oo, studentName: patch.name }
+              : oo
+          ),
+        })),
+      };
+    });
+  };
+
+  const deleteStudent: CampusContextValue["deleteStudent"] = (studentId) => {
+    persist((prev) => {
+      const remaining = prev.students.filter((s) => s.id !== studentId);
+      return {
+        ...prev,
+        students: remaining,
+        activeStudentId:
+          prev.activeStudentId === studentId
+            ? remaining[0]?.id ?? ""
+            : prev.activeStudentId,
+        teachers: prev.teachers.map((t) => ({
+          ...t,
+          oneOnOneSlots: t.oneOnOneSlots.filter(
+            (oo) => oo.studentId !== studentId
+          ),
+        })),
+      };
+    });
+  };
+
+  const updateTeacher: CampusContextValue["updateTeacher"] = (
+    teacherId,
+    patch
+  ) => {
+    persist((prev) => {
+      const oldTeacher = prev.teachers.find((t) => t.id === teacherId);
+      const oldName = oldTeacher?.name;
+      const newName = patch.name;
+      return {
+        ...prev,
+        teachers: prev.teachers.map((t) =>
+          t.id === teacherId ? { ...t, ...patch } : t
+        ),
+        classes:
+          oldName && newName && oldName !== newName
+            ? prev.classes.map((c) => ({
+                ...c,
+                schedule: c.schedule.map((slot) =>
+                  slot.teacher === oldName ? { ...slot, teacher: newName } : slot
+                ),
+              }))
+            : prev.classes,
+      };
+    });
+  };
+
+  const deleteTeacher: CampusContextValue["deleteTeacher"] = (teacherId) => {
+    persist((prev) => {
+      const remaining = prev.teachers.filter((t) => t.id !== teacherId);
+      return {
+        ...prev,
+        teachers: remaining,
+        activeTeacherId:
+          prev.activeTeacherId === teacherId
+            ? remaining[0]?.id ?? ""
+            : prev.activeTeacherId,
+      };
+    });
+  };
+
+  const deleteStudentExam: CampusContextValue["deleteStudentExam"] = (
+    studentId,
+    examId
+  ) => {
+    persist((prev) => ({
+      ...prev,
+      students: prev.students.map((s) =>
+        s.id === studentId
+          ? { ...s, exams: s.exams.filter((e) => e.id !== examId) }
+          : s
+      ),
+    }));
+  };
+
+  const removeStudentScheduleSlot: CampusContextValue["removeStudentScheduleSlot"] = (
+    studentId,
+    slotId
+  ) => {
+    persist((prev) => ({
+      ...prev,
+      students: prev.students.map((s) =>
+        s.id === studentId
+          ? { ...s, schedule: s.schedule.filter((slot) => slot.id !== slotId) }
+          : s
+      ),
+    }));
+  };
+
+  const deleteHomeworkFromStudent: CampusContextValue["deleteHomeworkFromStudent"] = (
+    studentId,
+    hwId
+  ) => {
+    persist((prev) => ({
+      ...prev,
+      students: prev.students.map((s) =>
+        s.id === studentId
+          ? { ...s, homework: s.homework.filter((hw) => hw.id !== hwId) }
+          : s
+      ),
+    }));
+  };
+
+  const deleteStudyPlanItem: CampusContextValue["deleteStudyPlanItem"] = (
+    studentId,
+    planId
+  ) => {
+    persist((prev) => ({
+      ...prev,
+      students: prev.students.map((s) =>
+        s.id === studentId
+          ? { ...s, studyPlan: s.studyPlan.filter((p) => p.id !== planId) }
+          : s
+      ),
+    }));
+  };
+
+  const deleteGuidanceSession: CampusContextValue["deleteGuidanceSession"] = (
+    studentId,
+    sessionId
+  ) => {
+    persist((prev) => ({
+      ...prev,
+      students: prev.students.map((s) =>
+        s.id === studentId
+          ? {
+              ...s,
+              guidanceSessions: s.guidanceSessions.filter(
+                (g) => g.id !== sessionId
+              ),
+            }
+          : s
+      ),
+    }));
+  };
+
+  const updateTeacherScheduleSlot: CampusContextValue["updateTeacherScheduleSlot"] = (
+    teacherId,
+    slotId,
+    patch
+  ) => {
+    persist((prev) => ({
+      ...prev,
+      teachers: prev.teachers.map((t) =>
+        t.id === teacherId
+          ? {
+              ...t,
+              schedule: t.schedule.map((slot) =>
+                slot.id === slotId ? { ...slot, ...patch } : slot
+              ),
+            }
+          : t
+      ),
+    }));
+  };
+
+  const updateOneOnOneSlot: CampusContextValue["updateOneOnOneSlot"] = (
+    teacherId,
+    slotId,
+    patch
+  ) => {
+    persist((prev) => {
+      const teacher = prev.teachers.find((t) => t.id === teacherId);
+      const oldSlot = teacher?.oneOnOneSlots.find((o) => o.id === slotId);
+      if (!teacher || !oldSlot) return prev;
+      const nextSubject = (patch.subject ?? oldSlot.subject)
+        .replace(/\s*\(Birebir\)\s*$/i, "")
+        .trim();
+      const nextDay = patch.day ?? oldSlot.day;
+      const nextTime = (patch.time ?? oldSlot.time).trim();
+      const nextNote = patch.note ?? oldSlot.note;
+
+      return {
+        ...prev,
+        teachers: prev.teachers.map((t) =>
+          t.id === teacherId
+            ? {
+                ...t,
+                oneOnOneSlots: t.oneOnOneSlots.map((o) =>
+                  o.id === slotId
+                    ? {
+                        ...o,
+                        day: nextDay,
+                        time: nextTime,
+                        subject: nextSubject,
+                        note: nextNote,
+                      }
+                    : o
+                ),
+              }
+            : t
+        ),
+        students: prev.students.map((s) =>
+          s.id === oldSlot.studentId
+            ? {
+                ...s,
+                schedule: s.schedule.map((ss) =>
+                  ss.type === "Etüt" &&
+                  ss.day === oldSlot.day &&
+                  ss.time === oldSlot.time &&
+                  ss.teacher === teacher.name
+                    ? {
+                        ...ss,
+                        day: nextDay,
+                        time: nextTime,
+                        subject: nextSubject,
+                      }
+                    : ss
+                ),
+              }
+            : s
+        ),
+      };
+    });
+  };
+
+  const updateClass: CampusContextValue["updateClass"] = (classId, patch) => {
+    persist((prev) => {
+      const oldClass = prev.classes.find((c) => c.id === classId);
+      const oldName = oldClass?.name;
+      const newName = patch.name?.trim();
+      return {
+        ...prev,
+        classes: prev.classes.map((c) =>
+          c.id === classId
+            ? { ...c, ...patch, name: newName || c.name }
+            : c
+        ),
+        students:
+          oldName && newName && oldName !== newName
+            ? prev.students.map((s) =>
+                s.classId === classId ? { ...s, className: newName } : s
+              )
+            : prev.students,
+        teachers:
+          oldName && newName && oldName !== newName
+            ? prev.teachers.map((t) => ({
+                ...t,
+                schedule: t.schedule.map((slot) =>
+                  slot.classGroup === oldName
+                    ? { ...slot, classGroup: newName }
+                    : slot
+                ),
+              }))
+            : prev.teachers,
+      };
+    });
+  };
+
+  const deleteClass: CampusContextValue["deleteClass"] = (classId) => {
+    persist((prev) => ({
+      ...prev,
+      classes: prev.classes.filter((c) => c.id !== classId),
+    }));
+  };
+
+  const updateClassScheduleSlot: CampusContextValue["updateClassScheduleSlot"] = (
+    classId,
+    slotId,
+    patch
+  ) => {
+    persist((prev) => ({
+      ...prev,
+      classes: prev.classes.map((c) =>
+        c.id === classId
+          ? {
+              ...c,
+              schedule: c.schedule.map((slot) =>
+                slot.id === slotId ? { ...slot, ...patch } : slot
+              ),
+            }
+          : c
+      ),
+    }));
+  };
+
+  const deleteContactMessage: CampusContextValue["deleteContactMessage"] = (
+    id
+  ) => {
+    persist((prev) => ({
+      ...prev,
+      contactMessages: prev.contactMessages.filter((m) => m.id !== id),
+    }));
   };
 
   const addExamToStudent: CampusContextValue["addExamToStudent"] = (
@@ -2276,30 +2649,45 @@ export function CampusProvider({ children }: { children: React.ReactNode }) {
         loginAdmin,
         logoutAdmin,
         addStudent,
+        updateStudent,
+        deleteStudent,
         addTeacher,
+        updateTeacher,
+        deleteTeacher,
         addExamToStudent,
+        deleteStudentExam,
         addBulkExamsToStudents,
         addScheduleToStudent,
+        removeStudentScheduleSlot,
         addHomeworkToStudent,
         toggleHomeworkStatus,
+        deleteHomeworkFromStudent,
         addStudyPlanToStudent,
         toggleStudyPlanItem,
+        deleteStudyPlanItem,
         addGuidanceToStudent,
+        deleteGuidanceSession,
         addPersonalNote,
         deletePersonalNote,
         addScheduleToTeacher,
+        updateTeacherScheduleSlot,
         removeTeacherScheduleSlot,
         createOneOnOneSession,
+        updateOneOnOneSlot,
         removeOneOnOneSlot,
         addClass,
+        updateClass,
+        deleteClass,
         assignStudentToClass,
         addScheduleToClass,
+        updateClassScheduleSlot,
         addBulkScheduleToClass,
         removeClassScheduleSlot,
         addAnnouncement,
         deleteAnnouncement,
         addContactMessage,
         toggleContactMessageStatus,
+        deleteContactMessage,
         updateSiteContent,
         updatePackage,
       }}
