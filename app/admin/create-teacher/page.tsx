@@ -23,11 +23,9 @@ const TEACHER_BRANCHES = [
 ] as const;
 
 const TEACHER_ROLES: TeacherRole[] = [
-  "Branş Öğretmeni",
-  "Akademik Danışman",
-  "Rehberlik Uzmanı",
-  "Zümre Başkanı",
-  "Etüt Öğretmeni",
+  "Branş Hocası",
+  "Rehberlik Hocası",
+  "Etüt Nöbetçisi",
 ];
 
 function toSlugUsername(fullName: string) {
@@ -49,7 +47,7 @@ export default function AdminCreateTeacherPage() {
   const { teachers, addTeacher } = useCampus();
 
   const [tchName, setTchName] = useState("");
-  const [tchRole, setTchRole] = useState<TeacherRole>("Branş Öğretmeni");
+  const [tchRole, setTchRole] = useState<TeacherRole>("Branş Hocası");
   const [tchBranch, setTchBranch] = useState("Matematik & Geometri");
   const [tchUsername, setTchUsername] = useState("");
   const [tchUsernameEdited, setTchUsernameEdited] = useState(false);

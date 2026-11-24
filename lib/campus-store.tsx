@@ -143,11 +143,26 @@ export interface OneOnOneSlot {
 }
 
 export type TeacherRole =
+  | "Branş Hocası"
+  | "Rehberlik Hocası"
+  | "Etüt Nöbetçisi"
   | "Branş Öğretmeni"
   | "Akademik Danışman"
   | "Rehberlik Uzmanı"
   | "Zümre Başkanı"
   | "Etüt Öğretmeni";
+
+export function isGuidanceRole(teacher?: { role?: string; branch?: string } | null): boolean {
+  if (!teacher) return false;
+  const r = (teacher.role ?? "").toLowerCase();
+  const b = (teacher.branch ?? "").toLowerCase();
+  return (
+    r.includes("rehberlik") ||
+    r.includes("danışman") ||
+    b.includes("rehberlik") ||
+    b.includes("danışman")
+  );
+}
 
 export interface TeacherAccount {
   id: string;

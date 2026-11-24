@@ -459,11 +459,9 @@ export default function AdminTeachersPage() {
                 <input type="text" required value={editTchName} onChange={(e) => setEditTchName(e.target.value)} placeholder="Ad Soyad" className="rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5" />
                 <input type="text" required value={editTchBranch} onChange={(e) => setEditTchBranch(e.target.value)} placeholder="Branş" className="rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5" />
                 <select value={editTchRole} onChange={(e) => setEditTchRole(e.target.value as TeacherRole)} className="rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5">
-                  <option value="Branş Öğretmeni">Branş Öğretmeni</option>
-                  <option value="Akademik Danışman">Akademik Danışman</option>
-                  <option value="Rehberlik Uzmanı">Rehberlik Uzmanı</option>
-                  <option value="Zümre Başkanı">Zümre Başkanı</option>
-                  <option value="Etüt Öğretmeni">Etüt Öğretmeni</option>
+                  <option value="Branş Hocası">Branş Hocası</option>
+                  <option value="Rehberlik Hocası">Rehberlik Hocası</option>
+                  <option value="Etüt Nöbetçisi">Etüt Nöbetçisi</option>
                 </select>
                 <input type="text" required value={editTchUser} onChange={(e) => setEditTchUser(e.target.value)} placeholder="Kullanıcı Adı" className="rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5" />
                 <input type="text" required value={editTchPass} onChange={(e) => setEditTchPass(e.target.value)} placeholder="Şifre" className="rounded border border-[#DCE4EE] bg-white px-2.5 py-1.5" />

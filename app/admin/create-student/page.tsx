@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { Plus, Search, UserPlus } from "lucide-react";
-import { useCampus, type StudentAccount } from "@/lib/campus-store";
+import { isGuidanceRole, useCampus, type StudentAccount } from "@/lib/campus-store";
 
 function toSlugUsername(fullName: string) {
   return fullName
@@ -36,16 +36,8 @@ export default function AdminCreateStudentPage() {
   const [stuPhone, setStuPhone] = useState("+90 532 000 00 00");
   const [stuTarget, setStuTarget] = useState("");
   const [stuClassId, setStuClassId] = useState(classes[0]?.id ?? "");
-  const guidanceTeachers = teachers.filter(
-    (t) =>
-      t.role === "Rehberlik Uzmanı" ||
-      t.role === "Akademik Danışman" ||
-      t.branch.toLowerCase().includes("rehberlik") ||
-      t.branch.toLowerCase().includes("danışman")
-  );
-  const branchTeachers = teachers.filter(
-    (t) => !guidanceTeachers.some((g) => g.id === t.id)
-  );
+  const guidanceTeachers = teachers.filter((t) => isGuidanceRole(t));
+  const branchTeachers = teachers.filter((t) => !isGuidanceRole(t));
 
   const [stuBranchTeacherId, setStuBranchTeacherId] = useState(
     branchTeachers[0]?.id ?? ""

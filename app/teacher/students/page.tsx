@@ -18,7 +18,7 @@ import {
   UserCheck,
   Users,
 } from "lucide-react";
-import { useCampus, type StudentExamRecord } from "@/lib/campus-store";
+import { isGuidanceRole, useCampus, type StudentExamRecord } from "@/lib/campus-store";
 import { StudentNetCharts } from "@/components/student-net-charts";
 import { PRESET_SUBJECTS, WeeklyTimetable } from "@/components/WeeklyTimetable";
 
@@ -75,11 +75,7 @@ export default function TeacherStudentsPage() {
   const [hwTitle, setHwTitle] = useState("");
   const [hwDueDate, setHwDueDate] = useState("2026-11-28");
 
-  const isGuidanceTeacher =
-    activeTeacher.role === "Rehberlik Uzmanı" ||
-    activeTeacher.role === "Akademik Danışman" ||
-    activeTeacher.branch.toLowerCase().includes("rehberlik") ||
-    activeTeacher.branch.toLowerCase().includes("danışman");
+  const isGuidanceTeacher = isGuidanceRole(activeTeacher);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
