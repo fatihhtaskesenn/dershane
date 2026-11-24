@@ -1520,6 +1520,10 @@ interface CampusContextValue {
     slots: Omit<StudentScheduleSlot, "id">[]
   ) => void;
   clearClassSchedule: (classId: string) => void;
+  replaceAllClassSchedules: (
+    entries: { classId: string; slots: Omit<StudentScheduleSlot, "id">[] }[],
+    preserveExamBlocks?: boolean
+  ) => void;
   removeClassScheduleSlot: (classId: string, slotId: string) => void;
   addAnnouncement: (
     ann: Omit<CampusAnnouncement, "id" | "date">
@@ -2586,6 +2590,69 @@ export function CampusProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const replaceAllClassSchedules: CampusContextValue["replaceAllClassSchedules"] = (
+    entries,
+    preserveExamBlocks = true
+  ) => {
+    const base = Date.now();
+    persist((prev) => {
+      const entryMap = new Map(entries.map((e) => [e.classId, e.slots]));
+      const replacedClassNames = new Set(
+        prev.classes.filter((c) => entryMap.has(c.id)).map((c) => c.name)
+      );
+
+      const nextClasses = prev.classes.map((cls) => {
+        const rawSlots = entryMap.get(cls.id);
+        if (!rawSlots) return cls;
+        const keptBlocks = preserveExamBlocks
+          ? cls.schedule.filter((s) => Boolean(s.blockPeriod))
+          : [];
+        const mapped = rawSlots.map((slot, idx) => ({
+          ...slot,
+          time: slot.time.trim(),
+          id: `cs-${base}-${cls.id}-${idx}`,
+        }));
+        return {
+          ...cls,
+          schedule: [...keptBlocks, ...mapped],
+        };
+      });
+
+      const nextTeachers = prev.teachers.map((t) => {
+        // Keep lessons in classes NOT included in this bulk replacement
+        const keptTeacherSlots = t.schedule.filter(
+          (ts) => !replacedClassNames.has(ts.classGroup)
+        );
+        const addedTeacherSlots: TeacherScheduleSlot[] = [];
+        nextClasses.forEach((cls) => {
+          if (!entryMap.has(cls.id)) return;
+          cls.schedule.forEach((slot, idx) => {
+            if (!slot.blockPeriod && slot.teacher === t.name) {
+              addedTeacherSlots.push({
+                id: `ts-${base}-${t.id}-${cls.id}-${idx}`,
+                day: slot.day,
+                time: slot.time,
+                classGroup: cls.name,
+                subject: slot.subject,
+                room: slot.room || cls.room,
+              });
+            }
+          });
+        });
+        return {
+          ...t,
+          schedule: [...keptTeacherSlots, ...addedTeacherSlots],
+        };
+      });
+
+      return {
+        ...prev,
+        classes: nextClasses,
+        teachers: nextTeachers,
+      };
+    });
+  };
+
   const removeClassScheduleSlot = (classId: string, slotId: string) => {
     persist((prev) => {
       const cls = prev.classes.find((c) => c.id === classId);
@@ -2756,6 +2823,7 @@ export function CampusProvider({ children }: { children: React.ReactNode }) {
         updateClassScheduleSlot,
         addBulkScheduleToClass,
         clearClassSchedule,
+        replaceAllClassSchedules,
         removeClassScheduleSlot,
         addAnnouncement,
         deleteAnnouncement,

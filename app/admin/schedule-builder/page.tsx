@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   AlertTriangle,
   CalendarDays,
@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import {
   useCampus,
+  type ClassroomRecord,
   type StudentScheduleSlot,
   type TeacherAccount,
   type WeekDay,
@@ -22,7 +23,6 @@ import {
   doesTeacherMatchSubject,
   EXAM_LEVELS,
   PRESET_SUBJECTS,
-  TIMETABLE_DAYS,
   WeeklyTimetable,
 } from "@/components/WeeklyTimetable";
 
@@ -42,84 +42,126 @@ function getMatchingTeachers(teachers: TeacherAccount[], subject: string) {
 
 function buildDefaultCurriculum(
   track: string,
-  teachers: TeacherAccount[]
+  teachers: TeacherAccount[],
+  prefix: string
 ): CurriculumRow[] {
   const pickTeacher = (sub: string) =>
     getMatchingTeachers(teachers, sub)[0]?.name ?? teachers[0]?.name ?? "";
 
   if (track === "Eşit Ağırlık") {
     return [
-      { rowId: "r-1", subject: "Matematik", examLevel: "TYT / AYT", teacherName: pickTeacher("Matematik"), weeklyHours: 6, type: "Konu Anlatımı" },
-      { rowId: "r-2", subject: "Türkçe", examLevel: "TYT", teacherName: pickTeacher("Türkçe"), weeklyHours: 4, type: "Konu Anlatımı" },
-      { rowId: "r-3", subject: "Edebiyat", examLevel: "AYT", teacherName: pickTeacher("Edebiyat"), weeklyHours: 4, type: "Konu Anlatımı" },
-      { rowId: "r-4", subject: "Tarih", examLevel: "TYT / AYT", teacherName: pickTeacher("Tarih"), weeklyHours: 3, type: "Konu Anlatımı" },
-      { rowId: "r-5", subject: "Coğrafya", examLevel: "TYT / AYT", teacherName: pickTeacher("Coğrafya"), weeklyHours: 2, type: "Konu Anlatımı" },
-      { rowId: "r-6", subject: "Geometri", examLevel: "TYT / AYT", teacherName: pickTeacher("Geometri"), weeklyHours: 2, type: "Soru Çözümü" },
+      { rowId: `${prefix}-1`, subject: "Matematik", examLevel: "TYT / AYT", teacherName: pickTeacher("Matematik"), weeklyHours: 6, type: "Konu Anlatımı" },
+      { rowId: `${prefix}-2`, subject: "Türkçe", examLevel: "TYT", teacherName: pickTeacher("Türkçe"), weeklyHours: 4, type: "Konu Anlatımı" },
+      { rowId: `${prefix}-3`, subject: "Edebiyat", examLevel: "AYT", teacherName: pickTeacher("Edebiyat"), weeklyHours: 4, type: "Konu Anlatımı" },
+      { rowId: `${prefix}-4`, subject: "Tarih", examLevel: "TYT / AYT", teacherName: pickTeacher("Tarih"), weeklyHours: 3, type: "Konu Anlatımı" },
+      { rowId: `${prefix}-5`, subject: "Coğrafya", examLevel: "TYT / AYT", teacherName: pickTeacher("Coğrafya"), weeklyHours: 2, type: "Konu Anlatımı" },
+      { rowId: `${prefix}-6`, subject: "Geometri", examLevel: "TYT / AYT", teacherName: pickTeacher("Geometri"), weeklyHours: 2, type: "Soru Çözümü" },
     ];
   }
 
   if (track === "Sözel") {
     return [
-      { rowId: "r-1", subject: "Edebiyat", examLevel: "AYT", teacherName: pickTeacher("Edebiyat"), weeklyHours: 6, type: "Konu Anlatımı" },
-      { rowId: "r-2", subject: "Türkçe", examLevel: "TYT", teacherName: pickTeacher("Türkçe"), weeklyHours: 4, type: "Konu Anlatımı" },
-      { rowId: "r-3", subject: "Tarih", examLevel: "TYT / AYT", teacherName: pickTeacher("Tarih"), weeklyHours: 4, type: "Konu Anlatımı" },
-      { rowId: "r-4", subject: "Coğrafya", examLevel: "TYT / AYT", teacherName: pickTeacher("Coğrafya"), weeklyHours: 3, type: "Konu Anlatımı" },
-      { rowId: "r-5", subject: "Felsefe", examLevel: "TYT / AYT", teacherName: pickTeacher("Felsefe"), weeklyHours: 2, type: "Konu Anlatımı" },
-      { rowId: "r-6", subject: "Din Kültürü", examLevel: "TYT / AYT", teacherName: pickTeacher("Din Kültürü"), weeklyHours: 2, type: "Konu Anlatımı" },
+      { rowId: `${prefix}-1`, subject: "Edebiyat", examLevel: "AYT", teacherName: pickTeacher("Edebiyat"), weeklyHours: 6, type: "Konu Anlatımı" },
+      { rowId: `${prefix}-2`, subject: "Türkçe", examLevel: "TYT", teacherName: pickTeacher("Türkçe"), weeklyHours: 4, type: "Konu Anlatımı" },
+      { rowId: `${prefix}-3`, subject: "Tarih", examLevel: "TYT / AYT", teacherName: pickTeacher("Tarih"), weeklyHours: 4, type: "Konu Anlatımı" },
+      { rowId: `${prefix}-4`, subject: "Coğrafya", examLevel: "TYT / AYT", teacherName: pickTeacher("Coğrafya"), weeklyHours: 3, type: "Konu Anlatımı" },
+      { rowId: `${prefix}-5`, subject: "Felsefe", examLevel: "TYT / AYT", teacherName: pickTeacher("Felsefe"), weeklyHours: 2, type: "Konu Anlatımı" },
+      { rowId: `${prefix}-6`, subject: "Din Kültürü", examLevel: "TYT / AYT", teacherName: pickTeacher("Din Kültürü"), weeklyHours: 2, type: "Konu Anlatımı" },
     ];
   }
 
-  // Sayısal & YKS Hazırlık default
   return [
-    { rowId: "r-1", subject: "Matematik", examLevel: "TYT / AYT", teacherName: pickTeacher("Matematik"), weeklyHours: 6, type: "Konu Anlatımı" },
-    { rowId: "r-2", subject: "Geometri", examLevel: "TYT / AYT", teacherName: pickTeacher("Geometri"), weeklyHours: 2, type: "Soru Çözümü" },
-    { rowId: "r-3", subject: "Fizik", examLevel: "TYT / AYT", teacherName: pickTeacher("Fizik"), weeklyHours: 4, type: "Konu Anlatımı" },
-    { rowId: "r-4", subject: "Kimya", examLevel: "TYT / AYT", teacherName: pickTeacher("Kimya"), weeklyHours: 3, type: "Konu Anlatımı" },
-    { rowId: "r-5", subject: "Biyoloji", examLevel: "TYT / AYT", teacherName: pickTeacher("Biyoloji"), weeklyHours: 3, type: "Konu Anlatımı" },
-    { rowId: "r-6", subject: "Türkçe", examLevel: "TYT", teacherName: pickTeacher("Türkçe"), weeklyHours: 3, type: "Konu Anlatımı" },
+    { rowId: `${prefix}-1`, subject: "Matematik", examLevel: "TYT / AYT", teacherName: pickTeacher("Matematik"), weeklyHours: 6, type: "Konu Anlatımı" },
+    { rowId: `${prefix}-2`, subject: "Geometri", examLevel: "TYT / AYT", teacherName: pickTeacher("Geometri"), weeklyHours: 2, type: "Soru Çözümü" },
+    { rowId: `${prefix}-3`, subject: "Fizik", examLevel: "TYT / AYT", teacherName: pickTeacher("Fizik"), weeklyHours: 4, type: "Konu Anlatımı" },
+    { rowId: `${prefix}-4`, subject: "Kimya", examLevel: "TYT / AYT", teacherName: pickTeacher("Kimya"), weeklyHours: 3, type: "Konu Anlatımı" },
+    { rowId: `${prefix}-5`, subject: "Biyoloji", examLevel: "TYT / AYT", teacherName: pickTeacher("Biyoloji"), weeklyHours: 3, type: "Konu Anlatımı" },
+    { rowId: `${prefix}-6`, subject: "Türkçe", examLevel: "TYT", teacherName: pickTeacher("Türkçe"), weeklyHours: 3, type: "Konu Anlatımı" },
   ];
+}
+
+function buildInitialCurriculums(
+  classes: ClassroomRecord[],
+  teachers: TeacherAccount[]
+): Record<string, CurriculumRow[]> {
+  const map: Record<string, CurriculumRow[]> = {};
+  classes.forEach((cls) => {
+    map[cls.id] = buildDefaultCurriculum(cls.track, teachers, cls.id);
+  });
+  return map;
 }
 
 export default function AdminScheduleBuilderPage() {
   const {
     classes,
     teachers,
-    addBulkScheduleToClass,
+    replaceAllClassSchedules,
     clearClassSchedule,
     removeClassScheduleSlot,
   } = useCampus();
 
   const [selectedClassId, setSelectedClassId] = useState(classes[0]?.id ?? "");
-  const selectedClass =
-    classes.find((c) => c.id === selectedClassId) ?? classes[0];
+  const [curriculumsByClass, setCurriculumsByClass] = useState<
+    Record<string, CurriculumRow[]>
+  >(() => buildInitialCurriculums(classes, teachers));
 
-  const [curriculum, setCurriculum] = useState<CurriculumRow[]>(() =>
-    buildDefaultCurriculum(classes[0]?.track ?? "Sayısal", teachers)
-  );
   const [daysScope, setDaysScope] = useState<"weekdays" | "sixdays">("weekdays");
-  const [timeWindow, setTimeWindow] = useState<"morning" | "afternoon" | "fullday">("fullday");
-  const [replaceExisting, setReplaceExisting] = useState<boolean>(true);
+  const [timeWindow, setTimeWindow] = useState<
+    "morning" | "afternoon" | "fullday"
+  >("fullday");
+  const [preserveExamBlocks, setPreserveExamBlocks] = useState<boolean>(true);
   const [resultBanner, setResultBanner] = useState<{
     ok: boolean;
     message: string;
     warnings: string[];
   } | null>(null);
 
-  useEffect(() => {
-    if (!selectedClass) return;
-    setCurriculum(buildDefaultCurriculum(selectedClass.track, teachers));
-    setResultBanner(null);
-  }, [selectedClassId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const selectedClass =
+    classes.find((c) => c.id === selectedClassId) ?? classes[0];
 
-  const totalRequestedHours = useMemo(
-    () => curriculum.reduce((acc, row) => acc + Math.max(0, row.weeklyHours), 0),
-    [curriculum]
+  const activeCurriculum = useMemo(() => {
+    if (!selectedClass) return [];
+    return (
+      curriculumsByClass[selectedClass.id] ??
+      buildDefaultCurriculum(selectedClass.track, teachers, selectedClass.id)
+    );
+  }, [selectedClass, curriculumsByClass, teachers]);
+
+  const setActiveCurriculum = (
+    updater: (prev: CurriculumRow[]) => CurriculumRow[]
+  ) => {
+    if (!selectedClass) return;
+    setCurriculumsByClass((prev) => {
+      const current =
+        prev[selectedClass.id] ??
+        buildDefaultCurriculum(selectedClass.track, teachers, selectedClass.id);
+      return {
+        ...prev,
+        [selectedClass.id]: updater(current),
+      };
+    });
+  };
+
+  const totalHoursAllClasses = useMemo(
+    () =>
+      classes.reduce((sum, cls) => {
+        const rows =
+          curriculumsByClass[cls.id] ??
+          buildDefaultCurriculum(cls.track, teachers, cls.id);
+        return sum + rows.reduce((s, r) => s + Math.max(0, r.weeklyHours), 0);
+      }, 0),
+    [classes, curriculumsByClass, teachers]
+  );
+
+  const totalRequestedForSelected = useMemo(
+    () => activeCurriculum.reduce((acc, r) => acc + Math.max(0, r.weeklyHours), 0),
+    [activeCurriculum]
   );
 
   const handleAddRow = () => {
     const defaultSub = PRESET_SUBJECTS[0];
     const teacherName = getMatchingTeachers(teachers, defaultSub)[0]?.name ?? "";
-    setCurriculum((prev) => [
+    setActiveCurriculum((prev) => [
       ...prev,
       {
         rowId: `r-${Date.now()}`,
@@ -133,7 +175,7 @@ export default function AdminScheduleBuilderPage() {
   };
 
   const handleUpdateRow = (rowId: string, patch: Partial<CurriculumRow>) => {
-    setCurriculum((prev) =>
+    setActiveCurriculum((prev) =>
       prev.map((row) => {
         if (row.rowId !== rowId) return row;
         const next = { ...row, ...patch };
@@ -148,11 +190,11 @@ export default function AdminScheduleBuilderPage() {
   };
 
   const handleRemoveRow = (rowId: string) => {
-    setCurriculum((prev) => prev.filter((r) => r.rowId !== rowId));
+    setActiveCurriculum((prev) => prev.filter((r) => r.rowId !== rowId));
   };
 
-  const handleGenerateSchedule = () => {
-    if (!selectedClass) return;
+  const runSchedulerForClasses = (targetClasses: ClassroomRecord[]) => {
+    if (targetClasses.length === 0) return;
 
     const candidateDays: WeekDay[] =
       daysScope === "weekdays"
@@ -166,35 +208,15 @@ export default function AdminScheduleBuilderPage() {
       return t <= "17:10";
     });
 
-    // Track busy slots for this class
-    const classBusyKeys = new Set<string>();
-    const classExamBlocks = selectedClass.schedule.filter((s) => s.blockPeriod);
+    const targetClassNames = new Set(targetClasses.map((c) => c.name));
 
-    if (!replaceExisting) {
-      selectedClass.schedule.forEach((s) => {
-        if (!s.blockPeriod) {
-          classBusyKeys.add(`${s.day}|${s.time.trim()}`);
-        }
-      });
-    }
-
-    // Check if class has a morning/afternoon exam block
-    const isClassExamBlocked = (day: WeekDay, time: string) => {
-      if (replaceExisting) return false;
-      return classExamBlocks.some((b) => {
-        if (b.day !== day) return false;
-        if (b.blockPeriod === "morning") return time < "12:00";
-        if (b.blockPeriod === "afternoon") return time >= "12:00";
-        return false;
-      });
-    };
-
-    // Track busy slots per teacher (from ALL other classes + 1-on-1 slots)
+    // Shared teacher busy map across the entire institution
     const teacherBusyMap = new Map<string, Set<string>>();
     teachers.forEach((t) => {
       const set = new Set<string>();
       t.schedule.forEach((ts) => {
-        if (replaceExisting && ts.classGroup === selectedClass.name) return;
+        // Ignore existing lessons in classes we are regenerating
+        if (targetClassNames.has(ts.classGroup)) return;
         set.add(`${ts.day}|${ts.time.trim()}`);
       });
       t.oneOnOneSlots.forEach((oo) => {
@@ -203,82 +225,101 @@ export default function AdminScheduleBuilderPage() {
       teacherBusyMap.set(t.name, set);
     });
 
-    const newSlots: Omit<StudentScheduleSlot, "id">[] = [];
+    const entries: { classId: string; slots: Omit<StudentScheduleSlot, "id">[] }[] = [];
     const warnings: string[] = [];
+    let totalPlaced = 0;
 
-    // Sort rows descending by weeklyHours so harder-to-place subjects go first
-    const sortedRows = [...curriculum]
-      .filter((r) => r.weeklyHours > 0 && r.teacherName)
-      .sort((a, b) => b.weeklyHours - a.weeklyHours);
+    targetClasses.forEach((cls) => {
+      const rows =
+        curriculumsByClass[cls.id] ??
+        buildDefaultCurriculum(cls.track, teachers, cls.id);
 
-    sortedRows.forEach((row) => {
-      const fullSubject = `${row.examLevel} ${row.subject}`.trim();
-      const teacherSet = teacherBusyMap.get(row.teacherName) ?? new Set<string>();
-      let remaining = row.weeklyHours;
+      const classBusyKeys = new Set<string>();
+      const classExamBlocks = preserveExamBlocks
+        ? cls.schedule.filter((s) => Boolean(s.blockPeriod))
+        : [];
 
-      // Count how many hours of this subject are placed on each day to spread evenly
-      const dayCount: Record<string, number> = {};
-      candidateDays.forEach((d) => {
-        dayCount[d] = 0;
-      });
+      const isExamBlocked = (day: WeekDay, time: string) =>
+        classExamBlocks.some((b) => {
+          if (b.day !== day) return false;
+          if (b.blockPeriod === "morning") return time < "12:00";
+          if (b.blockPeriod === "afternoon") return time >= "12:00";
+          return false;
+        });
 
-      // Pass 1: Max 2 lessons per day of same subject, spreading across least-loaded days
-      let safety = 0;
-      while (remaining > 0 && safety < 200) {
-        safety += 1;
-        const orderedDays = [...candidateDays].sort(
-          (a, b) => (dayCount[a] ?? 0) - (dayCount[b] ?? 0)
-        );
+      const classNewSlots: Omit<StudentScheduleSlot, "id">[] = [];
+      const sortedRows = [...rows]
+        .filter((r) => r.weeklyHours > 0 && r.teacherName)
+        .sort((a, b) => b.weeklyHours - a.weeklyHours);
 
-        let placedOne = false;
-        for (const day of orderedDays) {
-          if ((dayCount[day] ?? 0) >= 2 && safety < 100) continue;
-
-          for (const time of candidateTimes) {
-            const key = `${day}|${time}`;
-            if (classBusyKeys.has(key)) continue;
-            if (isClassExamBlocked(day, time)) continue;
-            if (teacherSet.has(key)) continue;
-
-            // Place slot!
-            classBusyKeys.add(key);
-            teacherSet.add(key);
-            dayCount[day] = (dayCount[day] ?? 0) + 1;
-            newSlots.push({
-              day,
-              time,
-              subject: fullSubject,
-              teacher: row.teacherName,
-              room: selectedClass.room,
-              type: row.type,
-            });
-            remaining -= 1;
-            placedOne = true;
-            break;
-          }
-          if (placedOne) break;
+      sortedRows.forEach((row) => {
+        const fullSubject = `${row.examLevel} ${row.subject}`.trim();
+        let teacherSet = teacherBusyMap.get(row.teacherName);
+        if (!teacherSet) {
+          teacherSet = new Set<string>();
+          teacherBusyMap.set(row.teacherName, teacherSet);
         }
 
-        if (!placedOne && safety >= 100) break;
-      }
+        let remaining = row.weeklyHours;
+        const dayCount: Record<string, number> = {};
+        candidateDays.forEach((d) => {
+          dayCount[d] = 0;
+        });
 
-      if (remaining > 0) {
-        warnings.push(
-          `${fullSubject} (${row.teacherName}): ${remaining} saat için çakışmasız boş slot bulunamadı.`
-        );
-      }
+        let safety = 0;
+        while (remaining > 0 && safety < 200) {
+          safety += 1;
+          const orderedDays = [...candidateDays].sort(
+            (a, b) => (dayCount[a] ?? 0) - (dayCount[b] ?? 0)
+          );
+
+          let placedOne = false;
+          for (const day of orderedDays) {
+            if ((dayCount[day] ?? 0) >= 2 && safety < 100) continue;
+
+            for (const time of candidateTimes) {
+              const key = `${day}|${time}`;
+              if (classBusyKeys.has(key)) continue;
+              if (isExamBlocked(day, time)) continue;
+              if (teacherSet.has(key)) continue;
+
+              classBusyKeys.add(key);
+              teacherSet.add(key);
+              dayCount[day] = (dayCount[day] ?? 0) + 1;
+              classNewSlots.push({
+                day,
+                time,
+                subject: fullSubject,
+                teacher: row.teacherName,
+                room: cls.room,
+                type: row.type,
+              });
+              remaining -= 1;
+              totalPlaced += 1;
+              placedOne = true;
+              break;
+            }
+            if (placedOne) break;
+          }
+
+          if (!placedOne && safety >= 100) break;
+        }
+
+        if (remaining > 0) {
+          warnings.push(
+            `${cls.name} · ${fullSubject} (${row.teacherName}): ${remaining} saat için çakışmasız boş slot bulunamadı.`
+          );
+        }
+      });
+
+      entries.push({ classId: cls.id, slots: classNewSlots });
     });
 
-    if (replaceExisting) {
-      clearClassSchedule(selectedClass.id);
-    }
-    if (newSlots.length > 0) {
-      addBulkScheduleToClass(selectedClass.id, newSlots);
-    }
+    replaceAllClassSchedules(entries, preserveExamBlocks);
 
     setResultBanner({
       ok: warnings.length === 0,
-      message: `${selectedClass.name} sınıfı için ${newSlots.length} ders saati çakışmasız olarak oluşturuldu ve öğretmen takvimlerine işlendi.`,
+      message: `${targetClasses.length} sınıf için toplam ${totalPlaced} ders saati çakışmasız olarak toplu atandı ve öğretmen takvimlerine işlendi.`,
       warnings,
     });
   };
@@ -288,34 +329,52 @@ export default function AdminScheduleBuilderPage() {
       {/* Header */}
       <div className="border-b border-[#E9EBEE] pb-5">
         <p className="text-[11px] font-semibold tracking-[0.14em] text-[#B18A52] uppercase">
-          Otomatik Çakışmasız Planlama
+          Toplu Çakışmasız Ders Programı Motoru
         </p>
         <h1 className="font-editorial mt-1 flex items-center gap-2 text-2xl font-medium text-[#203B5C] sm:text-3xl">
           <CalendarDays className="h-6 w-6 text-[#135D43]" />
           <span>Ders Programı Oluştur</span>
         </h1>
         <p className="mt-1 text-xs text-[#737B86] sm:text-sm">
-          Sınıfı seçin, her dersten haftalık kaç saat olacağını ve branş öğretmenini
-          belirleyin; sistem tüm öğretmen ve birebir çakışmalarını kontrol ederek
-          otomatik ders programını oluştursun.
+          Önce mevcut tüm sınıfların hangi dersten haftada kaç saat alacağını ve
+          öğretmenlerini belirleyin; ardından tek tıkla{" "}
+          <strong>tüm sınıflara çakışmasız toplu atama</strong> yapın.
         </p>
       </div>
 
-      {/* Step 1: Class Selector */}
+      {/* Step 1: Class Selector Tabs with Planned vs Assigned Hours */}
       <div className="rounded-xl border border-[#DCE4EE] bg-white p-4 shadow-2xs sm:p-5">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h2 className="flex items-center gap-2 text-sm font-bold text-[#11284B]">
             <Layers className="h-4 w-4 text-[#135D43]" />
-            <span>1. Program Oluşturulacak Sınıfı Seçin</span>
+            <span>1. Tüm Sınıfların Ders &amp; Saat Planını Ayarlayın</span>
           </h2>
-          <span className="text-[11px] text-[#64748B]">
-            Toplam {classes.length} aktif sınıf
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-md bg-[#EEF3F9] px-2.5 py-1 text-[11px] font-bold text-[#11284B]">
+              Toplam Talep: {totalHoursAllClasses} Ders Saati ({classes.length} Sınıf)
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setCurriculumsByClass(buildInitialCurriculums(classes, teachers));
+                setResultBanner(null);
+              }}
+              className="rounded-lg border border-[#E5DEC9] bg-[#FCFBF8] px-2.5 py-1 text-[11px] font-semibold text-[#203B5C] hover:border-[#B18A52]"
+            >
+              Tüm Sınıfları Alanına Göre Sıfırla
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
           {classes.map((cls) => {
             const active = selectedClass?.id === cls.id;
+            const rows =
+              curriculumsByClass[cls.id] ??
+              buildDefaultCurriculum(cls.track, teachers, cls.id);
+            const plannedHrs = rows.reduce((s, r) => s + Math.max(0, r.weeklyHours), 0);
+            const assignedHrs = cls.schedule.filter((s) => !s.blockPeriod).length;
+
             return (
               <button
                 key={cls.id}
@@ -327,20 +386,22 @@ export default function AdminScheduleBuilderPage() {
                     : "border-[#E2E8F0] bg-[#FCFBF8] hover:border-[#B18A52]"
                 }`}
               >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-bold text-[#11284B]">{cls.name}</span>
+                <div className="flex items-center justify-between gap-1.5">
+                  <span className="truncate font-bold text-[#11284B]">
+                    {cls.name}
+                  </span>
                   <span
-                    className={`rounded px-2 py-0.5 text-[10px] font-bold ${
+                    className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold ${
                       active
                         ? "bg-[#135D43] text-white"
-                        : "bg-white text-[#4E5E57]"
+                        : "bg-white text-[#135D43]"
                     }`}
                   >
-                    {cls.schedule.length} Saat
+                    {plannedHrs} Saat
                   </span>
                 </div>
-                <p className="mt-1 text-[11px] text-[#64748B]">
-                  {cls.track} · {cls.room}
+                <p className="mt-1 text-[10px] text-[#64748B]">
+                  {cls.track} · Atanan: {assignedHrs} Saat
                 </p>
               </button>
             );
@@ -348,7 +409,7 @@ export default function AdminScheduleBuilderPage() {
         </div>
       </div>
 
-      {/* Step 2: Curriculum & Teacher Assignment */}
+      {/* Step 2: Selected Class Curriculum Editor */}
       {selectedClass && (
         <div className="rounded-xl border border-[#DCE4EE] bg-white p-4 shadow-2xs sm:p-6">
           <div className="flex flex-col justify-between gap-3 border-b border-[#E9EBEE] pb-4 sm:flex-row sm:items-center">
@@ -356,11 +417,14 @@ export default function AdminScheduleBuilderPage() {
               <h2 className="flex items-center gap-2 text-sm font-bold text-[#11284B] sm:text-base">
                 <Sparkles className="h-4 w-4 text-[#B18A52]" />
                 <span>
-                  2. {selectedClass.name} — Haftalık Ders, Saat ve Öğretmen Dağılımı
+                  2. {selectedClass.name} ({selectedClass.track}) — Ders &amp; Saat Planı
                 </span>
               </h2>
               <p className="mt-0.5 text-xs text-[#64748B]">
-                Toplam Talep Edilen Haftalık Ders: <strong className="text-[#135D43]">{totalRequestedHours} Saat</strong>
+                Bu sınıf için belirlenen haftalık ders:{" "}
+                <strong className="text-[#135D43]">
+                  {totalRequestedForSelected} Saat
+                </strong>
               </p>
             </div>
 
@@ -370,7 +434,9 @@ export default function AdminScheduleBuilderPage() {
                   key={tmpl}
                   type="button"
                   onClick={() =>
-                    setCurriculum(buildDefaultCurriculum(tmpl, teachers))
+                    setActiveCurriculum(() =>
+                      buildDefaultCurriculum(tmpl, teachers, selectedClass.id)
+                    )
                   }
                   className="rounded-lg border border-[#E5DEC9] bg-[#FCFBF8] px-2.5 py-1.5 text-[11px] font-semibold text-[#203B5C] hover:border-[#B18A52] hover:bg-white"
                 >
@@ -389,7 +455,7 @@ export default function AdminScheduleBuilderPage() {
           </div>
 
           <div className="mt-4 space-y-2.5">
-            {curriculum.map((row) => {
+            {activeCurriculum.map((row) => {
               const matchingTeachers = getMatchingTeachers(teachers, row.subject);
               return (
                 <div
@@ -397,9 +463,6 @@ export default function AdminScheduleBuilderPage() {
                   className="grid grid-cols-1 gap-2 rounded-xl border border-[#E2E8F0] bg-[#FAF8F5]/70 p-3 text-xs sm:grid-cols-12 sm:items-center"
                 >
                   <div className="sm:col-span-3">
-                    <label className="mb-1 block text-[10px] font-bold uppercase text-[#64748B] sm:hidden">
-                      Ders
-                    </label>
                     <select
                       value={row.subject}
                       onChange={(e) =>
@@ -416,9 +479,6 @@ export default function AdminScheduleBuilderPage() {
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className="mb-1 block text-[10px] font-bold uppercase text-[#64748B] sm:hidden">
-                      Düzey
-                    </label>
                     <select
                       value={row.examLevel}
                       onChange={(e) =>
@@ -435,9 +495,6 @@ export default function AdminScheduleBuilderPage() {
                   </div>
 
                   <div className="sm:col-span-3">
-                    <label className="mb-1 block text-[10px] font-bold uppercase text-[#64748B] sm:hidden">
-                      Öğretmen
-                    </label>
                     <select
                       value={row.teacherName}
                       onChange={(e) =>
@@ -463,9 +520,6 @@ export default function AdminScheduleBuilderPage() {
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className="mb-1 block text-[10px] font-bold uppercase text-[#64748B] sm:hidden">
-                      Haftalık Saat
-                    </label>
                     <div className="flex items-center gap-1.5">
                       <input
                         type="number"
@@ -512,8 +566,8 @@ export default function AdminScheduleBuilderPage() {
             })}
           </div>
 
-          {/* Step 3: Scheduling Preferences & Generate Button */}
-          <div className="mt-5 flex flex-col justify-between gap-3 rounded-xl border border-[#DCE8E2] bg-[#F7FAF8] p-4 sm:flex-row sm:items-center">
+          {/* Step 3: Global Bulk Generation Controls */}
+          <div className="mt-5 flex flex-col justify-between gap-3 rounded-xl border border-[#DCE8E2] bg-[#F7FAF8] p-4 lg:flex-row lg:items-center">
             <div className="flex flex-wrap items-center gap-2 text-xs">
               <select
                 value={daysScope}
@@ -543,22 +597,33 @@ export default function AdminScheduleBuilderPage() {
               <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-[#DCE4EE] bg-white px-3 py-2 font-medium text-[#203B5C]">
                 <input
                   type="checkbox"
-                  checked={replaceExisting}
-                  onChange={(e) => setReplaceExisting(e.target.checked)}
+                  checked={preserveExamBlocks}
+                  onChange={(e) => setPreserveExamBlocks(e.target.checked)}
                   className="accent-[#135D43]"
                 />
-                <span>Sıfırdan oluştur (mevcutları değiştir)</span>
+                <span>Deneme bloklarını koru</span>
               </label>
             </div>
 
-            <button
-              type="button"
-              onClick={handleGenerateSchedule}
-              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#135D43] px-5 py-3 text-xs font-bold text-white shadow-sm transition hover:bg-[#0E4A35] sm:text-sm"
-            >
-              <Wand2 className="h-4 w-4 text-[#E8C483]" />
-              <span>Otomatik Ders Programı Oluştur</span>
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => runSchedulerForClasses([selectedClass])}
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#203B5C] bg-white px-4 py-2.5 text-xs font-bold text-[#203B5C] transition hover:bg-[#EEF3F9]"
+              >
+                <span>Sadece {selectedClass.name} İçin Oluştur</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => runSchedulerForClasses(classes)}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#135D43] px-5 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-[#0E4A35] sm:text-sm"
+              >
+                <Wand2 className="h-4 w-4 text-[#E8C483]" />
+                <span>
+                  Tüm Sınıflar İçin Toplu Oluştur ({classes.length} Sınıf)
+                </span>
+              </button>
+            </div>
           </div>
 
           {resultBanner && (
@@ -598,7 +663,7 @@ export default function AdminScheduleBuilderPage() {
                 {selectedClass.name} — Oluşturulan Haftalık Ders Programı ({selectedClass.schedule.length} Saat)
               </h2>
               <p className="text-xs text-[#64748B]">
-                İstemediğiniz bir ders saatini çöp kutusu simgesine basarak tek tek kaldırabilirsiniz.
+                Yukarıdan sınıf seçerek her sınıfın oluşturulan programını inceleyebilirsiniz.
               </p>
             </div>
             {selectedClass.schedule.length > 0 && (
@@ -608,7 +673,7 @@ export default function AdminScheduleBuilderPage() {
                 className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100"
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                <span>Programı Temizle</span>
+                <span>Bu Sınıfın Programını Temizle</span>
               </button>
             )}
           </div>
