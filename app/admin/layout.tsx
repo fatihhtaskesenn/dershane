@@ -4,6 +4,7 @@ import React from "react";
 import { usePathname } from "next/navigation";
 import {
   BookOpenCheck,
+  CalendarDays,
   CalendarPlus,
   FileUp,
   GraduationCap,
@@ -50,6 +51,11 @@ const ADMIN_NAV: SidebarNavItem[] = [
     label: "Sınıflar",
     href: "/admin/classes",
     icon: Layers,
+  },
+  {
+    label: "Ders Programı Oluştur",
+    href: "/admin/schedule-builder",
+    icon: CalendarDays,
   },
   {
     label: "Birebir Oluştur",

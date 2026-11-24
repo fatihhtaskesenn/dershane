@@ -1502,6 +1502,7 @@ interface CampusContextValue {
     classId: string,
     slots: Omit<StudentScheduleSlot, "id">[]
   ) => void;
+  clearClassSchedule: (classId: string) => void;
   removeClassScheduleSlot: (classId: string, slotId: string) => void;
   addAnnouncement: (
     ann: Omit<CampusAnnouncement, "id" | "date">
@@ -2498,19 +2499,74 @@ export function CampusProvider({ children }: { children: React.ReactNode }) {
     const base = Date.now();
     const mapped = slots.map((slot, index) => ({
       ...slot,
+      time: slot.time.trim(),
       id: `cs-${base}-${index}`,
     }));
-    persist((prev) => ({
-      ...prev,
-      classes: prev.classes.map((c) =>
-        c.id === classId
-          ? {
-              ...c,
-              schedule: [...c.schedule, ...mapped],
-            }
-          : c
-      ),
-    }));
+    persist((prev) => {
+      const cls = prev.classes.find((c) => c.id === classId);
+      if (!cls) return prev;
+      return {
+        ...prev,
+        classes: prev.classes.map((c) =>
+          c.id === classId
+            ? {
+                ...c,
+                schedule: [...c.schedule, ...mapped],
+              }
+            : c
+        ),
+        teachers: prev.teachers.map((t) => {
+          const additions = mapped
+            .filter(
+              (m) =>
+                m.teacher === t.name &&
+                !m.blockPeriod &&
+                !t.schedule.some(
+                  (ts) =>
+                    ts.day === m.day &&
+                    ts.time.trim() === m.time.trim() &&
+                    ts.classGroup === cls.name
+                )
+            )
+            .map((m, idx) => ({
+              id: `ts-${base}-${indexOffset(t.id, idx)}`,
+              day: m.day,
+              time: m.time,
+              classGroup: cls.name,
+              subject: m.subject,
+              room: m.room || cls.room,
+            }));
+          if (additions.length === 0) return t;
+          return {
+            ...t,
+            schedule: [...t.schedule, ...additions],
+          };
+        }),
+      };
+    });
+  };
+
+  function indexOffset(tid: string, idx: number) {
+    return `${tid}-${idx}`;
+  }
+
+  const clearClassSchedule: CampusContextValue["clearClassSchedule"] = (
+    classId
+  ) => {
+    persist((prev) => {
+      const cls = prev.classes.find((c) => c.id === classId);
+      if (!cls) return prev;
+      return {
+        ...prev,
+        classes: prev.classes.map((c) =>
+          c.id === classId ? { ...c, schedule: [] } : c
+        ),
+        teachers: prev.teachers.map((t) => ({
+          ...t,
+          schedule: t.schedule.filter((ts) => ts.classGroup !== cls.name),
+        })),
+      };
+    });
   };
 
   const removeClassScheduleSlot = (classId: string, slotId: string) => {
@@ -2682,6 +2738,7 @@ export function CampusProvider({ children }: { children: React.ReactNode }) {
         addScheduleToClass,
         updateClassScheduleSlot,
         addBulkScheduleToClass,
+        clearClassSchedule,
         removeClassScheduleSlot,
         addAnnouncement,
         deleteAnnouncement,
