@@ -36,7 +36,23 @@ export default function AdminCreateStudentPage() {
   const [stuPhone, setStuPhone] = useState("+90 532 000 00 00");
   const [stuTarget, setStuTarget] = useState("");
   const [stuClassId, setStuClassId] = useState(classes[0]?.id ?? "");
-  const [stuAdvisorId, setStuAdvisorId] = useState(teachers[0]?.id ?? "");
+  const guidanceTeachers = teachers.filter(
+    (t) =>
+      t.role === "Rehberlik Uzmanı" ||
+      t.role === "Akademik Danışman" ||
+      t.branch.toLowerCase().includes("rehberlik") ||
+      t.branch.toLowerCase().includes("danışman")
+  );
+  const branchTeachers = teachers.filter(
+    (t) => !guidanceTeachers.some((g) => g.id === t.id)
+  );
+
+  const [stuBranchTeacherId, setStuBranchTeacherId] = useState(
+    branchTeachers[0]?.id ?? ""
+  );
+  const [stuAdvisorId, setStuAdvisorId] = useState(
+    guidanceTeachers[0]?.id ?? ""
+  );
 
   const filteredStudents = students.filter(
     (s) =>
@@ -49,7 +65,12 @@ export default function AdminCreateStudentPage() {
   const handleCreateStudent = (e: React.FormEvent) => {
     e.preventDefault();
     if (!stuName.trim() || !stuUsername.trim() || !stuPassword.trim()) return;
-    const adv = teachers.find((t) => t.id === stuAdvisorId) ?? teachers[0];
+    const adv =
+      guidanceTeachers.find((t) => t.id === stuAdvisorId) ??
+      guidanceTeachers[0];
+    const brTch =
+      branchTeachers.find((t) => t.id === stuBranchTeacherId) ??
+      branchTeachers[0];
     const cls = classes.find((c) => c.id === stuClassId) ?? classes[0];
     addStudent({
       name: stuName.trim(),
@@ -64,6 +85,8 @@ export default function AdminCreateStudentPage() {
       target: stuTarget.trim() || "Hedef Belirleniyor",
       advisorTeacherId: adv?.id ?? "",
       advisorName: adv?.name ?? "Atanmadı",
+      branchTeacherId: brTch?.id ?? "",
+      branchTeacherName: brTch?.name ?? "Atanmadı",
       phone: stuPhone.trim(),
       attendance: 100,
       status: "Aktif",
@@ -183,22 +206,41 @@ export default function AdminCreateStudentPage() {
           ))}
         </select>
         <select
+          value={stuBranchTeacherId}
+          onChange={(e) => setStuBranchTeacherId(e.target.value)}
+          className="rounded-md border border-[#DCE4EE] bg-[#F8FAFC] px-3 py-2.5 text-xs"
+        >
+          {branchTeachers.length === 0 ? (
+            <option value="">Branş Öğretmeni Yok</option>
+          ) : (
+            branchTeachers.map((t) => (
+              <option key={t.id} value={t.id}>
+                Branş Öğretmeni: {t.name} ({t.branch})
+              </option>
+            ))
+          )}
+        </select>
+        <select
           value={stuAdvisorId}
           onChange={(e) => setStuAdvisorId(e.target.value)}
           className="rounded-md border border-[#DCE4EE] bg-[#F8FAFC] px-3 py-2.5 text-xs"
         >
-          {teachers.map((t) => (
-            <option key={t.id} value={t.id}>
-              Danışman: {t.name}
-            </option>
-          ))}
+          {guidanceTeachers.length === 0 ? (
+            <option value="">Rehberlikçi Yok</option>
+          ) : (
+            guidanceTeachers.map((t) => (
+              <option key={t.id} value={t.id}>
+                Rehberlikçi: {t.name}
+              </option>
+            ))
+          )}
         </select>
         <input
           type="text"
           placeholder="Hedef Bölüm"
           value={stuTarget}
           onChange={(e) => setStuTarget(e.target.value)}
-          className="rounded-md border border-[#DCE4EE] bg-[#F8FAFC] px-3 py-2.5 text-xs sm:col-span-2 lg:col-span-4"
+          className="rounded-md border border-[#DCE4EE] bg-[#F8FAFC] px-3 py-2.5 text-xs sm:col-span-2 lg:col-span-3"
         />
         <button
           type="submit"

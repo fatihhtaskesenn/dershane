@@ -11,14 +11,16 @@ import {
   ClipboardList,
   MessageSquareHeart,
   Phone,
+  Plus,
   Search,
   Target,
+  Trash2,
   UserCheck,
   Users,
 } from "lucide-react";
 import { useCampus, type StudentExamRecord } from "@/lib/campus-store";
 import { StudentNetCharts } from "@/components/student-net-charts";
-import { WeeklyTimetable } from "@/components/WeeklyTimetable";
+import { PRESET_SUBJECTS, WeeklyTimetable } from "@/components/WeeklyTimetable";
 
 const SUBJECT_MAX_QUESTIONS: Record<string, number> = {
   Türkçe: 40,
@@ -56,12 +58,28 @@ function getWeakestSubject(exam?: StudentExamRecord) {
 }
 
 export default function TeacherStudentsPage() {
-  const { students, classes } = useCampus();
+  const {
+    students,
+    classes,
+    activeTeacher,
+    addHomeworkToStudent,
+    toggleHomeworkStatus,
+    deleteHomeworkFromStudent,
+  } = useCampus();
   const [search, setSearch] = useState("");
   const [classFilter, setClassFilter] = useState("ALL");
   const [selectedStudentId, setSelectedStudentId] = useState(
     students[0]?.id ?? ""
   );
+  const [hwSubject, setHwSubject] = useState<string>("Matematik");
+  const [hwTitle, setHwTitle] = useState("");
+  const [hwDueDate, setHwDueDate] = useState("2026-11-28");
+
+  const isGuidanceTeacher =
+    activeTeacher.role === "Rehberlik Uzmanı" ||
+    activeTeacher.role === "Akademik Danışman" ||
+    activeTeacher.branch.toLowerCase().includes("rehberlik") ||
+    activeTeacher.branch.toLowerCase().includes("danışman");
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -483,10 +501,79 @@ export default function TeacherStudentsPage() {
           {/* Homework & Guidance */}
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
             <div className="rounded-xl border border-[#E9EBEE] bg-[#FAF8F5]/70 p-4">
-              <h3 className="flex items-center gap-2 text-sm font-bold text-[#203B5C]">
-                <ClipboardList className="h-4 w-4 text-[#C58B3B]" />
-                <span>Ödevlendirmeler ({selectedStudent.homework.length})</span>
-              </h3>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="flex items-center gap-2 text-sm font-bold text-[#203B5C]">
+                  <ClipboardList className="h-4 w-4 text-[#C58B3B]" />
+                  <span>Ödevlendirmeler ({selectedStudent.homework.length})</span>
+                </h3>
+                {isGuidanceTeacher ? (
+                  <span className="rounded bg-[#EAF6F0] px-2 py-0.5 text-[10px] font-bold text-[#135D43]">
+                    Rehberlik Ödev Yetkisi Aktif
+                  </span>
+                ) : (
+                  <span className="rounded bg-[#F1F5F9] px-2 py-0.5 text-[10px] font-semibold text-[#64748B]">
+                    Salt Okunur (Branş)
+                  </span>
+                )}
+              </div>
+
+              {isGuidanceTeacher ? (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!hwTitle.trim()) return;
+                    addHomeworkToStudent(selectedStudent.id, {
+                      subject: hwSubject,
+                      title: hwTitle.trim(),
+                      dueDate: hwDueDate,
+                      teacherName: activeTeacher.name,
+                      status: "Bekliyor",
+                    });
+                    setHwTitle("");
+                  }}
+                  className="mt-3 grid grid-cols-1 gap-2 rounded-lg border border-[#DCE4EE] bg-white p-2.5 text-xs sm:grid-cols-4"
+                >
+                  <select
+                    value={hwSubject}
+                    onChange={(e) => setHwSubject(e.target.value)}
+                    className="rounded border border-[#DCE4EE] bg-[#F8FAFC] px-2 py-1.5"
+                  >
+                    {PRESET_SUBJECTS.map((sub) => (
+                      <option key={sub} value={sub}>
+                        {sub}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    required
+                    value={hwTitle}
+                    onChange={(e) => setHwTitle(e.target.value)}
+                    placeholder="Ödev konusu / soru sayısı..."
+                    className="rounded border border-[#DCE4EE] bg-[#F8FAFC] px-2.5 py-1.5 sm:col-span-2"
+                  />
+                  <div className="flex gap-1.5">
+                    <input
+                      type="date"
+                      value={hwDueDate}
+                      onChange={(e) => setHwDueDate(e.target.value)}
+                      className="w-full rounded border border-[#DCE4EE] bg-[#F8FAFC] px-2 py-1.5"
+                    />
+                    <button
+                      type="submit"
+                      className="inline-flex shrink-0 items-center gap-1 rounded bg-[#135D43] px-3 py-1.5 font-semibold text-white hover:bg-[#0E4A35]"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      <span>Ata</span>
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <p className="mt-2 rounded-md border border-[#E2E8F0] bg-white px-3 py-2 text-[11px] text-[#64748B]">
+                  Ödevlendirme yetkisi yalnızca Rehberlik / Danışman öğretmenlere aittir.
+                </p>
+              )}
+
               <div className="mt-3 space-y-2">
                 {selectedStudent.homework.length === 0 ? (
                   <p className="text-xs text-[#737B86]">
@@ -504,13 +591,38 @@ export default function TeacherStudentsPage() {
                         <Circle className="mt-0.5 h-4 w-4 shrink-0 text-[#737B86]" />
                       )}
                       <div className="flex-1">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between gap-2">
                           <span className="font-semibold text-[#135D43]">
                             {hw.subject}
                           </span>
-                          <span className="text-[10px] font-semibold text-[#9A743E]">
-                            {hw.status} • {hw.dueDate}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-semibold text-[#9A743E]">
+                              {hw.status} • {hw.dueDate}
+                            </span>
+                            {isGuidanceTeacher && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    toggleHomeworkStatus(selectedStudent.id, hw.id)
+                                  }
+                                  className="rounded border border-[#DCE4EE] px-1.5 py-0.5 text-[10px] font-semibold text-[#135D43] hover:bg-[#EAF6F0]"
+                                >
+                                  {hw.status === "Tamamlandı" ? "Geri Al" : "Tamamla"}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    deleteHomeworkFromStudent(selectedStudent.id, hw.id)
+                                  }
+                                  title="Ödevi Sil"
+                                  className="rounded p-0.5 text-rose-600 hover:bg-rose-50"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </div>
                         <p className="mt-0.5 font-medium text-[#203B5C]">
                           {hw.title}

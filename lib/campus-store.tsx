@@ -110,6 +110,8 @@ export interface StudentAccount {
   target: string;
   advisorTeacherId: string;
   advisorName: string;
+  branchTeacherId?: string;
+  branchTeacherName?: string;
   phone: string;
   attendance: number;
   status: "Aktif" | "İzinli";
