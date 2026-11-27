@@ -39,8 +39,7 @@ import {
 } from "@/lib/timetable-optimizer";
 
 function getMatchingTeachers(teachers: TeacherAccount[], subject: string) {
-  const matched = teachers.filter((t) => doesTeacherMatchSubject(t.branch, subject));
-  return matched.length > 0 ? matched : teachers;
+  return teachers.filter((t) => doesTeacherMatchSubject(t.branch, subject));
 }
 
 function buildDefaultCurriculum(
@@ -49,7 +48,7 @@ function buildDefaultCurriculum(
   prefix: string
 ): OptimizerCurriculumRow[] {
   const pickTeacher = (sub: string) =>
-    getMatchingTeachers(teachers, sub)[0]?.name ?? teachers[0]?.name ?? "";
+    getMatchingTeachers(teachers, sub)[0]?.name ?? "";
 
   if (track === "Eşit Ağırlık") {
     return [
@@ -286,9 +285,13 @@ export default function AdminScheduleBuilderPage() {
         if (row.rowId !== rowId) return row;
         const next = { ...row, ...patch };
         if (patch.subject && !patch.teacherName) {
-          next.teacherName =
-            getMatchingTeachers(teachers, patch.subject)[0]?.name ??
-            row.teacherName;
+          const matched = getMatchingTeachers(teachers, patch.subject);
+          const currentStillMatches = matched.some(
+            (t) => t.name === row.teacherName
+          );
+          next.teacherName = currentStillMatches
+            ? row.teacherName
+            : matched[0]?.name ?? "";
         }
         return next;
       })
@@ -531,26 +534,33 @@ export default function AdminScheduleBuilderPage() {
 
                   <div className="sm:col-span-3">
                     <select
-                      value={row.teacherName}
+                      value={
+                        matchingTeachers.some((t) => t.name === row.teacherName)
+                          ? row.teacherName
+                          : ""
+                      }
                       onChange={(e) =>
                         handleUpdateRow(row.rowId, {
                           teacherName: e.target.value,
                         })
                       }
-                      className="w-full rounded-lg border border-[#DCE4EE] bg-white px-2.5 py-2 text-[#11284B]"
+                      className={`w-full rounded-lg border bg-white px-2.5 py-2 ${
+                        matchingTeachers.length === 0
+                          ? "border-rose-300 text-rose-600"
+                          : "border-[#DCE4EE] text-[#11284B]"
+                      }`}
                     >
-                      {matchingTeachers.map((t) => (
-                        <option key={t.id} value={t.name}>
-                          {t.name} (Talep: {teacherDemandMap.get(t.name) ?? 0}s)
+                      {matchingTeachers.length === 0 ? (
+                        <option value="">
+                          {row.subject} branşında öğretmen yok
                         </option>
-                      ))}
-                      {teachers
-                        .filter((t) => !matchingTeachers.some((m) => m.id === t.id))
-                        .map((t) => (
+                      ) : (
+                        matchingTeachers.map((t) => (
                           <option key={t.id} value={t.name}>
-                            {t.name} — {t.branch}
+                            {t.name} (Talep: {teacherDemandMap.get(t.name) ?? 0}s)
                           </option>
-                        ))}
+                        ))
+                      )}
                     </select>
                   </div>
 
