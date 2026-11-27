@@ -241,7 +241,7 @@ interface CampusState {
   adminAuthenticated: boolean;
 }
 
-const STORAGE_KEY = "dershane_campus_store_v11";
+const STORAGE_KEY = "dershane_campus_store_v12";
 
 const INITIAL_ANNOUNCEMENTS: CampusAnnouncement[] = [
   {
@@ -269,66 +269,35 @@ const INITIAL_CLASSES: ClassroomRecord[] = [
     name: "12-A Sayısal",
     track: "Sayısal",
     room: "Derslik 204",
-    schedule: [
-      { id: "cs-1", day: "Pazartesi", time: "08:00 - 08:40", subject: "AYT Matematik", teacher: "Dr. Selin Kaya", room: "Derslik 204", type: "Konu Anlatımı" },
-      { id: "cs-2", day: "Pazartesi", time: "08:50 - 09:30", subject: "AYT Matematik", teacher: "Dr. Selin Kaya", room: "Derslik 204", type: "Soru Çözümü" },
-      { id: "cs-3", day: "Pazartesi", time: "09:40 - 10:20", subject: "AYT Fizik", teacher: "Murat Demir", room: "Lab 101", type: "Konu Anlatımı" },
-      { id: "cs-4", day: "Salı", time: "10:30 - 11:10", subject: "AYT Kimya", teacher: "Prof. Dr. Ahmet Yılmaz", room: "Derslik 204", type: "Konu Anlatımı" },
-      { id: "cs-5", day: "Çarşamba", time: "12:50 - 13:30", subject: "TYT Türkçe", teacher: "Zeynep Aksoy", room: "Derslik 204", type: "Soru Çözümü" },
-      { id: "cs-6", day: "Perşembe", time: "08:50 - 09:30", subject: "AYT Biyoloji", teacher: "Elif Çelik", room: "Derslik 204", type: "Konu Anlatımı" },
-      { id: "cs-7", day: "Cuma", time: "13:40 - 14:20", subject: "TYT Geometri", teacher: "Dr. Selin Kaya", room: "Etüt Salonu B", type: "Etüt" },
-      { id: "cs-8", day: "Cumartesi", time: "08:00 - 12:00", subject: "TYT Genel Deneme", teacher: "Ölçme Birimi", room: "Salon A", type: "Deneme", blockPeriod: "morning" },
-      { id: "cs-11", day: "Pazar", time: "10:30 - 11:10", subject: "AYT Matematik", teacher: "Dr. Selin Kaya", room: "Etüt Salonu A", type: "Etüt" },
-    ],
+    schedule: [],
   },
   {
     id: "cls-2",
     name: "Mezun-1 Sayısal",
     track: "Sayısal",
     room: "Derslik 102",
-    schedule: [
-      { id: "cs-12", day: "Pazartesi", time: "10:30 - 11:10", subject: "AYT Fizik", teacher: "Murat Demir", room: "Derslik 102", type: "Konu Anlatımı" },
-      { id: "cs-13", day: "Salı", time: "08:50 - 09:30", subject: "TYT Matematik", teacher: "Dr. Selin Kaya", room: "Derslik 102", type: "Konu Anlatımı" },
-      { id: "cs-14", day: "Çarşamba", time: "09:40 - 10:20", subject: "AYT Kimya", teacher: "Prof. Dr. Ahmet Yılmaz", room: "Derslik 102", type: "Soru Çözümü" },
-      { id: "cs-15", day: "Perşembe", time: "11:20 - 12:00", subject: "AYT Biyoloji", teacher: "Elif Çelik", room: "Derslik 102", type: "Konu Anlatımı" },
-      { id: "cs-16", day: "Cuma", time: "14:30 - 15:10", subject: "TYT Türkçe", teacher: "Zeynep Aksoy", room: "Derslik 102", type: "Soru Çözümü" },
-      { id: "cs-17", day: "Pazar", time: "08:00 - 12:00", subject: "AYT Sayısal Deneme", teacher: "Ölçme Birimi", room: "Salon B", type: "Deneme", blockPeriod: "morning" },
-    ],
+    schedule: [],
   },
   {
     id: "cls-3",
     name: "12-B Eşit Ağırlık",
     track: "Eşit Ağırlık",
     room: "Derslik 301",
-    schedule: [
-      { id: "cs-19", day: "Pazartesi", time: "12:50 - 13:30", subject: "AYT Matematik", teacher: "Dr. Selin Kaya", room: "Derslik 301", type: "Konu Anlatımı" },
-      { id: "cs-20", day: "Salı", time: "13:40 - 14:20", subject: "AYT Edebiyat", teacher: "Zeynep Aksoy", room: "Derslik 301", type: "Konu Anlatımı" },
-      { id: "cs-21", day: "Çarşamba", time: "10:30 - 11:10", subject: "AYT Tarih", teacher: "Caner Aydın", room: "Derslik 301", type: "Konu Anlatımı" },
-      { id: "cs-22", day: "Perşembe", time: "14:30 - 15:10", subject: "AYT Coğrafya", teacher: "Merve Koç", room: "Derslik 301", type: "Soru Çözümü" },
-      { id: "cs-23", day: "Cumartesi", time: "12:50 - 21:00", subject: "TYT Genel Deneme", teacher: "Ölçme Birimi", room: "Salon A", type: "Deneme", blockPeriod: "afternoon" },
-    ],
+    schedule: [],
   },
   {
     id: "cls-4",
     name: "12-C Sözel",
     track: "Sözel",
     room: "Derslik 304",
-    schedule: [
-      { id: "cs-24", day: "Pazartesi", time: "14:30 - 15:10", subject: "AYT Edebiyat", teacher: "Zeynep Aksoy", room: "Derslik 304", type: "Konu Anlatımı" },
-      { id: "cs-25", day: "Çarşamba", time: "08:50 - 09:30", subject: "AYT Tarih", teacher: "Caner Aydın", room: "Derslik 304", type: "Konu Anlatımı" },
-      { id: "cs-26", day: "Cuma", time: "10:30 - 11:10", subject: "TYT Türkçe", teacher: "Zeynep Aksoy", room: "Derslik 304", type: "Soru Çözümü" },
-    ],
+    schedule: [],
   },
   {
     id: "cls-5",
     name: "11-A Erken Hazırlık",
     track: "Sayısal",
     room: "Derslik 108",
-    schedule: [
-      { id: "cs-27", day: "Salı", time: "16:10 - 16:50", subject: "TYT Matematik", teacher: "Dr. Selin Kaya", room: "Derslik 108", type: "Konu Anlatımı" },
-      { id: "cs-28", day: "Perşembe", time: "16:10 - 16:50", subject: "TYT Fizik", teacher: "Murat Demir", room: "Derslik 108", type: "Konu Anlatımı" },
-      { id: "cs-29", day: "Cumartesi", time: "11:20 - 12:00", subject: "TYT Biyoloji", teacher: "Elif Çelik", room: "Derslik 108", type: "Soru Çözümü" },
-    ],
+    schedule: [],
   },
 ];
 
@@ -342,13 +311,7 @@ const INITIAL_TEACHERS: TeacherAccount[] = [
     password: "123456",
     email: "selin.kaya@dershane.edu.tr",
     phone: "+90 532 410 22 11",
-    schedule: [
-      { id: "ts-1", day: "Pazartesi", time: "08:00 - 08:40", classGroup: "12-A Sayısal", subject: "AYT Matematik", room: "Derslik 204" },
-      { id: "ts-2", day: "Pazartesi", time: "08:50 - 09:30", classGroup: "12-A Sayısal", subject: "AYT Matematik", room: "Derslik 204" },
-      { id: "ts-3", day: "Salı", time: "08:50 - 09:30", classGroup: "Mezun-1 Sayısal", subject: "TYT Matematik", room: "Derslik 102" },
-      { id: "ts-4", day: "Cuma", time: "13:40 - 14:20", classGroup: "12-A Sayısal", subject: "TYT Geometri", room: "Etüt Salonu B" },
-      { id: "ts-5", day: "Pazar", time: "10:30 - 11:10", classGroup: "12-A Sayısal", subject: "AYT Matematik", room: "Etüt Salonu A" },
-    ],
+    schedule: [],
     oneOnOneSlots: [
       { id: "oo-1", studentId: "stu-1", studentName: "Kerem Yılmaz", day: "Salı", time: "15:20 - 16:00", subject: "AYT Türev & Ekstremum", note: "Son denemedeki 3 hatalı soru üzerinden birebir tekrar." },
       { id: "oo-2", studentId: "stu-2", studentName: "Defne Arslan", day: "Perşembe", time: "16:10 - 16:50", subject: "TYT Hız Problemleri", note: "Süre yönetimi ve denklem kurma pratiği." },
@@ -364,11 +327,7 @@ const INITIAL_TEACHERS: TeacherAccount[] = [
     password: "123456",
     email: "murat.demir@dershane.edu.tr",
     phone: "+90 533 618 44 09",
-    schedule: [
-      { id: "ts-6", day: "Pazartesi", time: "09:40 - 10:20", classGroup: "12-A Sayısal", subject: "AYT Fizik", room: "Lab 101" },
-      { id: "ts-7", day: "Pazartesi", time: "10:30 - 11:10", classGroup: "Mezun-1 Sayısal", subject: "AYT Fizik", room: "Derslik 102" },
-      { id: "ts-8", day: "Perşembe", time: "16:10 - 16:50", classGroup: "11-A Erken Hazırlık", subject: "TYT Fizik", room: "Derslik 108" },
-    ],
+    schedule: [],
     oneOnOneSlots: [
       { id: "oo-4", studentId: "stu-1", studentName: "Kerem Yılmaz", day: "Çarşamba", time: "16:10 - 16:50", subject: "AYT Manyetik İndüksiyon", note: "Sağ el kuralı ve akı değişimi soruları." },
       { id: "oo-5", studentId: "stu-7", studentName: "Berkay Öztürk", day: "Cuma", time: "15:20 - 16:00", subject: "AYT Çembersel Hareket", note: "Açısal momentum test analizi." },
@@ -383,11 +342,7 @@ const INITIAL_TEACHERS: TeacherAccount[] = [
     password: "123456",
     email: "zeynep.aksoy@dershane.edu.tr",
     phone: "+90 535 712 88 30",
-    schedule: [
-      { id: "ts-9", day: "Çarşamba", time: "12:50 - 13:30", classGroup: "12-A Sayısal", subject: "TYT Türkçe", room: "Derslik 204" },
-      { id: "ts-10", day: "Salı", time: "13:40 - 14:20", classGroup: "12-B Eşit Ağırlık", subject: "AYT Edebiyat", room: "Derslik 301" },
-      { id: "ts-11", day: "Pazartesi", time: "14:30 - 15:10", classGroup: "12-C Sözel", subject: "AYT Edebiyat", room: "Derslik 304" },
-    ],
+    schedule: [],
     oneOnOneSlots: [
       { id: "oo-6", studentId: "stu-4", studentName: "Zehra Karahan", day: "Perşembe", time: "15:20 - 16:00", subject: "AYT Divan Edebiyatı", note: "Nazım şekilleri ve beyit analizi." },
     ],
@@ -401,10 +356,7 @@ const INITIAL_TEACHERS: TeacherAccount[] = [
     password: "123456",
     email: "ahmet.yilmaz@dershane.edu.tr",
     phone: "+90 532 840 15 62",
-    schedule: [
-      { id: "ts-12", day: "Salı", time: "10:30 - 11:10", classGroup: "12-A Sayısal", subject: "AYT Kimya", room: "Derslik 204" },
-      { id: "ts-13", day: "Çarşamba", time: "09:40 - 10:20", classGroup: "Mezun-1 Sayısal", subject: "AYT Kimya", room: "Derslik 102" },
-    ],
+    schedule: [],
     oneOnOneSlots: [
       { id: "oo-7", studentId: "stu-2", studentName: "Defne Arslan", day: "Cuma", time: "16:10 - 16:50", subject: "AYT Organik Kimya", note: "Fonksiyonel gruplar ve adlandırma." },
     ],
@@ -418,11 +370,7 @@ const INITIAL_TEACHERS: TeacherAccount[] = [
     password: "123456",
     email: "elif.celik@dershane.edu.tr",
     phone: "+90 536 309 77 14",
-    schedule: [
-      { id: "ts-14", day: "Perşembe", time: "08:50 - 09:30", classGroup: "12-A Sayısal", subject: "AYT Biyoloji", room: "Derslik 204" },
-      { id: "ts-15", day: "Perşembe", time: "11:20 - 12:00", classGroup: "Mezun-1 Sayısal", subject: "AYT Biyoloji", room: "Derslik 102" },
-      { id: "ts-16", day: "Cumartesi", time: "11:20 - 12:00", classGroup: "11-A Erken Hazırlık", subject: "TYT Biyoloji", room: "Derslik 108" },
-    ],
+    schedule: [],
     oneOnOneSlots: [],
   },
   {
@@ -434,11 +382,7 @@ const INITIAL_TEACHERS: TeacherAccount[] = [
     password: "123456",
     email: "caner.aydin@dershane.edu.tr",
     phone: "+90 534 992 18 40",
-    schedule: [
-      { id: "ts-17", day: "Çarşamba", time: "10:30 - 11:10", classGroup: "12-B Eşit Ağırlık", subject: "AYT Tarih", room: "Derslik 301" },
-      { id: "ts-18", day: "Perşembe", time: "14:30 - 15:10", classGroup: "12-B Eşit Ağırlık", subject: "AYT Coğrafya", room: "Derslik 301" },
-      { id: "ts-19", day: "Çarşamba", time: "08:50 - 09:30", classGroup: "12-C Sözel", subject: "AYT Tarih", room: "Derslik 304" },
-    ],
+    schedule: [],
     oneOnOneSlots: [
       { id: "oo-8", studentId: "stu-6", studentName: "Ayşe Nur Şahin", day: "Cumartesi", time: "14:30 - 15:10", subject: "AYT Çağdaş Türk Tarihi", note: "Harita ve kronoloji pekiştirme." },
     ],
@@ -452,10 +396,7 @@ const INITIAL_TEACHERS: TeacherAccount[] = [
     password: "123456",
     email: "burak.sen@dershane.edu.tr",
     phone: "+90 532 511 40 22",
-    schedule: [
-      { id: "ts-20", day: "Salı", time: "09:40 - 10:20", classGroup: "12-A Sayısal", subject: "AYT Analitik Geometri", room: "Derslik 204" },
-      { id: "ts-21", day: "Perşembe", time: "13:40 - 14:20", classGroup: "Mezun-1 Sayısal", subject: "TYT Üçgenler & Çokgenler", room: "Derslik 102" },
-    ],
+    schedule: [],
     oneOnOneSlots: [
       { id: "oo-9", studentId: "stu-3", studentName: "Emirhan Demir", day: "Cuma", time: "16:10 - 16:50", subject: "Çemberde Uzunluk", note: "Kiriş ve teğet özellikleri." },
     ],
@@ -469,10 +410,7 @@ const INITIAL_TEACHERS: TeacherAccount[] = [
     password: "123456",
     email: "merve.koc@dershane.edu.tr",
     phone: "+90 535 449 12 87",
-    schedule: [
-      { id: "ts-22", day: "Perşembe", time: "14:30 - 15:10", classGroup: "12-B Eşit Ağırlık", subject: "AYT Coğrafya", room: "Derslik 301" },
-      { id: "ts-23", day: "Cuma", time: "11:20 - 12:00", classGroup: "12-C Sözel", subject: "TYT İklim & Harita Bilgisi", room: "Derslik 304" },
-    ],
+    schedule: [],
     oneOnOneSlots: [],
   },
   {
@@ -484,10 +422,7 @@ const INITIAL_TEACHERS: TeacherAccount[] = [
     password: "123456",
     email: "oguzhan.arslan@dershane.edu.tr",
     phone: "+90 536 774 30 15",
-    schedule: [
-      { id: "ts-24", day: "Salı", time: "14:30 - 15:10", classGroup: "12-C Sözel", subject: "AYT Felsefe Grubu", room: "Derslik 304" },
-      { id: "ts-25", day: "Cumartesi", time: "15:20 - 16:00", classGroup: "12-B Eşit Ağırlık", subject: "TYT Felsefe & Din", room: "Derslik 301" },
-    ],
+    schedule: [],
     oneOnOneSlots: [],
   },
   {
@@ -499,10 +434,7 @@ const INITIAL_TEACHERS: TeacherAccount[] = [
     password: "123456",
     email: "seda.yavuz@dershane.edu.tr",
     phone: "+90 533 905 64 21",
-    schedule: [
-      { id: "ts-26", day: "Pazartesi", time: "13:40 - 14:20", classGroup: "11-A Erken Hazırlık", subject: "TYT Paragraf Teknikleri", room: "Derslik 108" },
-      { id: "ts-27", day: "Pazar", time: "13:40 - 14:20", classGroup: "12-B Eşit Ağırlık", subject: "Sınav Kaygısı & Zaman Yönetimi", room: "Seminer Salonu" },
-    ],
+    schedule: [],
     oneOnOneSlots: [
       { id: "oo-10", studentId: "stu-8", studentName: "Ece Yıldız", day: "Çarşamba", time: "17:00 - 17:40", subject: "Haftalık Çalışma Planı", note: "11. sınıf TYT erken başlangıç rutini." },
     ],
@@ -644,26 +576,7 @@ const BASE_INITIAL_STUDENTS: StudentAccount[] = [
         ],
       },
     ],
-    schedule: [
-      {
-        id: "ss-3",
-        day: "Salı",
-        time: "15:00 - 16:00",
-        subject: "AYT Türev & Ekstremum (Birebir)",
-        teacher: "Dr. Selin Kaya",
-        room: "Danışmanlık 2",
-        type: "Etüt",
-      },
-      {
-        id: "ss-4",
-        day: "Çarşamba",
-        time: "16:00 - 17:00",
-        subject: "AYT Manyetik İndüksiyon (Birebir)",
-        teacher: "Murat Demir",
-        room: "Etüt 4",
-        type: "Etüt",
-      },
-    ],
+    schedule: [],
     studyPlan: [
       {
         id: "sp-1",
@@ -754,17 +667,7 @@ const BASE_INITIAL_STUDENTS: StudentAccount[] = [
         ],
       },
     ],
-    schedule: [
-      {
-        id: "ss-202",
-        day: "Perşembe",
-        time: "16:30 - 17:30",
-        subject: "TYT Hız Problemleri (Birebir)",
-        teacher: "Dr. Selin Kaya",
-        room: "Danışmanlık 2",
-        type: "Etüt",
-      },
-    ],
+    schedule: [],
     studyPlan: [],
     homework: [
       {
