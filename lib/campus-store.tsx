@@ -252,7 +252,7 @@ interface CampusState {
   adminAuthenticated: boolean;
 }
 
-const STORAGE_KEY = "dershane_campus_store_v14";
+const STORAGE_KEY = "dershane_campus_store_v15";
 
 const INITIAL_ANNOUNCEMENTS: CampusAnnouncement[] = [
   {
@@ -331,239 +331,7 @@ const INITIAL_CLASSES: ClassroomRecord[] = [
   },
 ];
 
-const SEED_ALL_SLOTS: string[] = [
-  "08:00 - 08:40",
-  "08:50 - 09:30",
-  "09:40 - 10:20",
-  "10:30 - 11:10",
-  "11:20 - 12:00",
-  "12:50 - 13:30",
-  "13:40 - 14:20",
-  "14:30 - 15:10",
-  "15:20 - 16:00",
-  "16:10 - 16:50",
-  "17:00 - 17:40",
-  "17:50 - 18:30",
-  "18:40 - 19:20",
-  "19:30 - 20:10",
-  "20:20 - 21:00",
-];
-
-function closeSlots(
-  days: WeekDay[],
-  predicate: (time: string) => boolean
-): string[] {
-  const out: string[] = [];
-  days.forEach((d) => {
-    SEED_ALL_SLOTS.filter(predicate).forEach((t) => out.push(`${d}|${t}`));
-  });
-  return out;
-}
-
-const WEEKDAYS_LIST: WeekDay[] = [
-  "Pazartesi",
-  "Salı",
-  "Çarşamba",
-  "Perşembe",
-  "Cuma",
-];
-
-const INITIAL_TEACHERS: TeacherAccount[] = [
-  {
-    id: "tch-1",
-    name: "Dr. Selin Kaya",
-    role: "Branş Hocası",
-    branch: "Matematik",
-    username: "selin.kaya",
-    password: "123456",
-    email: "selin.kaya@dershane.edu.tr",
-    phone: "+90 532 410 22 11",
-    schedule: [],
-    oneOnOneSlots: [],
-    // Çarşamba tam gün izinli
-    unavailableSlots: closeSlots(["Çarşamba"], () => true),
-  },
-  {
-    id: "tch-2",
-    name: "Kerem Aksoy",
-    role: "Branş Hocası",
-    branch: "Matematik",
-    username: "kerem.aksoy",
-    password: "123456",
-    email: "kerem.aksoy@dershane.edu.tr",
-    phone: "+90 533 215 48 90",
-    schedule: [],
-    oneOnOneSlots: [],
-    // Okulda görevli: hafta içi 16:10 öncesi kapalı, akşam + Cumartesi açık
-    unavailableSlots: closeSlots(WEEKDAYS_LIST, (t) => t < "16:10"),
-  },
-  {
-    id: "tch-3",
-    name: "Burak Şen",
-    role: "Branş Hocası",
-    branch: "Geometri",
-    username: "burak.sen",
-    password: "123456",
-    email: "burak.sen@dershane.edu.tr",
-    phone: "+90 532 511 40 22",
-    schedule: [],
-    oneOnOneSlots: [],
-    // Pazartesi ve Salı sabahları kapalı
-    unavailableSlots: closeSlots(["Pazartesi", "Salı"], (t) => t < "12:00"),
-  },
-  {
-    id: "tch-4",
-    name: "Murat Demir",
-    role: "Branş Hocası",
-    branch: "Fizik",
-    username: "murat.demir",
-    password: "123456",
-    email: "murat.demir@dershane.edu.tr",
-    phone: "+90 533 618 44 09",
-    schedule: [],
-    oneOnOneSlots: [],
-    // Perşembe akşamı ve Cuma sabahı kapalı
-    unavailableSlots: [
-      ...closeSlots(["Perşembe"], (t) => t >= "16:10"),
-      ...closeSlots(["Cuma"], (t) => t < "12:00"),
-    ],
-  },
-  {
-    id: "tch-5",
-    name: "Prof. Dr. Ahmet Yılmaz",
-    role: "Branş Hocası",
-    branch: "Kimya",
-    username: "ahmet.yilmaz",
-    password: "123456",
-    email: "ahmet.yilmaz@dershane.edu.tr",
-    phone: "+90 532 840 15 62",
-    schedule: [],
-    oneOnOneSlots: [],
-    // Salı tam gün kapalı
-    unavailableSlots: closeSlots(["Salı"], () => true),
-  },
-  {
-    id: "tch-6",
-    name: "Elif Çelik",
-    role: "Branş Hocası",
-    branch: "Biyoloji",
-    username: "elif.celik",
-    password: "123456",
-    email: "elif.celik@dershane.edu.tr",
-    phone: "+90 536 309 77 14",
-    schedule: [],
-    oneOnOneSlots: [],
-    // Cuma öğleden sonra kapalı
-    unavailableSlots: closeSlots(["Cuma"], (t) => t >= "12:50"),
-  },
-  {
-    id: "tch-7",
-    name: "Zeynep Aydın",
-    role: "Branş Hocası",
-    branch: "Türkçe & Edebiyat",
-    username: "zeynep.aydin",
-    password: "123456",
-    email: "zeynep.aydin@dershane.edu.tr",
-    phone: "+90 535 712 88 30",
-    schedule: [],
-    oneOnOneSlots: [],
-    // Perşembe sabahları kapalı
-    unavailableSlots: closeSlots(["Perşembe"], (t) => t < "12:00"),
-  },
-  {
-    id: "tch-8",
-    name: "Hakan Yıldız",
-    role: "Branş Hocası",
-    branch: "Türkçe & Edebiyat",
-    username: "hakan.yildiz",
-    password: "123456",
-    email: "hakan.yildiz@dershane.edu.tr",
-    phone: "+90 534 610 92 14",
-    schedule: [],
-    oneOnOneSlots: [],
-    // Okulda görevli: hafta içi 16:10 öncesi kapalı
-    unavailableSlots: closeSlots(WEEKDAYS_LIST, (t) => t < "16:10"),
-  },
-  {
-    id: "tch-9",
-    name: "Caner Özkan",
-    role: "Branş Hocası",
-    branch: "Tarih",
-    username: "caner.ozkan",
-    password: "123456",
-    email: "caner.ozkan@dershane.edu.tr",
-    phone: "+90 534 992 18 40",
-    schedule: [],
-    oneOnOneSlots: [],
-    // Pazartesi öğle arası sonrası 16:00'ya kadar kapalı
-    unavailableSlots: closeSlots(
-      ["Pazartesi"],
-      (t) => t >= "12:50" && t < "16:10"
-    ),
-  },
-  {
-    id: "tch-10",
-    name: "Merve Koç",
-    role: "Branş Hocası",
-    branch: "Coğrafya",
-    username: "merve.koc",
-    password: "123456",
-    email: "merve.koc@dershane.edu.tr",
-    phone: "+90 535 449 12 87",
-    schedule: [],
-    oneOnOneSlots: [],
-    // Çarşamba sabahları kapalı
-    unavailableSlots: closeSlots(["Çarşamba"], (t) => t < "12:00"),
-  },
-  {
-    id: "tch-11",
-    name: "Oğuzhan Arslan",
-    role: "Branş Hocası",
-    branch: "Felsefe & Din Kültürü",
-    username: "oguzhan.arslan",
-    password: "123456",
-    email: "oguzhan.arslan@dershane.edu.tr",
-    phone: "+90 536 774 30 15",
-    schedule: [],
-    oneOnOneSlots: [],
-    // Salı ve Perşembe 16:10 öncesi kapalı
-    unavailableSlots: closeSlots(["Salı", "Perşembe"], (t) => t < "16:10"),
-  },
-  {
-    id: "tch-12",
-    name: "Seda Yavuz",
-    role: "Rehberlik Hocası",
-    branch: "Rehberlik & Akademik Danışmanlık",
-    username: "seda.yavuz",
-    password: "123456",
-    email: "seda.yavuz@dershane.edu.tr",
-    phone: "+90 533 905 64 21",
-    schedule: [],
-    oneOnOneSlots: [],
-    // Akşam 18:40 sonrası kapalı
-    unavailableSlots: closeSlots(
-      [...WEEKDAYS_LIST, "Cumartesi"],
-      (t) => t >= "18:40"
-    ),
-  },
-  {
-    id: "tch-13",
-    name: "Emre Karahan",
-    role: "Etüt Nöbetçisi",
-    branch: "Etüt & Soru Çözümü",
-    username: "emre.karahan",
-    password: "123456",
-    email: "emre.karahan@dershane.edu.tr",
-    phone: "+90 537 412 55 08",
-    schedule: [],
-    oneOnOneSlots: [],
-    // Sabahları kapalı, öğleden sonra ve akşam etüt nöbetinde
-    unavailableSlots: closeSlots(
-      [...WEEKDAYS_LIST, "Cumartesi"],
-      (t) => t < "12:50"
-    ),
-  },
-];
+const INITIAL_TEACHERS: TeacherAccount[] = [];
 
 const BASE_INITIAL_STUDENTS: StudentAccount[] = [
   {
@@ -578,8 +346,8 @@ const BASE_INITIAL_STUDENTS: StudentAccount[] = [
     track: "Sayısal",
     parentName: "Hasan Yılmaz",
     target: "İTÜ Bilgisayar Mühendisliği",
-    advisorTeacherId: "tch-1",
-    advisorName: "Dr. Selin Kaya",
+    advisorTeacherId: "",
+    advisorName: "Atanmadı",
     phone: "+90 532 418 90 12",
     attendance: 97,
     status: "Aktif",
@@ -719,35 +487,8 @@ const BASE_INITIAL_STUDENTS: StudentAccount[] = [
         completed: true,
       },
     ],
-    homework: [
-      {
-        id: "hw-1",
-        subject: "Matematik",
-        title: "Türev Uygulamaları Fasikülü Test 4–7",
-        dueDate: "21 Kas 2026",
-        teacherName: "Dr. Selin Kaya",
-        status: "Bekliyor",
-      },
-      {
-        id: "hw-2",
-        subject: "Fizik",
-        title: "Elektromanyetik İndüksiyon 45 Yeni Nesil Soru",
-        dueDate: "22 Kas 2026",
-        teacherName: "Murat Demir",
-        status: "Bekliyor",
-      },
-    ],
-    guidanceSessions: [
-      {
-        id: "gs-1",
-        date: "20 Kas 2026",
-        time: "16:30",
-        advisorName: "Dr. Selin Kaya",
-        topic: "Kasım Ayı Net Hedef Revizyonu & Turlama Stratejisi",
-        note: "TYT Matematikte süre yönetimi 5 dk kısaltılacak, AYT Fizik tekrarları artırılacak.",
-        status: "Planlandı",
-      },
-    ],
+    homework: [],
+    guidanceSessions: [],
     personalNotes: [
       {
         id: "pn-1",
@@ -769,8 +510,8 @@ const BASE_INITIAL_STUDENTS: StudentAccount[] = [
     track: "Sayısal",
     parentName: "Mehmet Arslan",
     target: "Cerrahpaşa Tıp Fakültesi",
-    advisorTeacherId: "tch-1",
-    advisorName: "Dr. Selin Kaya",
+    advisorTeacherId: "",
+    advisorName: "Atanmadı",
     phone: "+90 535 712 44 09",
     attendance: 99,
     status: "Aktif",
@@ -793,16 +534,7 @@ const BASE_INITIAL_STUDENTS: StudentAccount[] = [
     ],
     schedule: [],
     studyPlan: [],
-    homework: [
-      {
-        id: "hw-201",
-        subject: "Matematik",
-        title: "İleri Düzey Problem Denemeleri",
-        dueDate: "23 Kas 2026",
-        teacherName: "Dr. Selin Kaya",
-        status: "Bekliyor",
-      },
-    ],
+    homework: [],
     guidanceSessions: [],
     personalNotes: [],
   },
@@ -818,8 +550,8 @@ const BASE_INITIAL_STUDENTS: StudentAccount[] = [
     track: "Sayısal",
     parentName: "Ayşe Demir",
     target: "ODTÜ Elektrik-Elektronik Müh.",
-    advisorTeacherId: "tch-2",
-    advisorName: "Murat Demir",
+    advisorTeacherId: "",
+    advisorName: "Atanmadı",
     phone: "+90 541 209 87 33",
     attendance: 94,
     status: "Aktif",
@@ -858,8 +590,8 @@ const BASE_INITIAL_STUDENTS: StudentAccount[] = [
     track: "Eşit Ağırlık",
     parentName: "Hasan Karahan",
     target: "Galatasaray Üniversitesi Hukuk",
-    advisorTeacherId: "tch-3",
-    advisorName: "Zeynep Aksoy",
+    advisorTeacherId: "",
+    advisorName: "Atanmadı",
     phone: "+90 537 210 44 19",
     attendance: 98,
     status: "Aktif",
@@ -882,12 +614,8 @@ const BASE_INITIAL_STUDENTS: StudentAccount[] = [
     ],
     schedule: [],
     studyPlan: [],
-    homework: [
-      { id: "hw-z1", subject: "AYT Edebiyat", title: "Divan Şiiri Mazmunları Tarama", dueDate: "22 Kasım", teacherName: "Zeynep Aksoy", status: "Bekliyor" },
-    ],
-    guidanceSessions: [
-      { id: "gs-z1", date: "19 Kasım 2026", time: "14:00", advisorName: "Zeynep Aksoy", topic: "EA Matematik Net Artışı", note: "İlk 12 soru hızlandırma planlandı.", status: "Planlandı" },
-    ],
+    homework: [],
+    guidanceSessions: [],
     personalNotes: [],
   },
   {
@@ -902,8 +630,8 @@ const BASE_INITIAL_STUDENTS: StudentAccount[] = [
     track: "Eşit Ağırlık",
     parentName: "Serkan Kaya",
     target: "Boğaziçi İşletme",
-    advisorTeacherId: "tch-6",
-    advisorName: "Caner Aydın",
+    advisorTeacherId: "",
+    advisorName: "Atanmadı",
     phone: "+90 538 411 62 05",
     attendance: 94,
     status: "Aktif",
@@ -942,8 +670,8 @@ const BASE_INITIAL_STUDENTS: StudentAccount[] = [
     track: "Sözel",
     parentName: "Fatma Şahin",
     target: "Ankara Üniversitesi İletişim",
-    advisorTeacherId: "tch-6",
-    advisorName: "Caner Aydın",
+    advisorTeacherId: "",
+    advisorName: "Atanmadı",
     phone: "+90 539 601 29 77",
     attendance: 99,
     status: "Aktif",
@@ -982,8 +710,8 @@ const BASE_INITIAL_STUDENTS: StudentAccount[] = [
     track: "Sayısal",
     parentName: "Kemal Öztürk",
     target: "Hacettepe Tıp",
-    advisorTeacherId: "tch-2",
-    advisorName: "Murat Demir",
+    advisorTeacherId: "",
+    advisorName: "Atanmadı",
     phone: "+90 531 820 33 90",
     attendance: 96,
     status: "Aktif",
@@ -1022,8 +750,8 @@ const BASE_INITIAL_STUDENTS: StudentAccount[] = [
     track: "Sayısal",
     parentName: "Dilek Yıldız",
     target: "İTÜ Mimarlık",
-    advisorTeacherId: "tch-5",
-    advisorName: "Elif Çelik",
+    advisorTeacherId: "",
+    advisorName: "Atanmadı",
     phone: "+90 542 190 85 11",
     attendance: 97,
     status: "Aktif",
@@ -1187,16 +915,7 @@ const GENERATED_STUDENTS: StudentAccount[] = EXTRA_FIRST_NAMES.map((first, idx) 
     ],
     schedule: [],
     studyPlan: [],
-    homework: [
-      {
-        id: `hw-g-${num}`,
-        subject: advisor?.branch.split("&")[0].trim() ?? "Matematik",
-        title: "Haftalık Kazanım Tarama Testi",
-        dueDate: "24 Kasım",
-        teacherName: advisor?.name ?? "Danışman",
-        status: idx % 2 === 0 ? "Tamamlandı" : "Bekliyor",
-      },
-    ],
+    homework: [],
     guidanceSessions: [],
     personalNotes: [],
   };
