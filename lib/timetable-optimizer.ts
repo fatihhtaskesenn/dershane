@@ -44,7 +44,9 @@ export interface TeacherLoadReport {
   assignedHours: number;
   openSlotCount: number;
   closedSlotCount: number;
+  remainingFreeCount: number;
   idleGaps: number;
+  freeSlotsByDay: { day: WeekDay; freeTimes: string[] }[];
 }
 
 export interface OptimizationMetrics {
@@ -784,24 +786,40 @@ export function runOptimizedTimetableSolver(
   const teacherReports: TeacherLoadReport[] = teachers
     .map((t) => {
       const grid = teacherGrid.get(t.name);
+      const tBlk = teacherBlocked.get(t.name);
       let assigned = 0;
-      if (grid) {
-        for (let d = 0; d < D; d++) {
-          for (let s = 0; s < T; s++) {
-            if (grid[d][s]) assigned += 1;
+      let remainingFreeCount = 0;
+      const freeSlotsByDay: { day: WeekDay; freeTimes: string[] }[] = [];
+
+      for (let d = 0; d < D; d++) {
+        const freeTimes: string[] = [];
+        for (let s = 0; s < T; s++) {
+          const isOccupied = Boolean(grid?.[d][s]);
+          const isClosed = Boolean(tBlk?.[d][s]);
+          if (isOccupied) {
+            assigned += 1;
+          } else if (!isClosed) {
+            remainingFreeCount += 1;
+            freeTimes.push(candidateTimes[s]);
           }
         }
+        if (freeTimes.length > 0) {
+          freeSlotsByDay.push({ day: candidateDays[d], freeTimes });
+        }
       }
+
       return {
         teacherName: t.name,
         branch: t.branch,
         assignedHours: assigned,
         openSlotCount: teacherOpenCount.get(t.name) ?? D * T,
         closedSlotCount: teacherClosedCount.get(t.name) ?? 0,
+        remainingFreeCount,
         idleGaps: perTeacher.get(t.name) ?? 0,
+        freeSlotsByDay,
       };
     })
-    .filter((r) => r.assignedHours > 0 || r.closedSlotCount > 0)
+    .filter((r) => r.assignedHours > 0 || r.closedSlotCount > 0 || r.remainingFreeCount > 0)
     .sort((a, b) => b.assignedHours - a.assignedHours);
 
   const durationMs = Math.max(1, Math.round(performance.now() - startTime));

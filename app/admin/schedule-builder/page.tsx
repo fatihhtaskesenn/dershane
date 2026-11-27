@@ -20,6 +20,7 @@ import {
   type TeacherAccount,
 } from "@/lib/campus-store";
 import {
+  buildDailySlots,
   doesTeacherMatchSubject,
   EXAM_LEVELS,
   PRESET_SUBJECTS,
@@ -63,13 +64,45 @@ function getMatchingTeachers(teachers: TeacherAccount[], subject: string) {
   return teachers.filter((t) => doesTeacherMatchSubject(t.branch, subject));
 }
 
+function countOpenSlotsInProfile(
+  teacher: TeacherAccount,
+  profile: ClassTimeProfile
+): number {
+  const days = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"];
+  const allSlots = buildDailySlots(50).slots.filter((tm) => {
+    if (profile === "morning") return tm < "12:00";
+    if (profile === "daytime") return tm <= "17:40";
+    if (profile === "afternoon") return tm >= "12:00";
+    if (profile === "after_school") return tm >= "16:10";
+    if (profile === "evening") return tm >= "17:00";
+    return true;
+  });
+  const closed = new Set(teacher.unavailableSlots ?? []);
+  let open = 0;
+  days.forEach((d) => {
+    allSlots.forEach((t) => {
+      if (!closed.has(`${d}|${t}`)) open += 1;
+    });
+  });
+  return open;
+}
+
 function buildDefaultCurriculum(
   track: string,
   teachers: TeacherAccount[],
-  prefix: string
+  prefix: string,
+  timeProfile: ClassTimeProfile = "fullday"
 ): OptimizerCurriculumRow[] {
-  const pickTeacher = (sub: string) =>
-    getMatchingTeachers(teachers, sub)[0]?.name ?? "";
+  const pickTeacher = (sub: string) => {
+    const matched = getMatchingTeachers(teachers, sub);
+    if (matched.length === 0) return "";
+    const sorted = [...matched].sort(
+      (a, b) =>
+        countOpenSlotsInProfile(b, timeProfile) -
+        countOpenSlotsInProfile(a, timeProfile)
+    );
+    return sorted[0]?.name ?? "";
+  };
 
   if (track === "Eşit Ağırlık") {
     return [
@@ -109,7 +142,14 @@ function buildInitialCurriculums(
 ): Record<string, OptimizerCurriculumRow[]> {
   const map: Record<string, OptimizerCurriculumRow[]> = {};
   classes.forEach((cls) => {
-    map[cls.id] = buildDefaultCurriculum(cls.track, teachers, cls.id);
+    const prof: ClassTimeProfile =
+      cls.timeProfile ??
+      (cls.isSchoolStudentClass
+        ? "after_school"
+        : cls.name.toLowerCase().includes("mezun")
+        ? "daytime"
+        : "fullday");
+    map[cls.id] = buildDefaultCurriculum(cls.track, teachers, cls.id, prof);
   });
   return map;
 }
@@ -155,7 +195,6 @@ export default function AdminScheduleBuilderPage() {
     warnings: string[];
     metrics: OptimizationMetrics;
   } | null>(null);
-  const [showTeacherReport, setShowTeacherReport] = useState<boolean>(false);
 
   const selectedClass =
     classes.find((c) => c.id === selectedClassId) ?? classes[0];
@@ -733,16 +772,17 @@ export default function AdminScheduleBuilderPage() {
             </div>
           </div>
 
-          {/* Optimization Result & Metrics */}
+          {/* Distribution Status Report & Teacher Free Time Overview */}
           {resultBanner && (
-            <div
-              className={`mt-4 rounded-xl border p-4 text-xs ${
-                resultBanner.ok
-                  ? "border-[#BBE0CE] bg-[#EAF6F0] text-[#0E4D3A]"
-                  : "border-[#FDE68A] bg-[#FFFBEB] text-[#92400E]"
-              }`}
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="mt-5 space-y-4 rounded-xl border border-[#DCE4EE] bg-[#FCFBF8] p-4 text-xs sm:p-5">
+              {/* Top Status Summary */}
+              <div
+                className={`flex flex-col justify-between gap-2 rounded-xl border p-3.5 sm:flex-row sm:items-center ${
+                  resultBanner.ok
+                    ? "border-[#BBE0CE] bg-[#EAF6F0] text-[#0E4D3A]"
+                    : "border-[#FDE68A] bg-[#FFFBEB] text-[#92400E]"
+                }`}
+              >
                 <p className="flex items-center gap-2 font-bold">
                   {resultBanner.ok ? (
                     <CheckCircle2 className="h-4 w-4 shrink-0" />
@@ -751,100 +791,148 @@ export default function AdminScheduleBuilderPage() {
                   )}
                   <span>{resultBanner.message}</span>
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setShowTeacherReport((v) => !v)}
-                  className="rounded-lg border border-current/20 bg-white/70 px-2.5 py-1 text-[11px] font-bold hover:bg-white"
-                >
-                  {showTeacherReport
-                    ? "Öğretmen Raporunu Gizle"
-                    : "Öğretmen Yük & Boşluk Raporu"}
-                </button>
-              </div>
-
-              {/* Metrics Grid */}
-              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
-                <div className="rounded-lg bg-white/80 p-2.5">
-                  <p className="text-[10px] opacity-75">Optimizasyon Puanı</p>
-                  <p className="mt-0.5 text-base font-bold text-[#11284B]">
-                    {resultBanner.metrics.optimizationScore} / 100
-                  </p>
-                </div>
-                <div className="rounded-lg bg-white/80 p-2.5">
-                  <p className="text-[10px] opacity-75">Yerleşim Oranı</p>
-                  <p className="mt-0.5 text-base font-bold text-[#135D43]">
-                    %{resultBanner.metrics.placementRate}
-                  </p>
-                </div>
-                <div className="rounded-lg bg-white/80 p-2.5">
-                  <p className="text-[10px] opacity-75">Öğretmen Pencere (Boşluk)</p>
-                  <p className="mt-0.5 text-base font-bold text-[#11284B]">
-                    {resultBanner.metrics.initialTeacherGaps} →{" "}
-                    {resultBanner.metrics.finalTeacherGaps} saat
-                  </p>
-                </div>
-                <div className="rounded-lg bg-white/80 p-2.5">
-                  <p className="text-[10px] opacity-75">Swap Kurtarma / Bölme</p>
-                  <p className="mt-0.5 text-base font-bold text-[#203B5C]">
-                    {resultBanner.metrics.swapRescues} /{" "}
-                    {resultBanner.metrics.splitFallbacks}
-                  </p>
-                </div>
-                <div className="rounded-lg bg-white/80 p-2.5">
-                  <p className="text-[10px] opacity-75">Çözüm Süresi</p>
-                  <p className="mt-0.5 flex items-center gap-1 text-base font-bold text-[#11284B]">
-                    <Clock className="h-3.5 w-3.5 text-[#B18A52]" />
-                    <span>{resultBanner.metrics.durationMs} ms</span>
-                  </p>
+                <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold">
+                  <span className="rounded-md bg-white/80 px-2.5 py-1 text-[#135D43]">
+                    Yerleşen: {resultBanner.metrics.placedHours} /{" "}
+                    {resultBanner.metrics.requestedHours} Saat (%
+                    {resultBanner.metrics.placementRate})
+                  </span>
+                  {resultBanner.metrics.requestedHours -
+                    resultBanner.metrics.placedHours >
+                    0 && (
+                    <span className="rounded-md bg-rose-100 px-2.5 py-1 text-rose-700">
+                      Boşta Kalan:{" "}
+                      {resultBanner.metrics.requestedHours -
+                        resultBanner.metrics.placedHours}{" "}
+                      Saat
+                    </span>
+                  )}
                 </div>
               </div>
 
               {resultBanner.warnings.length > 0 && (
-                <ul className="mt-3 list-inside list-disc space-y-0.5 text-[11px]">
-                  {resultBanner.warnings.map((w, i) => (
-                    <li key={i}>{w}</li>
-                  ))}
-                </ul>
+                <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-[#92400E]">
+                  <p className="mb-1.5 font-bold">Yerleştirilemeyen Dersler:</p>
+                  <ul className="list-inside list-disc space-y-0.5 text-[11px]">
+                    {resultBanner.warnings.map((w, i) => (
+                      <li key={i}>{w}</li>
+                    ))}
+                  </ul>
+                </div>
               )}
 
-              {showTeacherReport &&
-                resultBanner.metrics.teacherReports.length > 0 && (
-                  <div className="mt-3 overflow-x-auto rounded-lg border border-black/10 bg-white">
-                    <table className="w-full text-left text-[11px] text-[#11284B]">
-                      <thead className="bg-[#F8FAFC] text-[#475569]">
+              {/* Always-Visible Teacher Load & Free Time Report */}
+              {resultBanner.metrics.teacherReports.length > 0 && (
+                <div>
+                  <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#11284B]">
+                      <Clock className="h-4 w-4 text-[#135D43]" />
+                      <span>
+                        Öğretmen Durum Raporu — Ders Yükü &amp; Boş Vakitler
+                      </span>
+                    </h3>
+                    <span className="text-[11px] text-[#64748B]">
+                      Hocaların atanan ders saatleri ve etüt/birebir için kalan
+                      boş vakitleri
+                    </span>
+                  </div>
+
+                  <div className="overflow-x-auto rounded-xl border border-[#DCE4EE] bg-white">
+                    <table className="w-full min-w-[720px] text-left text-[11px] text-[#11284B]">
+                      <thead className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[#475569]">
                         <tr>
-                          <th className="px-3 py-2">Öğretmen</th>
-                          <th className="px-3 py-2">Branş</th>
-                          <th className="px-3 py-2">Atanan Saat</th>
-                          <th className="px-3 py-2">Açık / Kapalı Slot</th>
-                          <th className="px-3 py-2">Günlük Boşluk (Pencere)</th>
+                          <th className="px-3 py-2.5">Öğretmen</th>
+                          <th className="px-3 py-2.5">Doluluk Durumu</th>
+                          <th className="px-3 py-2.5 text-center">Ara Boşluk</th>
+                          <th className="px-3 py-2.5">
+                            Kalan Boş Vakitler (Gün Gün Müsait Saatler)
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[#E2E8F0]">
-                        {resultBanner.metrics.teacherReports.map((rep) => (
-                          <tr key={rep.teacherName}>
-                            <td className="px-3 py-1.5 font-bold">
-                              {rep.teacherName}
-                            </td>
-                            <td className="px-3 py-1.5 text-[#64748B]">
-                              {rep.branch}
-                            </td>
-                            <td className="px-3 py-1.5 font-semibold text-[#135D43]">
-                              {rep.assignedHours} Saat
-                            </td>
-                            <td className="px-3 py-1.5">
-                              {rep.openSlotCount} açık / {rep.closedSlotCount}{" "}
-                              kapalı
-                            </td>
-                            <td className="px-3 py-1.5 font-semibold">
-                              {rep.idleGaps} saat
-                            </td>
-                          </tr>
-                        ))}
+                        {resultBanner.metrics.teacherReports.map((rep) => {
+                          const fillPct =
+                            rep.openSlotCount > 0
+                              ? Math.min(
+                                  100,
+                                  Math.round(
+                                    (rep.assignedHours / rep.openSlotCount) * 100
+                                  )
+                                )
+                              : 0;
+                          return (
+                            <tr key={rep.teacherName} className="align-top">
+                              <td className="px-3 py-2.5">
+                                <p className="font-bold text-[#11284B]">
+                                  {rep.teacherName}
+                                </p>
+                                <p className="text-[10px] text-[#64748B]">
+                                  {rep.branch}
+                                </p>
+                              </td>
+                              <td className="px-3 py-2.5">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-[#135D43]">
+                                    {rep.assignedHours} / {rep.openSlotCount}s
+                                  </span>
+                                  <span className="text-[10px] text-[#64748B]">
+                                    (%{fillPct})
+                                  </span>
+                                </div>
+                                <div className="mt-1 h-1.5 w-28 overflow-hidden rounded-full bg-[#E2E8F0]">
+                                  <div
+                                    className="h-full rounded-full bg-[#135D43]"
+                                    style={{ width: `${fillPct}%` }}
+                                  />
+                                </div>
+                              </td>
+                              <td className="px-3 py-2.5 text-center">
+                                <span
+                                  className={`inline-block rounded px-2 py-0.5 font-bold ${
+                                    rep.idleGaps === 0
+                                      ? "bg-emerald-50 text-emerald-700"
+                                      : "bg-amber-50 text-amber-700"
+                                  }`}
+                                >
+                                  {rep.idleGaps} saat
+                                </span>
+                              </td>
+                              <td className="px-3 py-2.5">
+                                {rep.freeSlotsByDay.length === 0 ? (
+                                  <span className="text-[#94A3B8]">
+                                    Boş vakit kalmadı
+                                  </span>
+                                ) : (
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {rep.freeSlotsByDay.map((dInfo) => {
+                                      const startTimes = dInfo.freeTimes
+                                        .map((t) => t.split(" - ")[0])
+                                        .join(", ");
+                                      return (
+                                        <span
+                                          key={dInfo.day}
+                                          title={`${dInfo.day}: ${dInfo.freeTimes.join(", ")}`}
+                                          className="rounded-md border border-[#DCE4EE] bg-[#F8FAFC] px-2 py-1 text-[10px] text-[#203B5C]"
+                                        >
+                                          <strong className="text-[#11284B]">
+                                            {dInfo.day.slice(0, 3)} (
+                                            {dInfo.freeTimes.length}s):
+                                          </strong>{" "}
+                                          {startTimes}
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
-                )}
+                </div>
+              )}
             </div>
           )}
         </div>
