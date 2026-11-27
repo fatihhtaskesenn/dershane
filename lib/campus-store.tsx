@@ -175,6 +175,8 @@ export interface TeacherAccount {
   phone: string;
   schedule: TeacherScheduleSlot[];
   oneOnOneSlots: OneOnOneSlot[];
+  /** Kapalı / izinli saatler ("Pazartesi|08:00 - 08:40" biçiminde) */
+  unavailableSlots?: string[];
 }
 
 export interface CampusAnnouncement {
@@ -1496,6 +1498,10 @@ interface CampusContextValue {
     patch: Partial<Pick<OneOnOneSlot, "day" | "time" | "subject" | "note">>
   ) => void;
   removeOneOnOneSlot: (teacherId: string, slotId: string) => void;
+  updateTeacherUnavailableSlots: (
+    teacherId: string,
+    unavailableSlots: string[]
+  ) => void;
   addClass: (
     payload: Omit<ClassroomRecord, "id" | "schedule">,
     initialStudentIds?: string[]
@@ -2571,6 +2577,19 @@ export function CampusProvider({ children }: { children: React.ReactNode }) {
     return `${tid}-${idx}`;
   }
 
+  const updateTeacherUnavailableSlots: CampusContextValue["updateTeacherUnavailableSlots"] =
+    (teacherId, unavailableSlots) => {
+      const normalized = Array.from(
+        new Set(unavailableSlots.map((s) => s.trim()).filter(Boolean))
+      );
+      persist((prev) => ({
+        ...prev,
+        teachers: prev.teachers.map((t) =>
+          t.id === teacherId ? { ...t, unavailableSlots: normalized } : t
+        ),
+      }));
+    };
+
   const clearClassSchedule: CampusContextValue["clearClassSchedule"] = (
     classId
   ) => {
@@ -2815,6 +2834,7 @@ export function CampusProvider({ children }: { children: React.ReactNode }) {
         createOneOnOneSession,
         updateOneOnOneSlot,
         removeOneOnOneSlot,
+        updateTeacherUnavailableSlots,
         addClass,
         updateClass,
         deleteClass,
