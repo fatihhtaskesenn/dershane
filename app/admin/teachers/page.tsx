@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { BarChart3, CalendarDays, CalendarPlus, Check, Clock, Pencil, Search, Trash2, X } from "lucide-react";
+import { BarChart3, CalendarDays, CalendarPlus, Check, Clock, Lock, Pencil, Search, Trash2, X } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -15,6 +15,7 @@ import {
 import { useCampus, type TeacherRole, type WeekDay } from "@/lib/campus-store";
 import {
   ALL_PRESET_TIME_SLOTS,
+  buildDailySlots,
   doesTeacherMatchSubject,
   EXAM_LEVELS,
   PRESET_SUBJECTS,
@@ -36,6 +37,7 @@ export default function AdminTeachersPage() {
     removeTeacherScheduleSlot,
     createOneOnOneSession,
     removeOneOnOneSlot,
+    updateTeacherUnavailableSlots,
   } = useCampus();
 
   const [mounted, setMounted] = useState(false);
@@ -154,6 +156,59 @@ export default function AdminTeachersPage() {
         .length,
     }));
   }, [selectedTeacher]);
+
+  const availabilityDays: WeekDay[] = useMemo(
+    () => ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"],
+    []
+  );
+  const availabilityTimes = useMemo(() => buildDailySlots(50).slots, []);
+  const unavailableSet = useMemo(
+    () => new Set(selectedTeacher?.unavailableSlots ?? []),
+    [selectedTeacher]
+  );
+
+  const toggleTeacherSlot = (day: WeekDay, time: string) => {
+    if (!selectedTeacher) return;
+    const key = `${day}|${time.trim()}`;
+    const next = new Set(selectedTeacher.unavailableSlots ?? []);
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    updateTeacherUnavailableSlots(selectedTeacher.id, Array.from(next));
+  };
+
+  const toggleTeacherDay = (day: WeekDay) => {
+    if (!selectedTeacher) return;
+    const next = new Set(selectedTeacher.unavailableSlots ?? []);
+    const keys = availabilityTimes.map((t) => `${day}|${t.trim()}`);
+    const allClosed = keys.every((k) => next.has(k));
+    if (allClosed) keys.forEach((k) => next.delete(k));
+    else keys.forEach((k) => next.add(k));
+    updateTeacherUnavailableSlots(selectedTeacher.id, Array.from(next));
+  };
+
+  const applyAvailabilityPreset = (
+    preset: "before_1610" | "morning" | "afternoon" | "open_all"
+  ) => {
+    if (!selectedTeacher) return;
+    if (preset === "open_all") {
+      updateTeacherUnavailableSlots(selectedTeacher.id, []);
+      return;
+    }
+    const next = new Set(selectedTeacher.unavailableSlots ?? []);
+    const targetTimes = availabilityTimes.filter((t) => {
+      if (preset === "before_1610") return t < "16:10";
+      if (preset === "morning") return t < "12:00";
+      return t >= "12:00" && t < "17:00";
+    });
+    const keys: string[] = [];
+    availabilityDays.forEach((d) =>
+      targetTimes.forEach((t) => keys.push(`${d}|${t.trim()}`))
+    );
+    const allClosed = keys.length > 0 && keys.every((k) => next.has(k));
+    if (allClosed) keys.forEach((k) => next.delete(k));
+    else keys.forEach((k) => next.add(k));
+    updateTeacherUnavailableSlots(selectedTeacher.id, Array.from(next));
+  };
 
   const handleAddSchedule = (e: React.FormEvent) => {
     e.preventDefault();
@@ -309,6 +364,11 @@ export default function AdminTeachersPage() {
                         <span className="rounded bg-[#EEF3F9] px-2 py-0.5 font-bold text-[#0D2558]">
                           {totalHours} Saat/Hf
                         </span>
+                        {(t.unavailableSlots ?? []).length > 0 && (
+                          <span className="ml-1 rounded bg-rose-50 px-1.5 py-0.5 text-[10px] font-semibold text-rose-700">
+                            {(t.unavailableSlots ?? []).length} kapalı
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-2.5 text-right">
                         <span
@@ -499,6 +559,115 @@ export default function AdminTeachersPage() {
                   </BarChart>
                 </ResponsiveContainer>
               )}
+            </div>
+          </div>
+
+          {/* Teacher Availability Matrix */}
+          <div className="rounded-xl border border-[#DCE4EE] bg-white p-6">
+            <div className="flex flex-col justify-between gap-3 border-b border-[#E9EBEE] pb-4 lg:flex-row lg:items-center">
+              <div>
+                <h3 className="flex items-center gap-2 font-editorial text-xl font-semibold text-[#0D2558]">
+                  <Lock className="h-4 w-4 text-[#B18A52]" />
+                  <span>
+                    {selectedTeacher.name} — Müsaitlik Durumu (
+                    {availabilityDays.length * availabilityTimes.length -
+                      unavailableSet.size}{" "}
+                    Açık / {unavailableSet.size} Kapalı)
+                  </span>
+                </h3>
+                <p className="mt-0.5 text-xs text-[#64748B]">
+                  Öğretmenin okul veya özel nedenlerle ders veremeyeceği saatleri
+                  kapatın. Otomatik ders programı motoru bu matrisi doğrudan
+                  kullanır.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                <button
+                  type="button"
+                  onClick={() => applyAvailabilityPreset("before_1610")}
+                  className="rounded-lg border border-[#B18A52]/40 bg-[#FAF8F5] px-2.5 py-1.5 font-semibold text-[#11284B] hover:border-[#B18A52]"
+                >
+                  Okul Saati Kapat (16:10 Öncesi)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyAvailabilityPreset("morning")}
+                  className="rounded-lg border border-[#DCE4EE] bg-white px-2.5 py-1.5 font-semibold text-[#203B5C] hover:border-[#B18A52]"
+                >
+                  Sabahları Kapat
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyAvailabilityPreset("open_all")}
+                  className="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 font-semibold text-emerald-700 hover:bg-emerald-100"
+                >
+                  Tümünü Müsait Yap
+                </button>
+                <Link
+                  href="/admin/schedule-builder"
+                  className="rounded-lg bg-[#135D43] px-3 py-1.5 font-bold text-white hover:bg-[#0E4A35]"
+                >
+                  Program Oluşturucuya Git →
+                </Link>
+              </div>
+            </div>
+
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full min-w-[680px] border-collapse text-[11px]">
+                <thead>
+                  <tr>
+                    <th className="border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-2 text-left font-bold text-[#203B5C]">
+                      Saat
+                    </th>
+                    {availabilityDays.map((day) => (
+                      <th
+                        key={day}
+                        className="border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-center"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => toggleTeacherDay(day)}
+                          title="Tüm günü kapat / aç"
+                          className="font-bold text-[#11284B] hover:text-[#135D43]"
+                        >
+                          {day}
+                        </button>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {availabilityTimes.map((time) => (
+                    <tr key={time}>
+                      <td className="border border-[#E2E8F0] bg-[#FCFBF8] px-2.5 py-1 font-semibold text-[#475569]">
+                        {time}
+                      </td>
+                      {availabilityDays.map((day) => {
+                        const key = `${day}|${time.trim()}`;
+                        const isClosed = unavailableSet.has(key);
+                        return (
+                          <td
+                            key={key}
+                            className="border border-[#E2E8F0] p-1 text-center"
+                          >
+                            <button
+                              type="button"
+                              onClick={() => toggleTeacherSlot(day, time)}
+                              className={`w-full rounded py-1 font-semibold transition ${
+                                isClosed
+                                  ? "bg-rose-100 text-rose-700 hover:bg-rose-200"
+                                  : "bg-emerald-50/70 text-emerald-700 hover:bg-emerald-100"
+                              }`}
+                            >
+                              {isClosed ? "Kapalı" : "Müsait"}
+                            </button>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import Link from "next/link";
 import {
   AlertTriangle,
   CalendarDays,
@@ -33,10 +34,32 @@ import {
 import {
   runOptimizedTimetableSolver,
   type BlockMode,
+  type ClassTimeProfile,
   type OptimizationIntensity,
   type OptimizationMetrics,
   type OptimizerCurriculumRow,
 } from "@/lib/timetable-optimizer";
+
+const TIME_PROFILE_OPTIONS: { value: ClassTimeProfile; label: string; short: string }[] = [
+  { value: "fullday", label: "Tam Gün (08:00 – 21:00)", short: "08:00–21:00" },
+  { value: "daytime", label: "Gündüz / Mezun (08:00 – 17:40)", short: "08:00–17:40" },
+  { value: "morning", label: "Sabah Grubu (08:00 – 12:00)", short: "08:00–12:00" },
+  { value: "afternoon", label: "Öğle Sonrası (12:50 – 21:00)", short: "12:50–21:00" },
+  { value: "after_school", label: "Okul Sonrası (16:10 – 21:00)", short: "16:10+" },
+  { value: "evening", label: "Akşam Grubu (17:00 – 21:00)", short: "17:00+" },
+];
+
+function buildInitialTimeProfiles(
+  classes: ClassroomRecord[]
+): Record<string, ClassTimeProfile> {
+  const map: Record<string, ClassTimeProfile> = {};
+  classes.forEach((cls) => {
+    map[cls.id] = cls.name.toLowerCase().includes("mezun")
+      ? "daytime"
+      : "fullday";
+  });
+  return map;
+}
 
 function getMatchingTeachers(teachers: TeacherAccount[], subject: string) {
   return teachers.filter((t) => doesTeacherMatchSubject(t.branch, subject));
@@ -107,6 +130,9 @@ export default function AdminScheduleBuilderPage() {
   const [curriculumsByClass, setCurriculumsByClass] = useState<
     Record<string, OptimizerCurriculumRow[]>
   >(() => buildInitialCurriculums(classes, teachers));
+  const [timeProfileByClass, setTimeProfileByClass] = useState<
+    Record<string, ClassTimeProfile>
+  >(() => buildInitialTimeProfiles(classes));
 
   // Hard & Soft constraint controls
   const [daysScope, setDaysScope] = useState<"weekdays" | "sixdays">("weekdays");
@@ -216,8 +242,8 @@ export default function AdminScheduleBuilderPage() {
     const all = buildDailySlots(50).slots;
     return all.filter((t) => {
       if (timeWindow === "morning") return t < "12:00";
-      if (timeWindow === "afternoon") return t >= "12:00" && t <= "17:10";
-      return t <= "17:10";
+      if (timeWindow === "afternoon") return t >= "12:00";
+      return true;
     });
   }, [timeWindow]);
 
@@ -243,12 +269,16 @@ export default function AdminScheduleBuilderPage() {
     updateTeacherUnavailableSlots(selectedTeacher.id, Array.from(current));
   };
 
-  const handleTogglePeriodBlock = (period: "morning" | "afternoon") => {
+  const handleTogglePeriodBlock = (
+    period: "morning" | "afternoon" | "before_1610"
+  ) => {
     if (!selectedTeacher) return;
     const current = new Set(selectedTeacher.unavailableSlots ?? []);
-    const targetTimes = matrixTimes.filter((t) =>
-      period === "morning" ? t < "12:00" : t >= "12:00"
-    );
+    const targetTimes = matrixTimes.filter((t) => {
+      if (period === "morning") return t < "12:00";
+      if (period === "before_1610") return t < "16:10";
+      return t >= "12:00";
+    });
     const keys: string[] = [];
     matrixDays.forEach((d) => {
       targetTimes.forEach((t) => keys.push(`${d}|${t.trim()}`));
@@ -319,6 +349,7 @@ export default function AdminScheduleBuilderPage() {
       {
         daysScope,
         timeWindow,
+        classTimeProfiles: timeProfileByClass,
         preserveExamBlocks,
         minimizeTeacherGaps,
         balanceDailySubjects,
@@ -438,7 +469,12 @@ export default function AdminScheduleBuilderPage() {
                   </span>
                 </div>
                 <p className="mt-1 text-[10px] text-[#64748B]">
-                  {cls.track} · Atanan: {assignedHrs} Saat
+                  {cls.track} · Atanan: {assignedHrs}s ·{" "}
+                  <span className="font-semibold text-[#203B5C]">
+                    {TIME_PROFILE_OPTIONS.find(
+                      (o) => o.value === (timeProfileByClass[cls.id] ?? "fullday")
+                    )?.short ?? "08:00–21:00"}
+                  </span>
                 </p>
               </button>
             );
@@ -467,6 +503,23 @@ export default function AdminScheduleBuilderPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-1.5">
+              <select
+                value={timeProfileByClass[selectedClass.id] ?? "fullday"}
+                onChange={(e) =>
+                  setTimeProfileByClass((prev) => ({
+                    ...prev,
+                    [selectedClass.id]: e.target.value as ClassTimeProfile,
+                  }))
+                }
+                title="Sınıfın Ders Başlangıç ve Saat Aralığı"
+                className="rounded-lg border border-[#135D43]/40 bg-[#EAF6F0] px-2.5 py-1.5 text-[11px] font-bold text-[#135D43]"
+              >
+                {TIME_PROFILE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    Saat: {opt.label}
+                  </option>
+                ))}
+              </select>
               {(["Sayısal", "Eşit Ağırlık", "Sözel"] as const).map((tmpl) => (
                 <button
                   key={tmpl}
@@ -698,11 +751,24 @@ export default function AdminScheduleBuilderPage() {
               <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
                 <button
                   type="button"
+                  onClick={() => handleTogglePeriodBlock("before_1610")}
+                  className="rounded-lg border border-[#B18A52]/40 bg-[#FAF8F5] px-2.5 py-1.5 font-semibold text-[#11284B] hover:border-[#B18A52]"
+                >
+                  Okul Saati Kapat (16:10 Öncesi)
+                </button>
+                <button
+                  type="button"
                   onClick={() => handleTogglePeriodBlock("morning")}
                   className="rounded-lg border border-[#DCE4EE] bg-[#FCFBF8] px-2.5 py-1.5 font-semibold text-[#203B5C] hover:border-[#B18A52]"
                 >
                   Sabahları Kapat / Aç
                 </button>
+                <Link
+                  href="/admin/teachers"
+                  className="rounded-lg border border-[#11284B]/20 bg-[#EEF3F9] px-2.5 py-1.5 font-semibold text-[#11284B] hover:bg-[#DCE4EE]"
+                >
+                  Öğretmen Durumlarından Düzenle →
+                </Link>
                 <button
                   type="button"
                   onClick={() => handleTogglePeriodBlock("afternoon")}

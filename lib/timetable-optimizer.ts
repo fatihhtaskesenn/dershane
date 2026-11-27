@@ -8,6 +8,13 @@ import { buildDailySlots } from "@/components/WeeklyTimetable";
 
 export type BlockMode = "auto" | "double" | "single";
 export type OptimizationIntensity = "standard" | "high" | "max";
+export type ClassTimeProfile =
+  | "fullday"
+  | "daytime"
+  | "morning"
+  | "afternoon"
+  | "after_school"
+  | "evening";
 
 export interface OptimizerCurriculumRow {
   rowId: string;
@@ -22,6 +29,7 @@ export interface OptimizerCurriculumRow {
 export interface OptimizerOptions {
   daysScope: "weekdays" | "sixdays";
   timeWindow: "morning" | "afternoon" | "fullday";
+  classTimeProfiles?: Record<string, ClassTimeProfile>;
   preserveExamBlocks: boolean;
   minimizeTeacherGaps: boolean;
   balanceDailySubjects: boolean;
@@ -161,8 +169,8 @@ export function runOptimizedTimetableSolver(
   const allSlots = buildDailySlots(50).slots;
   const candidateTimes = allSlots.filter((t) => {
     if (options.timeWindow === "morning") return t < "12:00";
-    if (options.timeWindow === "afternoon") return t >= "12:00" && t <= "17:10";
-    return t <= "17:10";
+    if (options.timeWindow === "afternoon") return t >= "12:00";
+    return true;
   });
 
   const D = candidateDays.length;
@@ -226,9 +234,22 @@ export function runOptimizedTimetableSolver(
     teacherClosedCount.set(t.name, closed);
   });
 
-  // Class exam block matrices
+  // Class exam block matrices & per-class time profile masks
   const classExamBlocked = new Map<string, boolean[][]>();
+  const classTimeAllowed = new Map<string, boolean[]>();
   targetClasses.forEach((cls) => {
+    const profile: ClassTimeProfile =
+      options.classTimeProfiles?.[cls.id] ?? "fullday";
+    const allowedMask = candidateTimes.map((tm) => {
+      if (profile === "morning") return tm < "12:00";
+      if (profile === "daytime") return tm <= "17:40";
+      if (profile === "afternoon") return tm >= "12:00";
+      if (profile === "after_school") return tm >= "16:10";
+      if (profile === "evening") return tm >= "17:00";
+      return true;
+    });
+    classTimeAllowed.set(cls.id, allowedMask);
+
     const grid = Array.from({ length: D }, () => Array<boolean>(T).fill(false));
     if (options.preserveExamBlocks) {
       cls.schedule
@@ -310,11 +331,13 @@ export function runOptimizedTimetableSolver(
     if (!isSameHalfDay(t, u.duration)) return false;
     const cGrid = classGrid.get(u.classId)!;
     const exGrid = classExamBlocked.get(u.classId)!;
+    const tAllowed = classTimeAllowed.get(u.classId)!;
     const tGrid = ensureTeacherGrid(u.teacherName);
     const tBlk = teacherBlocked.get(u.teacherName);
 
     for (let k = 0; k < u.duration; k++) {
       const ti = t + k;
+      if (!tAllowed[ti]) return false;
       if (exGrid[d][ti]) return false;
       if (tBlk && tBlk[d][ti]) return false;
       const cOcc = cGrid[d][ti];
@@ -426,6 +449,7 @@ export function runOptimizedTimetableSolver(
     if (!options.enableSwapChains) return false;
     const cGrid = classGrid.get(u.classId)!;
     const exGrid = classExamBlocked.get(u.classId)!;
+    const tAllowed = classTimeAllowed.get(u.classId)!;
     const tGrid = ensureTeacherGrid(u.teacherName);
     const tBlk = teacherBlocked.get(u.teacherName);
 
@@ -433,12 +457,12 @@ export function runOptimizedTimetableSolver(
       for (let t = 0; t < T; t++) {
         if (!isSameHalfDay(t, u.duration)) continue;
 
-        // Check hard fixed blocks (exam / teacher unavailable)
+        // Check hard fixed blocks (class time window / exam / teacher unavailable)
         let fixedBlocked = false;
         const blockers = new Set<TeachingUnit>();
         for (let k = 0; k < u.duration; k++) {
           const ti = t + k;
-          if (exGrid[d][ti] || (tBlk && tBlk[d][ti])) {
+          if (!tAllowed[ti] || exGrid[d][ti] || (tBlk && tBlk[d][ti])) {
             fixedBlocked = true;
             break;
           }
