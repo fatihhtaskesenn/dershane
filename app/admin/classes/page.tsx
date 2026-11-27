@@ -50,6 +50,7 @@ export default function AdminClassesPage() {
   const [clsTrack, setClsTrack] =
     useState<ClassroomRecord["track"]>("Sayısal");
   const [clsRoom, setClsRoom] = useState("Derslik 205");
+  const [clsIsSchoolStudents, setClsIsSchoolStudents] = useState(false);
   const [stuCreateSearch, setStuCreateSearch] = useState("");
   const [clsInitialStudents, setClsInitialStudents] = useState<string[]>([]);
 
@@ -81,6 +82,7 @@ export default function AdminClassesPage() {
   const [editClsName, setEditClsName] = useState("");
   const [editClsTrack, setEditClsTrack] = useState<ClassroomRecord["track"]>("Sayısal");
   const [editClsRoom, setEditClsRoom] = useState("");
+  const [editClsIsSchoolStudents, setEditClsIsSchoolStudents] = useState(false);
 
   const selectedClass =
     classes.find((c) => c.id === selectedClassId) ?? classes[0];
@@ -155,11 +157,14 @@ export default function AdminClassesPage() {
         name: clsName.trim(),
         track: clsTrack,
         room: clsRoom.trim() || "Derslik",
+        isSchoolStudentClass: clsIsSchoolStudents,
+        timeProfile: clsIsSchoolStudents ? "after_school" : "daytime",
       },
       clsInitialStudents
     );
     setSelectedClassId(newId);
     setClsName("");
+    setClsIsSchoolStudents(false);
     setClsInitialStudents([]);
     setStuCreateSearch("");
   };
@@ -316,6 +321,36 @@ export default function AdminClassesPage() {
                 />
               </div>
             </div>
+
+            {/* Okula Giden Öğrenci Sınıfı Seçeneği */}
+            <button
+              type="button"
+              onClick={() => setClsIsSchoolStudents((v) => !v)}
+              className={`flex w-full items-center justify-between gap-3 rounded-xl border px-3.5 py-2.5 text-left text-xs transition ${
+                clsIsSchoolStudents
+                  ? "border-[#B8860B] bg-[#FFFBEB] text-[#11284B]"
+                  : "border-[#11284B]/15 bg-[#FAF8F5] text-[#4B5563] hover:border-[#11284B]/30"
+              }`}
+            >
+              <div>
+                <p className="font-bold text-[#11284B]">
+                  Okula Giden Öğrenci Sınıfı (16:10 / 16:30 Sonrası)
+                </p>
+                <p className="text-[11px] text-[#64748B]">
+                  Aktif edilirse ders programı oluşturulurken bu sınıfa yalnızca
+                  16:10 sonrası akşam saatlerine ders atanır.
+                </p>
+              </div>
+              <span
+                className={`shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-bold ${
+                  clsIsSchoolStudents
+                    ? "bg-[#B8860B] text-white"
+                    : "border border-[#CBD5E1] bg-white text-[#64748B]"
+                }`}
+              >
+                {clsIsSchoolStudents ? "Aktif (16:10+)" : "Tam / Gündüz"}
+              </span>
+            </button>
 
             {/* Searchable Institution Student List */}
             <div className="rounded-xl border border-[#11284B]/10 bg-[#FAF8F5] p-3.5 space-y-2.5">
@@ -476,6 +511,13 @@ export default function AdminClassesPage() {
                           <span className="rounded-md bg-[#11284B]/10 px-2 py-0.5 text-[10px] font-bold text-[#11284B]">
                             {cls.track}
                           </span>
+                          {(cls.isSchoolStudentClass ||
+                            cls.timeProfile === "after_school" ||
+                            cls.timeProfile === "evening") && (
+                            <span className="rounded-md bg-[#FFFBEB] px-2 py-0.5 text-[10px] font-bold text-[#B45309] ring-1 ring-[#FDE68A]">
+                              Okul Sonrası (16:10+)
+                            </span>
+                          )}
                           {isSelected && (
                             <span className="rounded-md bg-[#0E4D3A] px-2 py-0.5 text-[10px] font-bold text-white">
                               Seçili
@@ -520,6 +562,13 @@ export default function AdminClassesPage() {
                 <span className="rounded-md bg-[#FAF8F5] px-2.5 py-0.5 text-[11px] font-semibold text-[#4B5563]">
                   {selectedClass.room}
                 </span>
+                {(selectedClass.isSchoolStudentClass ||
+                  selectedClass.timeProfile === "after_school" ||
+                  selectedClass.timeProfile === "evening") && (
+                  <span className="rounded-md bg-[#FFFBEB] px-2.5 py-0.5 text-[11px] font-bold text-[#B45309] ring-1 ring-[#FDE68A]">
+                    Okula Giden Öğrenciler · 16:10+
+                  </span>
+                )}
               </div>
               <h2 className="font-serif mt-2 text-2xl font-bold text-[#11284B]">
                 {selectedClass.name}
@@ -541,6 +590,12 @@ export default function AdminClassesPage() {
                   setEditClsName(selectedClass.name);
                   setEditClsTrack(selectedClass.track);
                   setEditClsRoom(selectedClass.room);
+                  setEditClsIsSchoolStudents(
+                    Boolean(
+                      selectedClass.isSchoolStudentClass ||
+                        selectedClass.timeProfile === "after_school"
+                    )
+                  );
                   setEditingClass((prev) => !prev);
                   setConfirmDeleteClass(false);
                 }}
@@ -599,10 +654,14 @@ export default function AdminClassesPage() {
                   name: editClsName.trim(),
                   track: editClsTrack,
                   room: editClsRoom.trim(),
+                  isSchoolStudentClass: editClsIsSchoolStudents,
+                  timeProfile: editClsIsSchoolStudents
+                    ? "after_school"
+                    : "daytime",
                 });
                 setEditingClass(false);
               }}
-              className="grid grid-cols-1 gap-2 rounded-xl border border-[#DCE4EE] bg-[#F8FAFC] p-4 text-xs sm:grid-cols-4"
+              className="grid grid-cols-1 gap-2 rounded-xl border border-[#DCE4EE] bg-[#F8FAFC] p-4 text-xs sm:grid-cols-5"
             >
               <input type="text" required value={editClsName} onChange={(e) => setEditClsName(e.target.value)} placeholder="Sınıf Adı" className="rounded border border-[#DCE4EE] bg-white px-3 py-2" />
               <select value={editClsTrack} onChange={(e) => setEditClsTrack(e.target.value as ClassroomRecord["track"])} className="rounded border border-[#DCE4EE] bg-white px-3 py-2">
@@ -612,6 +671,15 @@ export default function AdminClassesPage() {
                 <option value="YKS Hazırlık">YKS Hazırlık</option>
               </select>
               <input type="text" required value={editClsRoom} onChange={(e) => setEditClsRoom(e.target.value)} placeholder="Derslik" className="rounded border border-[#DCE4EE] bg-white px-3 py-2" />
+              <label className="flex cursor-pointer items-center gap-2 rounded border border-[#DCE4EE] bg-white px-3 py-2 font-semibold text-[#11284B]">
+                <input
+                  type="checkbox"
+                  checked={editClsIsSchoolStudents}
+                  onChange={(e) => setEditClsIsSchoolStudents(e.target.checked)}
+                  className="accent-[#B8860B]"
+                />
+                <span>Okul Sonrası (16:10+)</span>
+              </label>
               <div className="flex gap-2">
                 <button type="submit" className="flex-1 rounded bg-[#135D43] px-3 py-2 font-semibold text-white">Kaydet</button>
                 <button type="button" onClick={() => setEditingClass(false)} className="rounded border border-[#DCE4EE] bg-white px-3 py-2 font-semibold text-[#64748B]">İptal</button>

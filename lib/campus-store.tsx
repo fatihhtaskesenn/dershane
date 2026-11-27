@@ -88,11 +88,22 @@ export interface PersonalNote {
   date: string;
 }
 
+export type ClassTimeWindowProfile =
+  | "fullday"
+  | "daytime"
+  | "morning"
+  | "afternoon"
+  | "after_school"
+  | "evening";
+
 export interface ClassroomRecord {
   id: string;
   name: string;
   track: "Sayısal" | "Eşit Ağırlık" | "Sözel";
   room: string;
+  /** Okula giden öğrencilerden oluşan sınıf (dersler 16:10 / 16:30 sonrası başlar) */
+  isSchoolStudentClass?: boolean;
+  timeProfile?: ClassTimeWindowProfile;
   schedule: StudentScheduleSlot[];
 }
 
@@ -269,6 +280,8 @@ const INITIAL_CLASSES: ClassroomRecord[] = [
     name: "12-A Sayısal",
     track: "Sayısal",
     room: "Derslik 204",
+    isSchoolStudentClass: true,
+    timeProfile: "after_school",
     schedule: [],
   },
   {
@@ -276,6 +289,8 @@ const INITIAL_CLASSES: ClassroomRecord[] = [
     name: "Mezun-1 Sayısal",
     track: "Sayısal",
     room: "Derslik 102",
+    isSchoolStudentClass: false,
+    timeProfile: "daytime",
     schedule: [],
   },
   {
@@ -283,6 +298,8 @@ const INITIAL_CLASSES: ClassroomRecord[] = [
     name: "12-B Eşit Ağırlık",
     track: "Eşit Ağırlık",
     room: "Derslik 301",
+    isSchoolStudentClass: true,
+    timeProfile: "after_school",
     schedule: [],
   },
   {
@@ -290,6 +307,8 @@ const INITIAL_CLASSES: ClassroomRecord[] = [
     name: "12-C Sözel",
     track: "Sözel",
     room: "Derslik 304",
+    isSchoolStudentClass: true,
+    timeProfile: "after_school",
     schedule: [],
   },
   {
@@ -297,6 +316,8 @@ const INITIAL_CLASSES: ClassroomRecord[] = [
     name: "11-A Erken Hazırlık",
     track: "Sayısal",
     room: "Derslik 108",
+    isSchoolStudentClass: true,
+    timeProfile: "after_school",
     schedule: [],
   },
 ];
@@ -1411,7 +1432,12 @@ interface CampusContextValue {
   ) => string;
   updateClass: (
     classId: string,
-    patch: Partial<Pick<ClassroomRecord, "name" | "track" | "room">>
+    patch: Partial<
+      Pick<
+        ClassroomRecord,
+        "name" | "track" | "room" | "isSchoolStudentClass" | "timeProfile"
+      >
+    >
   ) => void;
   deleteClass: (classId: string) => void;
   assignStudentToClass: (studentId: string, classId: string) => void;

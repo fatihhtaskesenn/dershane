@@ -54,9 +54,13 @@ function buildInitialTimeProfiles(
 ): Record<string, ClassTimeProfile> {
   const map: Record<string, ClassTimeProfile> = {};
   classes.forEach((cls) => {
-    map[cls.id] = cls.name.toLowerCase().includes("mezun")
-      ? "daytime"
-      : "fullday";
+    map[cls.id] =
+      cls.timeProfile ??
+      (cls.isSchoolStudentClass
+        ? "after_school"
+        : cls.name.toLowerCase().includes("mezun")
+        ? "daytime"
+        : "fullday");
   });
   return map;
 }
@@ -342,6 +346,14 @@ export default function AdminScheduleBuilderPage() {
         buildDefaultCurriculum(cls.track, teachers, cls.id);
     });
 
+    const preparedProfiles: Record<string, ClassTimeProfile> = {};
+    targetClasses.forEach((cls) => {
+      preparedProfiles[cls.id] =
+        timeProfileByClass[cls.id] ??
+        cls.timeProfile ??
+        (cls.isSchoolStudentClass ? "after_school" : "fullday");
+    });
+
     const result = runOptimizedTimetableSolver(
       targetClasses,
       preparedCurriculums,
@@ -349,7 +361,7 @@ export default function AdminScheduleBuilderPage() {
       {
         daysScope,
         timeWindow,
-        classTimeProfiles: timeProfileByClass,
+        classTimeProfiles: preparedProfiles,
         preserveExamBlocks,
         minimizeTeacherGaps,
         balanceDailySubjects,
