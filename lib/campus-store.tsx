@@ -252,7 +252,7 @@ interface CampusState {
   adminAuthenticated: boolean;
 }
 
-const STORAGE_KEY = "dershane_campus_store_v15";
+const STORAGE_KEY = "dershane_campus_store_v16";
 
 const INITIAL_ANNOUNCEMENTS: CampusAnnouncement[] = [
   {
@@ -331,7 +331,370 @@ const INITIAL_CLASSES: ClassroomRecord[] = [
   },
 ];
 
-const INITIAL_TEACHERS: TeacherAccount[] = [];
+const SEED_ALL_SLOTS: string[] = [
+  "08:00 - 08:40",
+  "08:50 - 09:30",
+  "09:40 - 10:20",
+  "10:30 - 11:10",
+  "11:20 - 12:00",
+  "12:50 - 13:30",
+  "13:40 - 14:20",
+  "14:30 - 15:10",
+  "15:20 - 16:00",
+  "16:10 - 16:50",
+  "17:00 - 17:40",
+  "17:50 - 18:30",
+  "18:40 - 19:20",
+  "19:30 - 20:10",
+  "20:20 - 21:00",
+];
+
+function closeSlots(
+  days: WeekDay[],
+  predicate: (time: string) => boolean
+): string[] {
+  const out: string[] = [];
+  days.forEach((d) => {
+    SEED_ALL_SLOTS.filter(predicate).forEach((t) => out.push(`${d}|${t}`));
+  });
+  return Array.from(new Set(out));
+}
+
+const WEEKDAYS_LIST: WeekDay[] = [
+  "Pazartesi",
+  "Salı",
+  "Çarşamba",
+  "Perşembe",
+  "Cuma",
+];
+const ALL_WORK_DAYS: WeekDay[] = [...WEEKDAYS_LIST, "Cumartesi"];
+
+const INITIAL_TEACHERS: TeacherAccount[] = [
+  // --- MATEMATİK (3 Hoca) ---
+  {
+    id: "tch-1",
+    name: "Dr. Selin Kaya",
+    role: "Branş Hocası",
+    branch: "Matematik",
+    username: "selin.kaya",
+    password: "123456",
+    email: "selin.kaya@dershane.edu.tr",
+    phone: "+90 532 410 22 11",
+    schedule: [],
+    oneOnOneSlots: [],
+    // Sadece öğlene kadar müsait (12:50 ve sonrası kapalı)
+    unavailableSlots: closeSlots(ALL_WORK_DAYS, (t) => t >= "12:50"),
+  },
+  {
+    id: "tch-2",
+    name: "Kerem Aksoy",
+    role: "Branş Hocası",
+    branch: "Matematik",
+    username: "kerem.aksoy",
+    password: "123456",
+    email: "kerem.aksoy@dershane.edu.tr",
+    phone: "+90 533 215 48 90",
+    schedule: [],
+    oneOnOneSlots: [],
+    // Okuldan geliyor: hafta içi 16:10 öncesi kapalı, akşam + Cumartesi açık
+    unavailableSlots: closeSlots(WEEKDAYS_LIST, (t) => t < "16:10"),
+  },
+  {
+    id: "tch-3",
+    name: "Emre Yılmaz",
+    role: "Branş Hocası",
+    branch: "Matematik",
+    username: "emre.yilmaz",
+    password: "123456",
+    email: "emre.yilmaz@dershane.edu.tr",
+    phone: "+90 534 318 72 45",
+    schedule: [],
+    oneOnOneSlots: [],
+    // İlk 2 ders yok (08:00-09:30 kapalı), akşam 17:50+ yok, Çarşamba izinli
+    unavailableSlots: [
+      ...closeSlots(ALL_WORK_DAYS, (t) => t < "09:40" || t >= "17:50"),
+      ...closeSlots(["Çarşamba"], () => true),
+    ],
+  },
+
+  // --- GEOMETRİ (2 Hoca) ---
+  {
+    id: "tch-4",
+    name: "Burak Şen",
+    role: "Branş Hocası",
+    branch: "Geometri",
+    username: "burak.sen",
+    password: "123456",
+    email: "burak.sen@dershane.edu.tr",
+    phone: "+90 532 511 40 22",
+    schedule: [],
+    oneOnOneSlots: [],
+    // İlk 2 ders yok (08:00-09:30 kapalı) ve son 2 ders yok (19:30+ kapalı)
+    unavailableSlots: closeSlots(
+      ALL_WORK_DAYS,
+      (t) => t < "09:40" || t >= "19:30"
+    ),
+  },
+  {
+    id: "tch-5",
+    name: "Deniz Karaca",
+    role: "Branş Hocası",
+    branch: "Geometri",
+    username: "deniz.karaca",
+    password: "123456",
+    email: "deniz.karaca@dershane.edu.tr",
+    phone: "+90 535 812 63 19",
+    schedule: [],
+    oneOnOneSlots: [],
+    // Öğlene kadar kapalı, öğleden sonra ve akşam açık
+    unavailableSlots: closeSlots(WEEKDAYS_LIST, (t) => t < "12:50"),
+  },
+
+  // --- FİZİK (2 Hoca) ---
+  {
+    id: "tch-6",
+    name: "Murat Demir",
+    role: "Branş Hocası",
+    branch: "Fizik",
+    username: "murat.demir",
+    password: "123456",
+    email: "murat.demir@dershane.edu.tr",
+    phone: "+90 533 618 44 09",
+    schedule: [],
+    oneOnOneSlots: [],
+    // Gündüzcü (16:10+ akşam kapalı) ve Perşembe tam gün izinli
+    unavailableSlots: [
+      ...closeSlots(ALL_WORK_DAYS, (t) => t >= "16:10"),
+      ...closeSlots(["Perşembe"], () => true),
+    ],
+  },
+  {
+    id: "tch-7",
+    name: "Tolga Çetin",
+    role: "Branş Hocası",
+    branch: "Fizik",
+    username: "tolga.cetin",
+    password: "123456",
+    email: "tolga.cetin@dershane.edu.tr",
+    phone: "+90 536 441 29 80",
+    schedule: [],
+    oneOnOneSlots: [],
+    // Okuldan geliyor: hafta içi 16:10 öncesi kapalı
+    unavailableSlots: closeSlots(WEEKDAYS_LIST, (t) => t < "16:10"),
+  },
+
+  // --- KİMYA (2 Hoca) ---
+  {
+    id: "tch-8",
+    name: "Prof. Dr. Ahmet Yılmaz",
+    role: "Branş Hocası",
+    branch: "Kimya",
+    username: "ahmet.yilmaz",
+    password: "123456",
+    email: "ahmet.yilmaz@dershane.edu.tr",
+    phone: "+90 532 840 15 62",
+    schedule: [],
+    oneOnOneSlots: [],
+    // Salı tam gün kapalı; diğer günler 1. ders (08:00) ve son 2 ders (19:30+) kapalı
+    unavailableSlots: [
+      ...closeSlots(["Salı"], () => true),
+      ...closeSlots(ALL_WORK_DAYS, (t) => t < "08:50" || t >= "19:30"),
+    ],
+  },
+  {
+    id: "tch-9",
+    name: "Gizem Taş",
+    role: "Branş Hocası",
+    branch: "Kimya",
+    username: "gizem.tas",
+    password: "123456",
+    email: "gizem.tas@dershane.edu.tr",
+    phone: "+90 537 519 42 33",
+    schedule: [],
+    oneOnOneSlots: [],
+    // Öğlene kadar kapalı (08:00-12:00), Cuma 18:40+ kapalı
+    unavailableSlots: [
+      ...closeSlots(WEEKDAYS_LIST, (t) => t < "12:50"),
+      ...closeSlots(["Cuma"], (t) => t >= "18:40"),
+    ],
+  },
+
+  // --- BİYOLOJİ (2 Hoca) ---
+  {
+    id: "tch-10",
+    name: "Elif Çelik",
+    role: "Branş Hocası",
+    branch: "Biyoloji",
+    username: "elif.celik",
+    password: "123456",
+    email: "elif.celik@dershane.edu.tr",
+    phone: "+90 536 309 77 14",
+    schedule: [],
+    oneOnOneSlots: [],
+    // Sadece öğlene kadar (12:50 sonrası tamamen kapalı)
+    unavailableSlots: closeSlots(ALL_WORK_DAYS, (t) => t >= "12:50"),
+  },
+  {
+    id: "tch-11",
+    name: "Serkan Polat",
+    role: "Branş Hocası",
+    branch: "Biyoloji",
+    username: "serkan.polat",
+    password: "123456",
+    email: "serkan.polat@dershane.edu.tr",
+    phone: "+90 532 770 19 41",
+    schedule: [],
+    oneOnOneSlots: [],
+    // İlk 2 ders (08:00-09:30) kapalı ve Pazartesi izinli
+    unavailableSlots: [
+      ...closeSlots(ALL_WORK_DAYS, (t) => t < "09:40"),
+      ...closeSlots(["Pazartesi"], () => true),
+    ],
+  },
+
+  // --- TÜRKÇE & EDEBİYAT (2 Hoca) ---
+  {
+    id: "tch-12",
+    name: "Zeynep Aydın",
+    role: "Branş Hocası",
+    branch: "Türkçe & Edebiyat",
+    username: "zeynep.aydin",
+    password: "123456",
+    email: "zeynep.aydin@dershane.edu.tr",
+    phone: "+90 535 712 88 30",
+    schedule: [],
+    oneOnOneSlots: [],
+    // Perşembe izinli, akşam 17:50+ kapalı
+    unavailableSlots: [
+      ...closeSlots(["Perşembe"], () => true),
+      ...closeSlots(ALL_WORK_DAYS, (t) => t >= "17:50"),
+    ],
+  },
+  {
+    id: "tch-13",
+    name: "Hakan Yıldız",
+    role: "Branş Hocası",
+    branch: "Türkçe & Edebiyat",
+    username: "hakan.yildiz",
+    password: "123456",
+    email: "hakan.yildiz@dershane.edu.tr",
+    phone: "+90 534 610 92 14",
+    schedule: [],
+    oneOnOneSlots: [],
+    // Okuldan geliyor: hafta içi 16:10 öncesi kapalı
+    unavailableSlots: closeSlots(WEEKDAYS_LIST, (t) => t < "16:10"),
+  },
+
+  // --- TARİH (2 Hoca) ---
+  {
+    id: "tch-14",
+    name: "Caner Özkan",
+    role: "Branş Hocası",
+    branch: "Tarih",
+    username: "caner.ozkan",
+    password: "123456",
+    email: "caner.ozkan@dershane.edu.tr",
+    phone: "+90 534 992 18 40",
+    schedule: [],
+    oneOnOneSlots: [],
+    // İlk 2 ders ve son 2 ders kapalı
+    unavailableSlots: closeSlots(
+      ALL_WORK_DAYS,
+      (t) => t < "09:40" || t >= "19:30"
+    ),
+  },
+  {
+    id: "tch-15",
+    name: "Melis Kurt",
+    role: "Branş Hocası",
+    branch: "Tarih",
+    username: "melis.kurt",
+    password: "123456",
+    email: "melis.kurt@dershane.edu.tr",
+    phone: "+90 533 482 11 07",
+    schedule: [],
+    oneOnOneSlots: [],
+    // Öğlene kadar kapalı
+    unavailableSlots: closeSlots(WEEKDAYS_LIST, (t) => t < "12:50"),
+  },
+
+  // --- COĞRAFYA (2 Hoca) ---
+  {
+    id: "tch-16",
+    name: "Merve Koç",
+    role: "Branş Hocası",
+    branch: "Coğrafya",
+    username: "merve.koc",
+    password: "123456",
+    email: "merve.koc@dershane.edu.tr",
+    phone: "+90 535 449 12 87",
+    schedule: [],
+    oneOnOneSlots: [],
+    // Çarşamba izinli, akşam 18:40+ kapalı
+    unavailableSlots: [
+      ...closeSlots(["Çarşamba"], () => true),
+      ...closeSlots(ALL_WORK_DAYS, (t) => t >= "18:40"),
+    ],
+  },
+  {
+    id: "tch-17",
+    name: "Kaan Şahin",
+    role: "Branş Hocası",
+    branch: "Coğrafya",
+    username: "kaan.sahin",
+    password: "123456",
+    email: "kaan.sahin@dershane.edu.tr",
+    phone: "+90 538 205 64 12",
+    schedule: [],
+    oneOnOneSlots: [],
+    // Hafta içi 16:10 öncesi kapalı
+    unavailableSlots: closeSlots(WEEKDAYS_LIST, (t) => t < "16:10"),
+  },
+
+  // --- FELSEFE & DİN KÜLTÜRÜ ---
+  {
+    id: "tch-18",
+    name: "Oğuzhan Arslan",
+    role: "Branş Hocası",
+    branch: "Felsefe & Din Kültürü",
+    username: "oguzhan.arslan",
+    password: "123456",
+    email: "oguzhan.arslan@dershane.edu.tr",
+    phone: "+90 536 774 30 15",
+    schedule: [],
+    oneOnOneSlots: [],
+    // İlk 2 ders kapalı (08:00-09:30)
+    unavailableSlots: closeSlots(ALL_WORK_DAYS, (t) => t < "09:40"),
+  },
+
+  // --- REHBERLİK & ETÜT ---
+  {
+    id: "tch-19",
+    name: "Seda Yavuz",
+    role: "Rehberlik Hocası",
+    branch: "Rehberlik & Akademik Danışmanlık",
+    username: "seda.yavuz",
+    password: "123456",
+    email: "seda.yavuz@dershane.edu.tr",
+    phone: "+90 533 905 64 21",
+    schedule: [],
+    oneOnOneSlots: [],
+    unavailableSlots: closeSlots(ALL_WORK_DAYS, (t) => t >= "18:40"),
+  },
+  {
+    id: "tch-20",
+    name: "Emre Karahan",
+    role: "Etüt Nöbetçisi",
+    branch: "Etüt & Soru Çözümü",
+    username: "emre.karahan",
+    password: "123456",
+    email: "emre.karahan@dershane.edu.tr",
+    phone: "+90 537 412 55 08",
+    schedule: [],
+    oneOnOneSlots: [],
+    unavailableSlots: closeSlots(ALL_WORK_DAYS, (t) => t < "12:50"),
+  },
+];
 
 const BASE_INITIAL_STUDENTS: StudentAccount[] = [
   {
