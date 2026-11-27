@@ -10,25 +10,25 @@ export default function TeacherSchedulePage() {
 
   const items: TimetableItem[] = activeTeacher
     ? [
-        ...activeTeacher.schedule.map((item) => ({
-          id: item.id,
-          day: item.day,
-          time: item.time,
-          title: item.subject,
-          subtitle: item.classGroup,
-          meta: item.room,
-          badge: "Sınıf Dersi",
-        })),
-        ...activeTeacher.oneOnOneSlots.map((slot) => ({
-          id: slot.id,
-          day: slot.day,
-          time: slot.time,
-          title: slot.subject,
-          subtitle: slot.studentName,
-          meta: slot.note || "Birebir Etüt",
-          badge: "Birebir",
-        })),
-      ]
+      ...activeTeacher.schedule.map((item) => ({
+        id: item.id,
+        day: item.day,
+        time: item.time,
+        title: item.subject,
+        subtitle: item.classGroup,
+        meta: item.room,
+        badge: "Sınıf Dersi",
+      })),
+      ...activeTeacher.oneOnOneSlots.map((slot) => ({
+        id: slot.id,
+        day: slot.day,
+        time: slot.time,
+        title: slot.subject,
+        subtitle: slot.studentName,
+        meta: slot.note || "Birebir Etüt",
+        badge: "Birebir",
+      })),
+    ]
     : [];
 
   return (

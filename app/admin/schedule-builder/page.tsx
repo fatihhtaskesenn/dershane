@@ -5,6 +5,8 @@ import {
   AlertTriangle,
   CalendarDays,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   Clock,
   Cpu,
   Layers,
@@ -195,6 +197,10 @@ export default function AdminScheduleBuilderPage() {
     warnings: string[];
     metrics: OptimizationMetrics;
   } | null>(null);
+  const [showTeacherReport, setShowTeacherReport] = useState<boolean>(false);
+  const [expandedTeacherCard, setExpandedTeacherCard] = useState<string | null>(
+    null
+  );
 
   const selectedClass =
     classes.find((c) => c.id === selectedClassId) ?? classes[0];
@@ -821,116 +827,148 @@ export default function AdminScheduleBuilderPage() {
                 </div>
               )}
 
-              {/* Always-Visible Teacher Load & Free Time Report */}
+              {/* Collapsible Teacher Load & Free Time Cards */}
               {resultBanner.metrics.teacherReports.length > 0 && (
-                <div>
-                  <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
-                    <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#11284B]">
+                <div className="rounded-xl border border-[#DCE4EE] bg-white">
+                  <button
+                    type="button"
+                    onClick={() => setShowTeacherReport((v) => !v)}
+                    className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left transition hover:bg-[#F8FAFC]"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
                       <Clock className="h-4 w-4 text-[#135D43]" />
-                      <span>
-                        Öğretmen Durum Raporu — Ders Yükü &amp; Boş Vakitler
+                      <span className="text-xs font-bold text-[#11284B] sm:text-sm">
+                        Öğretmen Durum Raporu &amp; Boş Vakitler (
+                        {resultBanner.metrics.teacherReports.length} Hoca)
                       </span>
-                    </h3>
-                    <span className="text-[11px] text-[#64748B]">
-                      Hocaların atanan ders saatleri ve etüt/birebir için kalan
-                      boş vakitleri
+                      <span className="rounded bg-[#EEF3F9] px-2 py-0.5 text-[10px] font-semibold text-[#203B5C]">
+                        Toplam Boş Kapasite:{" "}
+                        {resultBanner.metrics.teacherReports.reduce(
+                          (s, r) => s + r.remainingFreeCount,
+                          0
+                        )}{" "}
+                        Saat
+                      </span>
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#135D43]">
+                      <span>{showTeacherReport ? "Gizle" : "Detayları Aç"}</span>
+                      {showTeacherReport ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
                     </span>
-                  </div>
+                  </button>
 
-                  <div className="overflow-x-auto rounded-xl border border-[#DCE4EE] bg-white">
-                    <table className="w-full min-w-[720px] text-left text-[11px] text-[#11284B]">
-                      <thead className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[#475569]">
-                        <tr>
-                          <th className="px-3 py-2.5">Öğretmen</th>
-                          <th className="px-3 py-2.5">Doluluk Durumu</th>
-                          <th className="px-3 py-2.5 text-center">Ara Boşluk</th>
-                          <th className="px-3 py-2.5">
-                            Kalan Boş Vakitler (Gün Gün Müsait Saatler)
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#E2E8F0]">
-                        {resultBanner.metrics.teacherReports.map((rep) => {
-                          const fillPct =
-                            rep.openSlotCount > 0
-                              ? Math.min(
-                                  100,
-                                  Math.round(
-                                    (rep.assignedHours / rep.openSlotCount) * 100
-                                  )
+                  {showTeacherReport && (
+                    <div className="grid grid-cols-1 gap-2.5 border-t border-[#E2E8F0] p-3.5 md:grid-cols-2 xl:grid-cols-3">
+                      {resultBanner.metrics.teacherReports.map((rep) => {
+                        const fillPct =
+                          rep.openSlotCount > 0
+                            ? Math.min(
+                                100,
+                                Math.round(
+                                  (rep.assignedHours / rep.openSlotCount) * 100
                                 )
-                              : 0;
-                          return (
-                            <tr key={rep.teacherName} className="align-top">
-                              <td className="px-3 py-2.5">
-                                <p className="font-bold text-[#11284B]">
+                              )
+                            : 0;
+                        const isExpanded =
+                          expandedTeacherCard === rep.teacherName;
+
+                        return (
+                          <div
+                            key={rep.teacherName}
+                            className="rounded-xl border border-[#E2E8F0] bg-[#FCFBF8] p-3 transition hover:border-[#B18A52]/60"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="truncate font-bold text-[#11284B]">
                                   {rep.teacherName}
                                 </p>
-                                <p className="text-[10px] text-[#64748B]">
+                                <p className="truncate text-[10px] text-[#64748B]">
                                   {rep.branch}
                                 </p>
-                              </td>
-                              <td className="px-3 py-2.5">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-bold text-[#135D43]">
-                                    {rep.assignedHours} / {rep.openSlotCount}s
-                                  </span>
-                                  <span className="text-[10px] text-[#64748B]">
-                                    (%{fillPct})
-                                  </span>
-                                </div>
-                                <div className="mt-1 h-1.5 w-28 overflow-hidden rounded-full bg-[#E2E8F0]">
-                                  <div
-                                    className="h-full rounded-full bg-[#135D43]"
-                                    style={{ width: `${fillPct}%` }}
-                                  />
-                                </div>
-                              </td>
-                              <td className="px-3 py-2.5 text-center">
+                              </div>
+                              <div className="flex shrink-0 items-center gap-1.5 text-[10px] font-bold">
+                                <span className="rounded bg-[#EAF6F0] px-1.5 py-0.5 text-[#135D43]">
+                                  {rep.assignedHours}/{rep.openSlotCount}s (%{fillPct})
+                                </span>
                                 <span
-                                  className={`inline-block rounded px-2 py-0.5 font-bold ${
+                                  className={`rounded px-1.5 py-0.5 ${
                                     rep.idleGaps === 0
                                       ? "bg-emerald-50 text-emerald-700"
                                       : "bg-amber-50 text-amber-700"
                                   }`}
                                 >
-                                  {rep.idleGaps} saat
+                                  {rep.idleGaps}s ara
                                 </span>
-                              </td>
-                              <td className="px-3 py-2.5">
-                                {rep.freeSlotsByDay.length === 0 ? (
-                                  <span className="text-[#94A3B8]">
-                                    Boş vakit kalmadı
-                                  </span>
-                                ) : (
-                                  <div className="flex flex-wrap gap-1.5">
-                                    {rep.freeSlotsByDay.map((dInfo) => {
-                                      const startTimes = dInfo.freeTimes
-                                        .map((t) => t.split(" - ")[0])
-                                        .join(", ");
-                                      return (
-                                        <span
-                                          key={dInfo.day}
-                                          title={`${dInfo.day}: ${dInfo.freeTimes.join(", ")}`}
-                                          className="rounded-md border border-[#DCE4EE] bg-[#F8FAFC] px-2 py-1 text-[10px] text-[#203B5C]"
-                                        >
-                                          <strong className="text-[#11284B]">
-                                            {dInfo.day.slice(0, 3)} (
-                                            {dInfo.freeTimes.length}s):
-                                          </strong>{" "}
-                                          {startTimes}
-                                        </span>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                              </div>
+                            </div>
+
+                            <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-[#E2E8F0]">
+                              <div
+                                className="h-full rounded-full bg-[#135D43]"
+                                style={{ width: `${fillPct}%` }}
+                              />
+                            </div>
+
+                            {/* Compact Day Free-Hour Summary */}
+                            <div className="mt-2.5 flex flex-wrap items-center justify-between gap-1.5">
+                              {rep.freeSlotsByDay.length === 0 ? (
+                                <span className="text-[10px] text-[#94A3B8]">
+                                  Boş vakit kalmadı
+                                </span>
+                              ) : (
+                                <div className="flex flex-wrap gap-1">
+                                  {rep.freeSlotsByDay.map((dInfo) => (
+                                    <span
+                                      key={dInfo.day}
+                                      title={`${dInfo.day}: ${dInfo.freeTimes.join(", ")}`}
+                                      className="rounded border border-[#DCE4EE] bg-white px-1.5 py-0.5 text-[10px] font-medium text-[#203B5C]"
+                                    >
+                                      <strong className="text-[#11284B]">
+                                        {dInfo.day.slice(0, 3)}:
+                                      </strong>{" "}
+                                      {dInfo.freeTimes.length} boş
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+
+                              {rep.freeSlotsByDay.length > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setExpandedTeacherCard(
+                                      isExpanded ? null : rep.teacherName
+                                    )
+                                  }
+                                  className="text-[10px] font-bold text-[#135D43] hover:underline"
+                                >
+                                  {isExpanded ? "Gizle" : "Saatleri Gör"}
+                                </button>
+                              )}
+                            </div>
+
+                            {isExpanded && rep.freeSlotsByDay.length > 0 && (
+                              <div className="mt-2 space-y-1 border-t border-[#E2E8F0] pt-2 text-[10px] text-[#475569]">
+                                {rep.freeSlotsByDay.map((dInfo) => (
+                                  <p key={dInfo.day}>
+                                    <strong className="text-[#11284B]">
+                                      {dInfo.day}:
+                                    </strong>{" "}
+                                    {dInfo.freeTimes
+                                      .map((t) => t.split(" - ")[0])
+                                      .join(", ")}
+                                  </p>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
