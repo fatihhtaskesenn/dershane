@@ -1,17 +1,13 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import Link from "next/link";
 import {
   AlertTriangle,
   CalendarDays,
   CheckCircle2,
-  ChevronDown,
-  ChevronUp,
   Clock,
   Cpu,
   Layers,
-  Lock,
   Plus,
   Sparkles,
   Trash2,
@@ -22,10 +18,8 @@ import {
   useCampus,
   type ClassroomRecord,
   type TeacherAccount,
-  type WeekDay,
 } from "@/lib/campus-store";
 import {
-  buildDailySlots,
   doesTeacherMatchSubject,
   EXAM_LEVELS,
   PRESET_SUBJECTS,
@@ -127,7 +121,6 @@ export default function AdminScheduleBuilderPage() {
     replaceAllClassSchedules,
     clearClassSchedule,
     removeClassScheduleSlot,
-    updateTeacherUnavailableSlots,
   } = useCampus();
 
   const [selectedClassId, setSelectedClassId] = useState(classes[0]?.id ?? "");
@@ -150,12 +143,6 @@ export default function AdminScheduleBuilderPage() {
   const [enableSwapChains, setEnableSwapChains] = useState<boolean>(true);
   const [intensity, setIntensity] = useState<OptimizationIntensity>("high");
 
-  // Teacher availability matrix state
-  const [showAvailabilityPanel, setShowAvailabilityPanel] = useState<boolean>(true);
-  const [selectedTeacherId, setSelectedTeacherId] = useState<string>(
-    teachers[0]?.id ?? ""
-  );
-
   // Preview mode: Class vs Teacher
   const [previewMode, setPreviewMode] = useState<"class" | "teacher">("class");
   const [previewTeacherId, setPreviewTeacherId] = useState<string>(
@@ -172,8 +159,6 @@ export default function AdminScheduleBuilderPage() {
 
   const selectedClass =
     classes.find((c) => c.id === selectedClassId) ?? classes[0];
-  const selectedTeacher =
-    teachers.find((t) => t.id === selectedTeacherId) ?? teachers[0];
   const previewTeacher =
     teachers.find((t) => t.id === previewTeacherId) ?? teachers[0];
 
@@ -233,65 +218,6 @@ export default function AdminScheduleBuilderPage() {
     });
     return map;
   }, [classes, curriculumsByClass, teachers]);
-
-  const matrixDays: WeekDay[] = useMemo(
-    () =>
-      daysScope === "weekdays"
-        ? ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"]
-        : ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"],
-    [daysScope]
-  );
-
-  const matrixTimes = useMemo(() => {
-    const all = buildDailySlots(50).slots;
-    return all.filter((t) => {
-      if (timeWindow === "morning") return t < "12:00";
-      if (timeWindow === "afternoon") return t >= "12:00";
-      return true;
-    });
-  }, [timeWindow]);
-
-  const handleToggleUnavailableSlot = (day: WeekDay, time: string) => {
-    if (!selectedTeacher) return;
-    const key = `${day}|${time.trim()}`;
-    const current = new Set(selectedTeacher.unavailableSlots ?? []);
-    if (current.has(key)) current.delete(key);
-    else current.add(key);
-    updateTeacherUnavailableSlots(selectedTeacher.id, Array.from(current));
-  };
-
-  const handleToggleWholeDay = (day: WeekDay) => {
-    if (!selectedTeacher) return;
-    const current = new Set(selectedTeacher.unavailableSlots ?? []);
-    const dayKeys = matrixTimes.map((t) => `${day}|${t.trim()}`);
-    const allClosed = dayKeys.every((k) => current.has(k));
-    if (allClosed) {
-      dayKeys.forEach((k) => current.delete(k));
-    } else {
-      dayKeys.forEach((k) => current.add(k));
-    }
-    updateTeacherUnavailableSlots(selectedTeacher.id, Array.from(current));
-  };
-
-  const handleTogglePeriodBlock = (
-    period: "morning" | "afternoon" | "before_1610"
-  ) => {
-    if (!selectedTeacher) return;
-    const current = new Set(selectedTeacher.unavailableSlots ?? []);
-    const targetTimes = matrixTimes.filter((t) => {
-      if (period === "morning") return t < "12:00";
-      if (period === "before_1610") return t < "16:10";
-      return t >= "12:00";
-    });
-    const keys: string[] = [];
-    matrixDays.forEach((d) => {
-      targetTimes.forEach((t) => keys.push(`${d}|${t.trim()}`));
-    });
-    const allClosed = keys.length > 0 && keys.every((k) => current.has(k));
-    if (allClosed) keys.forEach((k) => current.delete(k));
-    else keys.forEach((k) => current.add(k));
-    updateTeacherUnavailableSlots(selectedTeacher.id, Array.from(current));
-  };
 
   const handleAddRow = () => {
     const defaultSub = PRESET_SUBJECTS[0];
@@ -380,28 +306,6 @@ export default function AdminScheduleBuilderPage() {
       metrics: result.metrics,
     });
   };
-
-  const selectedTeacherUnavailableSet = useMemo(
-    () => new Set(selectedTeacher?.unavailableSlots ?? []),
-    [selectedTeacher]
-  );
-
-  const selectedTeacherTotalGridSlots = matrixDays.length * matrixTimes.length;
-  const selectedTeacherClosedInView = useMemo(() => {
-    let cnt = 0;
-    matrixDays.forEach((d) => {
-      matrixTimes.forEach((t) => {
-        if (selectedTeacherUnavailableSet.has(`${d}|${t.trim()}`)) cnt += 1;
-      });
-    });
-    return cnt;
-  }, [matrixDays, matrixTimes, selectedTeacherUnavailableSet]);
-
-  const selectedTeacherOpenInView =
-    selectedTeacherTotalGridSlots - selectedTeacherClosedInView;
-  const selectedTeacherDemand = selectedTeacher
-    ? teacherDemandMap.get(selectedTeacher.name) ?? 0
-    : 0;
 
   return (
     <div className="space-y-6">
@@ -695,182 +599,14 @@ export default function AdminScheduleBuilderPage() {
         </div>
       )}
 
-      {/* Step 3: Teacher Availability Matrix */}
-      <div className="rounded-xl border border-[#DCE4EE] bg-white p-4 shadow-2xs sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="flex items-center gap-2 text-sm font-bold text-[#11284B] sm:text-base">
-              <Lock className="h-4 w-4 text-[#B18A52]" />
-              <span>3. Öğretmen Müsaitlik Matrisi (Kapalı / İzinli Saatler)</span>
-            </h2>
-            <p className="mt-0.5 text-xs text-[#64748B]">
-              Öğretmenlerin ders veremeyeceği gün veya saatleri kapatın; motor bu
-              saatlere kesinlikle ders atamaz.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowAvailabilityPanel((v) => !v)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[#DCE4EE] bg-[#FCFBF8] px-3 py-1.5 text-xs font-semibold text-[#203B5C] hover:border-[#B18A52]"
-          >
-            {showAvailabilityPanel ? (
-              <>
-                <ChevronUp className="h-3.5 w-3.5" />
-                <span>Matrisi Gizle</span>
-              </>
-            ) : (
-              <>
-                <ChevronDown className="h-3.5 w-3.5" />
-                <span>Matrisi Aç</span>
-              </>
-            )}
-          </button>
-        </div>
-
-        {showAvailabilityPanel && selectedTeacher && (
-          <div className="mt-4 space-y-4 border-t border-[#E9EBEE] pt-4">
-            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-              <div className="flex flex-wrap items-center gap-2">
-                <select
-                  value={selectedTeacher.id}
-                  onChange={(e) => setSelectedTeacherId(e.target.value)}
-                  className="rounded-lg border border-[#DCE4EE] bg-white px-3 py-2 text-xs font-bold text-[#11284B]"
-                >
-                  {teachers.map((t) => {
-                    const closedCnt = (t.unavailableSlots ?? []).length;
-                    const demand = teacherDemandMap.get(t.name) ?? 0;
-                    return (
-                      <option key={t.id} value={t.id}>
-                        {t.name} ({t.branch}) — Talep: {demand}s · Kapalı:{" "}
-                        {closedCnt}s
-                      </option>
-                    );
-                  })}
-                </select>
-
-                <span
-                  className={`rounded-md px-2.5 py-1.5 text-[11px] font-bold ${
-                    selectedTeacherDemand > selectedTeacherOpenInView
-                      ? "bg-rose-50 text-rose-700"
-                      : "bg-[#EAF6F0] text-[#135D43]"
-                  }`}
-                >
-                  Açık Kapasite: {selectedTeacherOpenInView} Saat / Talep:{" "}
-                  {selectedTeacherDemand} Saat
-                </span>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
-                <button
-                  type="button"
-                  onClick={() => handleTogglePeriodBlock("before_1610")}
-                  className="rounded-lg border border-[#B18A52]/40 bg-[#FAF8F5] px-2.5 py-1.5 font-semibold text-[#11284B] hover:border-[#B18A52]"
-                >
-                  Okul Saati Kapat (16:10 Öncesi)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleTogglePeriodBlock("morning")}
-                  className="rounded-lg border border-[#DCE4EE] bg-[#FCFBF8] px-2.5 py-1.5 font-semibold text-[#203B5C] hover:border-[#B18A52]"
-                >
-                  Sabahları Kapat / Aç
-                </button>
-                <Link
-                  href="/admin/teachers"
-                  className="rounded-lg border border-[#11284B]/20 bg-[#EEF3F9] px-2.5 py-1.5 font-semibold text-[#11284B] hover:bg-[#DCE4EE]"
-                >
-                  Öğretmen Durumlarından Düzenle →
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => handleTogglePeriodBlock("afternoon")}
-                  className="rounded-lg border border-[#DCE4EE] bg-[#FCFBF8] px-2.5 py-1.5 font-semibold text-[#203B5C] hover:border-[#B18A52]"
-                >
-                  Öğleden Sonrayı Kapat / Aç
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    updateTeacherUnavailableSlots(selectedTeacher.id, [])
-                  }
-                  className="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 font-semibold text-emerald-700 hover:bg-emerald-100"
-                >
-                  Tümünü Açık Yap
-                </button>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px] border-collapse text-[11px]">
-                <thead>
-                  <tr>
-                    <th className="border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-2 text-left font-bold text-[#203B5C]">
-                      Saat
-                    </th>
-                    {matrixDays.map((day) => (
-                      <th
-                        key={day}
-                        className="border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-center"
-                      >
-                        <button
-                          type="button"
-                          onClick={() => handleToggleWholeDay(day)}
-                          title="Tüm günü kapat / aç"
-                          className="font-bold text-[#11284B] hover:text-[#135D43]"
-                        >
-                          {day}
-                        </button>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {matrixTimes.map((time) => (
-                    <tr key={time}>
-                      <td className="border border-[#E2E8F0] bg-[#FCFBF8] px-2.5 py-1.5 font-semibold text-[#475569]">
-                        {time}
-                      </td>
-                      {matrixDays.map((day) => {
-                        const key = `${day}|${time.trim()}`;
-                        const isClosed = selectedTeacherUnavailableSet.has(key);
-                        return (
-                          <td
-                            key={key}
-                            className="border border-[#E2E8F0] p-1 text-center"
-                          >
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleToggleUnavailableSlot(day, time)
-                              }
-                              className={`w-full rounded-md py-1.5 font-semibold transition ${
-                                isClosed
-                                  ? "bg-rose-100 text-rose-700 hover:bg-rose-200"
-                                  : "bg-emerald-50/70 text-emerald-700 hover:bg-emerald-100"
-                              }`}
-                            >
-                              {isClosed ? "Kapalı" : "Müsait"}
-                            </button>
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Step 4: Optimization Engine & Constraints */}
+      {/* Step 3: Optimization Engine & Constraints */}
       {selectedClass && (
         <div className="rounded-xl border border-[#DCE4EE] bg-white p-4 shadow-2xs sm:p-6">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <div>
               <h2 className="flex items-center gap-2 text-sm font-bold text-[#11284B] sm:text-base">
                 <Cpu className="h-4 w-4 text-[#135D43]" />
-                <span>4. Optimizasyon Kısıtları ve Akıllı Dağıtım</span>
+                <span>3. Optimizasyon Kısıtları ve Akıllı Dağıtım</span>
               </h2>
               <p className="mt-0.5 text-xs text-[#64748B]">
                 Sert kısıtlar asla çiğnenmez; esnek kısıtlar Simulated Annealing
