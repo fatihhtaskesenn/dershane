@@ -8,26 +8,28 @@ import { WeeklyTimetable, type TimetableItem } from "@/components/WeeklyTimetabl
 export default function TeacherSchedulePage() {
   const { activeTeacher, announcements } = useCampus();
 
-  const items: TimetableItem[] = [
-    ...activeTeacher.schedule.map((item) => ({
-      id: item.id,
-      day: item.day,
-      time: item.time,
-      title: item.subject,
-      subtitle: item.classGroup,
-      meta: item.room,
-      badge: "Sınıf Dersi",
-    })),
-    ...activeTeacher.oneOnOneSlots.map((slot) => ({
-      id: slot.id,
-      day: slot.day,
-      time: slot.time,
-      title: slot.subject,
-      subtitle: slot.studentName,
-      meta: slot.note || "Birebir Etüt",
-      badge: "Birebir",
-    })),
-  ];
+  const items: TimetableItem[] = activeTeacher
+    ? [
+        ...activeTeacher.schedule.map((item) => ({
+          id: item.id,
+          day: item.day,
+          time: item.time,
+          title: item.subject,
+          subtitle: item.classGroup,
+          meta: item.room,
+          badge: "Sınıf Dersi",
+        })),
+        ...activeTeacher.oneOnOneSlots.map((slot) => ({
+          id: slot.id,
+          day: slot.day,
+          time: slot.time,
+          title: slot.subject,
+          subtitle: slot.studentName,
+          meta: slot.note || "Birebir Etüt",
+          badge: "Birebir",
+        })),
+      ]
+    : [];
 
   return (
     <div className="space-y-7">
@@ -38,16 +40,16 @@ export default function TeacherSchedulePage() {
           </p>
           <h1 className="font-editorial mt-1 flex items-center gap-2 text-2xl font-medium text-[#203B5C] sm:text-3xl">
             <CalendarDays className="h-6 w-6 text-[#135D43]" />
-            <span>Haftalık Takvim ({activeTeacher.name})</span>
+            <span>Haftalık Takvim ({activeTeacher?.name ?? "Öğretmen"})</span>
           </h1>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
           <span className="rounded-md bg-[#EEF3F9] px-2.5 py-1 text-[#11284B]">
-            {activeTeacher.schedule.length} Sınıf Dersi
+            {activeTeacher?.schedule.length ?? 0} Sınıf Dersi
           </span>
           <span className="rounded-md bg-[#F5F3FF] px-2.5 py-1 text-[#4C1D95]">
-            ✦ {activeTeacher.oneOnOneSlots.length} Birebir
+            ✦ {activeTeacher?.oneOnOneSlots.length ?? 0} Birebir
           </span>
         </div>
       </div>

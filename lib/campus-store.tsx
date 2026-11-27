@@ -252,7 +252,7 @@ interface CampusState {
   adminAuthenticated: boolean;
 }
 
-const STORAGE_KEY = "dershane_campus_store_v12";
+const STORAGE_KEY = "dershane_campus_store_v13";
 
 const INITIAL_ANNOUNCEMENTS: CampusAnnouncement[] = [
   {
@@ -322,145 +322,7 @@ const INITIAL_CLASSES: ClassroomRecord[] = [
   },
 ];
 
-const INITIAL_TEACHERS: TeacherAccount[] = [
-  {
-    id: "tch-1",
-    name: "Dr. Selin Kaya",
-    role: "Akademik Danışman",
-    branch: "Matematik & Akademik Koçluk",
-    username: "selin.kaya",
-    password: "123456",
-    email: "selin.kaya@dershane.edu.tr",
-    phone: "+90 532 410 22 11",
-    schedule: [],
-    oneOnOneSlots: [
-      { id: "oo-1", studentId: "stu-1", studentName: "Kerem Yılmaz", day: "Salı", time: "15:20 - 16:00", subject: "AYT Türev & Ekstremum", note: "Son denemedeki 3 hatalı soru üzerinden birebir tekrar." },
-      { id: "oo-2", studentId: "stu-2", studentName: "Defne Arslan", day: "Perşembe", time: "16:10 - 16:50", subject: "TYT Hız Problemleri", note: "Süre yönetimi ve denklem kurma pratiği." },
-      { id: "oo-3", studentId: "stu-3", studentName: "Emirhan Demir", day: "Cumartesi", time: "12:50 - 13:30", subject: "AYT Trigonometri", note: "Yarım açı formülleri soru çözümü." },
-    ],
-  },
-  {
-    id: "tch-2",
-    name: "Murat Demir",
-    role: "Branş Öğretmeni",
-    branch: "Fizik",
-    username: "murat.demir",
-    password: "123456",
-    email: "murat.demir@dershane.edu.tr",
-    phone: "+90 533 618 44 09",
-    schedule: [],
-    oneOnOneSlots: [
-      { id: "oo-4", studentId: "stu-1", studentName: "Kerem Yılmaz", day: "Çarşamba", time: "16:10 - 16:50", subject: "AYT Manyetik İndüksiyon", note: "Sağ el kuralı ve akı değişimi soruları." },
-      { id: "oo-5", studentId: "stu-7", studentName: "Berkay Öztürk", day: "Cuma", time: "15:20 - 16:00", subject: "AYT Çembersel Hareket", note: "Açısal momentum test analizi." },
-    ],
-  },
-  {
-    id: "tch-3",
-    name: "Zeynep Aksoy",
-    role: "Branş Öğretmeni",
-    branch: "Türkçe & Edebiyat",
-    username: "zeynep.aksoy",
-    password: "123456",
-    email: "zeynep.aksoy@dershane.edu.tr",
-    phone: "+90 535 712 88 30",
-    schedule: [],
-    oneOnOneSlots: [
-      { id: "oo-6", studentId: "stu-4", studentName: "Zehra Karahan", day: "Perşembe", time: "15:20 - 16:00", subject: "AYT Divan Edebiyatı", note: "Nazım şekilleri ve beyit analizi." },
-    ],
-  },
-  {
-    id: "tch-4",
-    name: "Prof. Dr. Ahmet Yılmaz",
-    role: "Zümre Başkanı",
-    branch: "Kimya",
-    username: "ahmet.yilmaz",
-    password: "123456",
-    email: "ahmet.yilmaz@dershane.edu.tr",
-    phone: "+90 532 840 15 62",
-    schedule: [],
-    oneOnOneSlots: [
-      { id: "oo-7", studentId: "stu-2", studentName: "Defne Arslan", day: "Cuma", time: "16:10 - 16:50", subject: "AYT Organik Kimya", note: "Fonksiyonel gruplar ve adlandırma." },
-    ],
-  },
-  {
-    id: "tch-5",
-    name: "Elif Çelik",
-    role: "Branş Öğretmeni",
-    branch: "Biyoloji",
-    username: "elif.celik",
-    password: "123456",
-    email: "elif.celik@dershane.edu.tr",
-    phone: "+90 536 309 77 14",
-    schedule: [],
-    oneOnOneSlots: [],
-  },
-  {
-    id: "tch-6",
-    name: "Caner Aydın",
-    role: "Rehberlik Uzmanı",
-    branch: "Tarih & Coğrafya",
-    username: "caner.aydin",
-    password: "123456",
-    email: "caner.aydin@dershane.edu.tr",
-    phone: "+90 534 992 18 40",
-    schedule: [],
-    oneOnOneSlots: [
-      { id: "oo-8", studentId: "stu-6", studentName: "Ayşe Nur Şahin", day: "Cumartesi", time: "14:30 - 15:10", subject: "AYT Çağdaş Türk Tarihi", note: "Harita ve kronoloji pekiştirme." },
-    ],
-  },
-  {
-    id: "tch-7",
-    name: "Burak Şen",
-    role: "Branş Öğretmeni",
-    branch: "Geometri",
-    username: "burak.sen",
-    password: "123456",
-    email: "burak.sen@dershane.edu.tr",
-    phone: "+90 532 511 40 22",
-    schedule: [],
-    oneOnOneSlots: [
-      { id: "oo-9", studentId: "stu-3", studentName: "Emirhan Demir", day: "Cuma", time: "16:10 - 16:50", subject: "Çemberde Uzunluk", note: "Kiriş ve teğet özellikleri." },
-    ],
-  },
-  {
-    id: "tch-8",
-    name: "Merve Koç",
-    role: "Branş Öğretmeni",
-    branch: "Coğrafya",
-    username: "merve.koc",
-    password: "123456",
-    email: "merve.koc@dershane.edu.tr",
-    phone: "+90 535 449 12 87",
-    schedule: [],
-    oneOnOneSlots: [],
-  },
-  {
-    id: "tch-9",
-    name: "Oğuzhan Arslan",
-    role: "Etüt Öğretmeni",
-    branch: "Felsefe & Din Kültürü",
-    username: "oguzhan.arslan",
-    password: "123456",
-    email: "oguzhan.arslan@dershane.edu.tr",
-    phone: "+90 536 774 30 15",
-    schedule: [],
-    oneOnOneSlots: [],
-  },
-  {
-    id: "tch-10",
-    name: "Seda Yavuz",
-    role: "Akademik Danışman",
-    branch: "Paragraf & Rehberlik",
-    username: "seda.yavuz",
-    password: "123456",
-    email: "seda.yavuz@dershane.edu.tr",
-    phone: "+90 533 905 64 21",
-    schedule: [],
-    oneOnOneSlots: [
-      { id: "oo-10", studentId: "stu-8", studentName: "Ece Yıldız", day: "Çarşamba", time: "17:00 - 17:40", subject: "Haftalık Çalışma Planı", note: "11. sınıf TYT erken başlangıç rutini." },
-    ],
-  },
-];
+const INITIAL_TEACHERS: TeacherAccount[] = [];
 
 const BASE_INITIAL_STUDENTS: StudentAccount[] = [
   {
@@ -1006,7 +868,10 @@ const GENERATED_STUDENTS: StudentAccount[] = EXTRA_FIRST_NAMES.map((first, idx) 
   const last = EXTRA_LAST_NAMES[idx % EXTRA_LAST_NAMES.length];
   const fullName = `${first} ${last}`;
   const cls = INITIAL_CLASSES[idx % INITIAL_CLASSES.length];
-  const advisor = INITIAL_TEACHERS[idx % INITIAL_TEACHERS.length];
+  const advisor =
+    INITIAL_TEACHERS.length > 0
+      ? INITIAL_TEACHERS[idx % INITIAL_TEACHERS.length]
+      : null;
   const grade: StudentAccount["grade"] =
     cls.id === "cls-2"
       ? "Mezun (YKS)"
@@ -1042,8 +907,8 @@ const GENERATED_STUDENTS: StudentAccount[] = EXTRA_FIRST_NAMES.map((first, idx) 
     track: cls.track,
     parentName: `${EXTRA_FIRST_NAMES[(idx + 7) % EXTRA_FIRST_NAMES.length]} ${last}`,
     target: targets[idx % targets.length],
-    advisorTeacherId: advisor.id,
-    advisorName: advisor.name,
+    advisorTeacherId: advisor?.id ?? "",
+    advisorName: advisor?.name ?? "Atanmadı",
     phone: `+90 53${idx % 9} ${310 + idx} ${(10 + idx) % 90} ${(20 + idx * 2) % 90}`,
     attendance: 90 + (idx % 10),
     status: "Aktif",
@@ -1084,10 +949,10 @@ const GENERATED_STUDENTS: StudentAccount[] = EXTRA_FIRST_NAMES.map((first, idx) 
     homework: [
       {
         id: `hw-g-${num}`,
-        subject: advisor.branch.split("&")[0].trim(),
+        subject: advisor?.branch.split("&")[0].trim() ?? "Matematik",
         title: "Haftalık Kazanım Tarama Testi",
         dueDate: "24 Kasım",
-        teacherName: advisor.name,
+        teacherName: advisor?.name ?? "Danışman",
         status: idx % 2 === 0 ? "Tamamlandı" : "Bekliyor",
       },
     ],
@@ -1484,8 +1349,8 @@ export function CampusProvider({ children }: { children: React.ReactNode }) {
     contactMessages: INITIAL_CONTACT_MESSAGES,
     siteContent: INITIAL_SITE_CONTENT,
     packages: COURSE_PACKAGES,
-    activeStudentId: INITIAL_STUDENTS[0].id,
-    activeTeacherId: INITIAL_TEACHERS[0].id,
+    activeStudentId: INITIAL_STUDENTS[0]?.id ?? "",
+    activeTeacherId: INITIAL_TEACHERS[0]?.id ?? "",
     adminAuthenticated: false,
   });
 
@@ -1498,8 +1363,7 @@ export function CampusProvider({ children }: { children: React.ReactNode }) {
           if (
             Array.isArray(parsed.students) &&
             parsed.students.length > 0 &&
-            Array.isArray(parsed.teachers) &&
-            parsed.teachers.length > 0
+            Array.isArray(parsed.teachers)
           ) {
             setState((prev) => ({
               ...prev,
@@ -1520,8 +1384,8 @@ export function CampusProvider({ children }: { children: React.ReactNode }) {
                 Array.isArray(parsed.packages) && parsed.packages.length > 0
                   ? parsed.packages
                   : COURSE_PACKAGES,
-              activeStudentId: parsed.activeStudentId || parsed.students![0].id,
-              activeTeacherId: parsed.activeTeacherId || parsed.teachers![0].id,
+              activeStudentId: parsed.activeStudentId || parsed.students![0]?.id || "",
+              activeTeacherId: parsed.activeTeacherId || parsed.teachers![0]?.id || "",
               adminAuthenticated: Boolean(parsed.adminAuthenticated),
             }));
           }

@@ -522,7 +522,7 @@ export default function TeacherStudentsPage() {
                       subject: hwSubject,
                       title: hwTitle.trim(),
                       dueDate: hwDueDate,
-                      teacherName: activeTeacher.name,
+                      teacherName: activeTeacher?.name ?? "Rehber Öğretmen",
                       status: "Bekliyor",
                     });
                     setHwTitle("");

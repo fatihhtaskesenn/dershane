@@ -74,7 +74,7 @@ export default function TeacherHomeworkPage() {
       subject: hwSubject,
       title: hwTitle.trim(),
       dueDate: hwDueDate,
-      teacherName: activeTeacher.name,
+      teacherName: activeTeacher?.name ?? "Rehber Öğretmen",
       status: "Bekliyor",
     });
     setHwTitle("");
@@ -84,7 +84,7 @@ export default function TeacherHomeworkPage() {
     <div className="space-y-6">
       <div className="border-b border-[#E9EBEE] pb-5">
         <p className="text-[11px] font-semibold tracking-[0.14em] text-[#B18A52] uppercase">
-          Rehberlik Ödevlendirme Merkezi • {activeTeacher.name}
+          Rehberlik Ödevlendirme Merkezi • {activeTeacher?.name ?? "Rehber Öğretmen"}
         </p>
         <h1 className="font-editorial mt-1 flex items-center gap-2 text-2xl font-medium text-[#203B5C] sm:text-3xl">
           <ClipboardList className="h-6 w-6 text-[#135D43]" />

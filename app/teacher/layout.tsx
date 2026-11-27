@@ -43,8 +43,12 @@ export default function TeacherLayout({
   return (
     <PanelSidebar
       portalName="Öğretmen Paneli"
-      userName={activeTeacher.name}
-      userMeta={`${activeTeacher.role} • ${activeTeacher.branch}`}
+      userName={activeTeacher?.name ?? "Öğretmen"}
+      userMeta={
+        activeTeacher
+          ? `${activeTeacher.role} • ${activeTeacher.branch}`
+          : "Kayıtlı öğretmen yok"
+      }
       items={navItems}
       logoutHref="/login"
     >

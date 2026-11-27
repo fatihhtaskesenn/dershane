@@ -55,6 +55,7 @@ export default function TeacherDashboardPage() {
   }, []);
 
   const allSlots = useMemo(() => {
+    if (!activeTeacher) return [];
     return [
       ...activeTeacher.schedule.map((item) => ({
         id: item.id,
@@ -121,10 +122,10 @@ export default function TeacherDashboardPage() {
       {/* Header */}
       <div className="border-b border-[#E9EBEE] pb-4 sm:pb-5">
         <p className="text-[11px] font-semibold tracking-[0.14em] text-[#B18A52] uppercase">
-          Genel Bakış • {activeTeacher.role} ({activeTeacher.branch})
+          Genel Bakış • {activeTeacher?.role ?? "Öğretmen"} ({activeTeacher?.branch ?? "Branş"})
         </p>
         <h1 className="font-editorial mt-1 text-2xl font-medium text-[#203B5C] sm:text-3xl">
-          Hoş Geldiniz, {activeTeacher.name}
+          Hoş Geldiniz, {activeTeacher?.name ?? "Öğretmen"}
         </h1>
       </div>
 
@@ -137,7 +138,7 @@ export default function TeacherDashboardPage() {
                 Haftalık Ders Saati
               </p>
               <p className="font-editorial mt-2 text-3xl font-semibold text-[#11284B] sm:text-4xl">
-                {activeTeacher.schedule.length}
+                {activeTeacher?.schedule.length ?? 0}
                 <span className="ml-1.5 text-sm font-medium text-[#64748B]">Saat</span>
               </p>
             </div>
@@ -148,7 +149,7 @@ export default function TeacherDashboardPage() {
           <div className="mt-3 flex items-center justify-between border-t border-[#E2E8F0]/80 pt-2 text-[11px] font-medium text-[#475569]">
             <span>Sınıf dersleri</span>
             <span className="rounded bg-white px-2 py-0.5 font-bold text-[#11284B]">
-              Toplam: {activeTeacher.schedule.length + activeTeacher.oneOnOneSlots.length} Saat
+              Toplam: {(activeTeacher?.schedule.length ?? 0) + (activeTeacher?.oneOnOneSlots.length ?? 0)} Saat
             </span>
           </div>
         </div>
@@ -160,7 +161,7 @@ export default function TeacherDashboardPage() {
                 Haftalık Birebir
               </p>
               <p className="font-editorial mt-2 text-3xl font-semibold text-[#4C1D95] sm:text-4xl">
-                {activeTeacher.oneOnOneSlots.length}
+                {activeTeacher?.oneOnOneSlots.length ?? 0}
                 <span className="ml-1.5 text-sm font-medium text-[#6D28D9]">Saat</span>
               </p>
             </div>
