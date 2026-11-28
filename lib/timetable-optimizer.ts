@@ -168,7 +168,7 @@ export function runOptimizedTimetableSolver(
       ? ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"]
       : ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
 
-  const allSlots = buildDailySlots(50).slots;
+  const allSlots = buildDailySlots(60).slots;
   const candidateTimes = allSlots.filter((t) => {
     if (options.timeWindow === "morning") return t < "12:00";
     if (options.timeWindow === "afternoon") return t >= "12:00";

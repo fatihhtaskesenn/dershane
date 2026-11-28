@@ -61,7 +61,7 @@ export default function AdminOneOnOnePage() {
   const [note, setNote] = useState("");
   const [feedback, setFeedback] = useState("");
 
-  const [lunchBreak, setLunchBreak] = useState<50 | 60>(50);
+  const lunchBreak = 60 as const;
   const [calendarView, setCalendarView] = useState<
     "combined" | "teacher" | "student"
   >("combined");
@@ -577,32 +577,10 @@ export default function AdminOneOnOnePage() {
                 </span>
               </div>
               <div className="flex items-center gap-2 text-[11px] font-semibold">
-                <span className="flex items-center gap-1 text-[#64748B]">
+                <span className="inline-flex items-center gap-1.5 rounded-md border border-[#DCE4EE] bg-white px-2.5 py-1 text-[#203B5C]">
                   <Clock className="h-3.5 w-3.5 text-[#11284B]" />
-                  08:00–21:00:
+                  <span>08:00–21:00 · Öğle Molası: 12:00–13:00 (60 dk)</span>
                 </span>
-                <button
-                  type="button"
-                  onClick={() => setLunchBreak(50)}
-                  className={`rounded-md px-2.5 py-1 ${
-                    lunchBreak === 50
-                      ? "bg-[#11284B] text-white"
-                      : "bg-white text-[#64748B]"
-                  }`}
-                >
-                  50 dk Mola
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLunchBreak(60)}
-                  className={`rounded-md px-2.5 py-1 ${
-                    lunchBreak === 60
-                      ? "bg-[#11284B] text-white"
-                      : "bg-white text-[#64748B]"
-                  }`}
-                >
-                  60 dk Mola
-                </button>
               </div>
             </div>
 

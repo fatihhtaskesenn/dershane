@@ -252,7 +252,7 @@ interface CampusState {
   adminAuthenticated: boolean;
 }
 
-const STORAGE_KEY = "dershane_campus_store_v16";
+const STORAGE_KEY = "dershane_campus_store_v17";
 
 const INITIAL_ANNOUNCEMENTS: CampusAnnouncement[] = [
   {
@@ -337,16 +337,16 @@ const SEED_ALL_SLOTS: string[] = [
   "09:40 - 10:20",
   "10:30 - 11:10",
   "11:20 - 12:00",
-  "12:50 - 13:30",
-  "13:40 - 14:20",
-  "14:30 - 15:10",
-  "15:20 - 16:00",
-  "16:10 - 16:50",
-  "17:00 - 17:40",
-  "17:50 - 18:30",
-  "18:40 - 19:20",
-  "19:30 - 20:10",
-  "20:20 - 21:00",
+  "13:00 - 13:40",
+  "13:50 - 14:30",
+  "14:40 - 15:20",
+  "15:30 - 16:10",
+  "16:20 - 17:00",
+  "17:10 - 17:50",
+  "18:00 - 18:40",
+  "18:50 - 19:30",
+  "19:40 - 20:20",
+  "20:30 - 21:10",
 ];
 
 function closeSlots(

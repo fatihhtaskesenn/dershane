@@ -161,7 +161,7 @@ export default function AdminTeachersPage() {
     () => ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"],
     []
   );
-  const availabilityTimes = useMemo(() => buildDailySlots(50).slots, []);
+  const availabilityTimes = useMemo(() => buildDailySlots(60).slots, []);
   const unavailableSet = useMemo(
     () => new Set(selectedTeacher?.unavailableSlots ?? []),
     [selectedTeacher]

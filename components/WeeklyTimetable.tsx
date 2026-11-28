@@ -78,7 +78,7 @@ function formatTime(totalMinutes: number) {
   return `${h}:${m}`;
 }
 
-export function buildDailySlots(lunchBreakMinutes: 50 | 60): {
+export function buildDailySlots(lunchBreakMinutes: 50 | 60 = 60): {
   slots: string[];
   lunchLabel: string;
 } {
@@ -108,12 +108,7 @@ export function buildDailySlots(lunchBreakMinutes: 50 | 60): {
   };
 }
 
-export const ALL_PRESET_TIME_SLOTS: string[] = Array.from(
-  new Set([
-    ...buildDailySlots(50).slots,
-    ...buildDailySlots(60).slots,
-  ])
-).sort((a, b) => a.localeCompare(b));
+export const ALL_PRESET_TIME_SLOTS: string[] = buildDailySlots(60).slots;
 
 export type TimetableBadgeType =
   | "Konu Anlatımı"
@@ -184,7 +179,7 @@ export function WeeklyTimetable({
   selectedTime,
   onSelectSlot,
 }: WeeklyTimetableProps) {
-  const [lunchBreak, setLunchBreak] = useState<50 | 60>(50);
+  const lunchBreak = 60 as const;
   const [mobileDay, setMobileDay] = useState<WeekDay>(selectedDay || "Pazartesi");
   const [mobileViewMode, setMobileViewMode] = useState<"daily" | "table">("daily");
   const [showEmptySlotsOnMobile, setShowEmptySlotsOnMobile] = useState<boolean>(editable);
@@ -268,35 +263,10 @@ export function WeeklyTimetable({
 
         <div className="flex w-full flex-wrap items-center justify-between gap-2 sm:w-auto sm:justify-end">
           <div className="flex items-center gap-1.5">
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#64748B]">
+            <span className="inline-flex items-center gap-1.5 rounded-lg border border-[#DCE4EE] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#203B5C]">
               <Coffee className="h-3.5 w-3.5 text-[#B8860B]" />
-              <span className="hidden sm:inline">Öğle Molası (12:00–13:00):</span>
-              <span className="sm:hidden">Mola:</span>
+              <span>Öğle Molası: 12:00–13:00 (60 dk)</span>
             </span>
-            <div className="inline-flex rounded-lg border border-[#DCE4EE] bg-white p-0.5 text-[11px] font-semibold">
-              <button
-                type="button"
-                onClick={() => setLunchBreak(50)}
-                className={`rounded-md px-2 py-1 transition sm:px-2.5 ${
-                  lunchBreak === 50
-                    ? "bg-[#11284B] text-white"
-                    : "text-[#64748B] hover:text-[#11284B]"
-                }`}
-              >
-                50 dk
-              </button>
-              <button
-                type="button"
-                onClick={() => setLunchBreak(60)}
-                className={`rounded-md px-2 py-1 transition sm:px-2.5 ${
-                  lunchBreak === 60
-                    ? "bg-[#11284B] text-white"
-                    : "text-[#64748B] hover:text-[#11284B]"
-                }`}
-              >
-                60 dk
-              </button>
-            </div>
           </div>
 
           {/* Mobile-only View Switcher */}
@@ -586,7 +556,7 @@ export function WeeklyTimetable({
                 </button>
               )}
               <span className="inline-block rounded-full bg-white px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#9A3412]">
-                Öğleden Sonra • Deneme ({lunchBreak === 50 ? "12:50" : "13:00"} – 21:00)
+                Öğleden Sonra • Deneme (13:00 – 21:00)
               </span>
               <p className="mt-2 text-sm font-bold">{mobileAfternoonBlock.title}</p>
               {mobileAfternoonBlock.subtitle && (
@@ -724,7 +694,7 @@ export function WeeklyTimetable({
                               {afternoonBlock.title}
                             </p>
                             <p className="mt-1 text-[11px] font-semibold opacity-85">
-                              {lunchBreak === 50 ? "12:50" : "13:00"} – 21:00 (Tüm Öğleden Sonra)
+                              13:00 – 21:00 (Tüm Öğleden Sonra)
                             </p>
                             {afternoonBlock.subtitle && (
                               <p className="mt-2 flex items-center justify-center gap-1 text-[11px] opacity-80">

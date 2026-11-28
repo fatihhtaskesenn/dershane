@@ -41,7 +41,7 @@ const TIME_PROFILE_OPTIONS: { value: ClassTimeProfile; label: string; short: str
   { value: "fullday", label: "Tam Gün (08:00 – 21:00)", short: "08:00–21:00" },
   { value: "daytime", label: "Gündüz / Mezun (08:00 – 17:40)", short: "08:00–17:40" },
   { value: "morning", label: "Sabah Grubu (08:00 – 12:00)", short: "08:00–12:00" },
-  { value: "afternoon", label: "Öğle Sonrası (12:50 – 21:00)", short: "12:50–21:00" },
+  { value: "afternoon", label: "Öğle Sonrası (13:00 – 21:00)", short: "13:00–21:00" },
   { value: "after_school", label: "Okul Sonrası (16:10 – 21:00)", short: "16:10+" },
   { value: "evening", label: "Akşam Grubu (17:00 – 21:00)", short: "17:00+" },
 ];
@@ -71,7 +71,7 @@ function countOpenSlotsInProfile(
   profile: ClassTimeProfile
 ): number {
   const days = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma"];
-  const allSlots = buildDailySlots(50).slots.filter((tm) => {
+  const allSlots = buildDailySlots(60).slots.filter((tm) => {
     if (profile === "morning") return tm < "12:00";
     if (profile === "daytime") return tm <= "17:40";
     if (profile === "afternoon") return tm >= "12:00";
@@ -686,7 +686,7 @@ export default function AdminScheduleBuilderPage() {
                 <option value="fullday">Saat: Tam Gün (08:00–17:00)</option>
                 <option value="morning">Saat: Sadece Sabah (08:00–12:00)</option>
                 <option value="afternoon">
-                  Saat: Öğleden Sonra (12:50–17:00)
+                  Saat: Öğleden Sonra (13:00–21:00)
                 </option>
               </select>
 
