@@ -8,10 +8,9 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
-  Cpu,
   Layers,
   Plus,
-  Sparkles,
+  SlidersHorizontal,
   Trash2,
   UserCheck,
   Wand2,
@@ -37,7 +36,11 @@ import {
   type OptimizerCurriculumRow,
 } from "@/lib/timetable-optimizer";
 
-const TIME_PROFILE_OPTIONS: { value: ClassTimeProfile; label: string; short: string }[] = [
+const TIME_PROFILE_OPTIONS: {
+  value: ClassTimeProfile;
+  label: string;
+  short: string;
+}[] = [
   { value: "fullday", label: "Tam Gün (08:00 – 21:00)", short: "08:00–21:00" },
   { value: "daytime", label: "Gündüz / Mezun (08:00 – 17:40)", short: "08:00–17:40" },
   { value: "morning", label: "Sabah Grubu (08:00 – 12:00)", short: "08:00–12:00" },
@@ -173,24 +176,26 @@ export default function AdminScheduleBuilderPage() {
     Record<string, ClassTimeProfile>
   >(() => buildInitialTimeProfiles(classes));
 
-  // Hard & Soft constraint controls
+  // Scheduling controls (smart defaults, advanced options tucked away)
   const [daysScope, setDaysScope] = useState<"weekdays" | "sixdays">("weekdays");
   const [timeWindow, setTimeWindow] = useState<
     "morning" | "afternoon" | "fullday"
   >("fullday");
   const [preserveExamBlocks, setPreserveExamBlocks] = useState<boolean>(true);
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState<boolean>(false);
   const [minimizeTeacherGaps, setMinimizeTeacherGaps] = useState<boolean>(true);
   const [balanceDailySubjects, setBalanceDailySubjects] = useState<boolean>(true);
   const [morningCorePriority, setMorningCorePriority] = useState<boolean>(true);
   const [enableSwapChains, setEnableSwapChains] = useState<boolean>(true);
   const [intensity, setIntensity] = useState<OptimizationIntensity>("high");
 
-  // Preview mode: Class vs Teacher
+  // Preview mode
   const [previewMode, setPreviewMode] = useState<"class" | "teacher">("class");
   const [previewTeacherId, setPreviewTeacherId] = useState<string>(
     teachers[0]?.id ?? ""
   );
 
+  // Result & collapsible teacher report
   const [resultBanner, setResultBanner] = useState<{
     ok: boolean;
     message: string;
@@ -209,20 +214,33 @@ export default function AdminScheduleBuilderPage() {
 
   const activeCurriculum = useMemo(() => {
     if (!selectedClass) return [];
+    const prof =
+      timeProfileByClass[selectedClass.id] ??
+      selectedClass.timeProfile ??
+      "fullday";
     return (
       curriculumsByClass[selectedClass.id] ??
-      buildDefaultCurriculum(selectedClass.track, teachers, selectedClass.id)
+      buildDefaultCurriculum(selectedClass.track, teachers, selectedClass.id, prof)
     );
-  }, [selectedClass, curriculumsByClass, teachers]);
+  }, [selectedClass, curriculumsByClass, teachers, timeProfileByClass]);
 
   const setActiveCurriculum = (
     updater: (prev: OptimizerCurriculumRow[]) => OptimizerCurriculumRow[]
   ) => {
     if (!selectedClass) return;
     setCurriculumsByClass((prev) => {
+      const prof =
+        timeProfileByClass[selectedClass.id] ??
+        selectedClass.timeProfile ??
+        "fullday";
       const current =
         prev[selectedClass.id] ??
-        buildDefaultCurriculum(selectedClass.track, teachers, selectedClass.id);
+        buildDefaultCurriculum(
+          selectedClass.track,
+          teachers,
+          selectedClass.id,
+          prof
+        );
       return {
         ...prev,
         [selectedClass.id]: updater(current),
@@ -246,7 +264,6 @@ export default function AdminScheduleBuilderPage() {
     [activeCurriculum]
   );
 
-  // Requested hours per teacher across ALL classes (for capacity check)
   const teacherDemandMap = useMemo(() => {
     const map = new Map<string, number>();
     classes.forEach((cls) => {
@@ -311,18 +328,17 @@ export default function AdminScheduleBuilderPage() {
     if (targetClasses.length === 0) return;
 
     const preparedCurriculums: Record<string, OptimizerCurriculumRow[]> = {};
-    targetClasses.forEach((cls) => {
-      preparedCurriculums[cls.id] =
-        curriculumsByClass[cls.id] ??
-        buildDefaultCurriculum(cls.track, teachers, cls.id);
-    });
-
     const preparedProfiles: Record<string, ClassTimeProfile> = {};
+
     targetClasses.forEach((cls) => {
-      preparedProfiles[cls.id] =
+      const prof: ClassTimeProfile =
         timeProfileByClass[cls.id] ??
         cls.timeProfile ??
         (cls.isSchoolStudentClass ? "after_school" : "fullday");
+      preparedProfiles[cls.id] = prof;
+      preparedCurriculums[cls.id] =
+        curriculumsByClass[cls.id] ??
+        buildDefaultCurriculum(cls.track, teachers, cls.id, prof);
     });
 
     const result = runOptimizedTimetableSolver(
@@ -346,159 +362,177 @@ export default function AdminScheduleBuilderPage() {
 
     setResultBanner({
       ok: result.warnings.length === 0,
-      message: `${targetClasses.length} sınıf için ${result.metrics.placedHours}/${result.metrics.requestedHours} ders saati (%${result.metrics.placementRate}) optimize edilerek dağıtıldı.`,
+      message: `${targetClasses.length} sınıf için ${result.metrics.placedHours}/${result.metrics.requestedHours} ders saati (%${result.metrics.placementRate}) çakışmasız dağıtıldı.`,
       warnings: result.warnings,
       metrics: result.metrics,
     });
   };
 
+  const selectedTimeProfile = selectedClass
+    ? timeProfileByClass[selectedClass.id] ??
+      selectedClass.timeProfile ??
+      "fullday"
+    : "fullday";
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="border-b border-[#E9EBEE] pb-5">
-        <p className="text-[11px] font-semibold tracking-[0.14em] text-[#B18A52] uppercase">
-          MRV + Zincirleme Takas + Simulated Annealing Dağıtım Motoru
-        </p>
-        <h1 className="font-editorial mt-1 flex items-center gap-2 text-2xl font-medium text-[#203B5C] sm:text-3xl">
-          <CalendarDays className="h-6 w-6 text-[#135D43]" />
-          <span>Akıllı Ders Programı Oluşturucu</span>
-        </h1>
-        <p className="mt-1 text-xs text-[#737B86] sm:text-sm">
-          Sınıfların haftalık ders/blok planlarını ve öğretmenlerin kapalı/izinli
-          saatlerini tanımlayın; optimizasyon motoru{" "}
-          <strong>çakışmasız, en az öğretmen boşluklu ve günlere dengeli</strong>{" "}
-          programı otomatik üretsin.
-        </p>
-      </div>
-
-      {/* Step 1: Class Selector Tabs */}
-      <div className="rounded-xl border border-[#DCE4EE] bg-white p-4 shadow-2xs sm:p-5">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="flex items-center gap-2 text-sm font-bold text-[#11284B]">
-            <Layers className="h-4 w-4 text-[#135D43]" />
-            <span>1. Tüm Sınıfların Ders &amp; Saat Planını Ayarlayın</span>
-          </h2>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-md bg-[#EEF3F9] px-2.5 py-1 text-[11px] font-bold text-[#11284B]">
-              Toplam Talep: {totalHoursAllClasses} Ders Saati ({classes.length} Sınıf)
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                setCurriculumsByClass(buildInitialCurriculums(classes, teachers));
-                setResultBanner(null);
-              }}
-              className="rounded-lg border border-[#E5DEC9] bg-[#FCFBF8] px-2.5 py-1 text-[11px] font-semibold text-[#203B5C] hover:border-[#B18A52]"
-            >
-              Tüm Sınıfları Alanına Göre Sıfırla
-            </button>
-          </div>
+      {/* Clean Header with Quick Bulk Action */}
+      <div className="flex flex-col justify-between gap-4 border-b border-[#E9EBEE] pb-5 sm:flex-row sm:items-end">
+        <div>
+          <p className="text-[11px] font-semibold tracking-[0.14em] text-[#B18A52] uppercase">
+            Akıllı Çizelgeleme
+          </p>
+          <h1 className="font-editorial mt-1 flex items-center gap-2 text-2xl font-medium text-[#203B5C] sm:text-3xl">
+            <CalendarDays className="h-6 w-6 text-[#135D43]" />
+            <span>Ders Programı Oluştur</span>
+          </h1>
+          <p className="mt-1 text-xs text-[#737B86] sm:text-sm">
+            Sınıfların ders ve öğretmen planını kontrol edin, ardından tek tıkla
+            çakışmasız dağıtımı başlatın.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-lg bg-[#EEF3F9] px-3 py-2 text-xs font-bold text-[#11284B]">
+            Toplam: {totalHoursAllClasses} Saat ({classes.length} Sınıf)
+          </span>
+          <button
+            type="button"
+            onClick={() => runSchedulerForClasses(classes)}
+            className="inline-flex items-center gap-2 rounded-xl bg-[#135D43] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-[#0E4A35] sm:text-sm"
+          >
+            <Wand2 className="h-4 w-4 text-[#E8C483]" />
+            <span>Tüm Sınıflara Dağıt ({classes.length})</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Step 1: Compact Class Switcher Strip */}
+      <section className="space-y-2.5">
+        <div className="flex items-center justify-between">
+          <h2 className="flex items-center gap-1.5 text-xs font-bold tracking-wide text-[#475569] uppercase">
+            <Layers className="h-3.5 w-3.5 text-[#135D43]" />
+            <span>1. Sınıf Seçimi</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => {
+              setCurriculumsByClass(buildInitialCurriculums(classes, teachers));
+              setResultBanner(null);
+            }}
+            className="text-[11px] font-semibold text-[#64748B] hover:text-[#11284B] hover:underline"
+          >
+            Varsayılan Şablonlara Sıfırla
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
           {classes.map((cls) => {
             const active = selectedClass?.id === cls.id;
             const rows =
               curriculumsByClass[cls.id] ??
               buildDefaultCurriculum(cls.track, teachers, cls.id);
-            const plannedHrs = rows.reduce((s, r) => s + Math.max(0, r.weeklyHours), 0);
+            const plannedHrs = rows.reduce(
+              (s, r) => s + Math.max(0, r.weeklyHours),
+              0
+            );
             const assignedHrs = cls.schedule.filter((s) => !s.blockPeriod).length;
+            const prof =
+              timeProfileByClass[cls.id] ??
+              cls.timeProfile ??
+              (cls.isSchoolStudentClass ? "after_school" : "fullday");
+            const profShort =
+              TIME_PROFILE_OPTIONS.find((o) => o.value === prof)?.short ??
+              "08:00–21:00";
 
             return (
               <button
                 key={cls.id}
                 type="button"
                 onClick={() => setSelectedClassId(cls.id)}
-                className={`rounded-xl border p-3 text-left text-xs transition-all ${
+                className={`rounded-xl border px-3 py-2.5 text-left transition-all ${
                   active
-                    ? "border-[#135D43] bg-[#EAF6F0] ring-1 ring-[#135D43]"
-                    : "border-[#E2E8F0] bg-[#FCFBF8] hover:border-[#B18A52]"
+                    ? "border-[#135D43] bg-[#EAF6F0]/80 shadow-2xs ring-1 ring-[#135D43]"
+                    : "border-[#DCE4EE] bg-white hover:border-[#B18A52]"
                 }`}
               >
-                <div className="flex items-center justify-between gap-1.5">
-                  <span className="truncate font-bold text-[#11284B]">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="truncate text-xs font-bold text-[#11284B]">
                     {cls.name}
                   </span>
                   <span
                     className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold ${
                       active
                         ? "bg-[#135D43] text-white"
-                        : "bg-white text-[#135D43]"
+                        : "bg-[#F1F5F9] text-[#11284B]"
                     }`}
                   >
-                    {plannedHrs} Saat
+                    {plannedHrs}s
                   </span>
                 </div>
-                <p className="mt-1 text-[10px] text-[#64748B]">
-                  {cls.track} · Atanan: {assignedHrs}s ·{" "}
-                  <span className="font-semibold text-[#203B5C]">
-                    {TIME_PROFILE_OPTIONS.find(
-                      (o) => o.value === (timeProfileByClass[cls.id] ?? "fullday")
-                    )?.short ?? "08:00–21:00"}
-                  </span>
+                <p className="mt-1 truncate text-[10px] text-[#64748B]">
+                  {profShort} · Atanan: {assignedHrs}s
                 </p>
               </button>
             );
           })}
         </div>
-      </div>
+      </section>
 
-      {/* Step 2: Selected Class Curriculum Editor */}
+      {/* Step 2: Clean Table Curriculum Editor */}
       {selectedClass && (
-        <div className="rounded-xl border border-[#DCE4EE] bg-white p-4 shadow-2xs sm:p-6">
-          <div className="flex flex-col justify-between gap-3 border-b border-[#E9EBEE] pb-4 sm:flex-row sm:items-center">
-            <div>
-              <h2 className="flex items-center gap-2 text-sm font-bold text-[#11284B] sm:text-base">
-                <Sparkles className="h-4 w-4 text-[#B18A52]" />
-                <span>
-                  2. {selectedClass.name} ({selectedClass.track}) — Ders, Blok &amp;
-                  Öğretmen Planı
-                </span>
+        <section className="overflow-hidden rounded-2xl border border-[#DCE4EE] bg-white shadow-2xs">
+          {/* Toolbar */}
+          <div className="flex flex-col justify-between gap-3 border-b border-[#E9EBEE] bg-[#FCFBF8] px-4 py-3.5 sm:flex-row sm:items-center sm:px-5">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h2 className="text-sm font-bold text-[#11284B] sm:text-base">
+                2. {selectedClass.name}
               </h2>
-              <p className="mt-0.5 text-xs text-[#64748B]">
-                Bu sınıf için belirlenen haftalık ders:{" "}
-                <strong className="text-[#135D43]">
-                  {totalRequestedForSelected} Saat
-                </strong>
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="rounded-md bg-[#EEF3F9] px-2 py-0.5 text-[11px] font-semibold text-[#203B5C]">
+                {selectedClass.track} · {totalRequestedForSelected} Saat
+              </span>
               <select
-                value={timeProfileByClass[selectedClass.id] ?? "fullday"}
+                value={selectedTimeProfile}
                 onChange={(e) =>
                   setTimeProfileByClass((prev) => ({
                     ...prev,
                     [selectedClass.id]: e.target.value as ClassTimeProfile,
                   }))
                 }
-                title="Sınıfın Ders Başlangıç ve Saat Aralığı"
-                className="rounded-lg border border-[#135D43]/40 bg-[#EAF6F0] px-2.5 py-1.5 text-[11px] font-bold text-[#135D43]"
+                className="rounded-lg border border-[#135D43]/30 bg-[#EAF6F0] px-2.5 py-1 text-[11px] font-bold text-[#135D43] focus:outline-none"
               >
                 {TIME_PROFILE_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
-                    Saat: {opt.label}
+                    {opt.label}
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-1.5">
               {(["Sayısal", "Eşit Ağırlık", "Sözel"] as const).map((tmpl) => (
                 <button
                   key={tmpl}
                   type="button"
                   onClick={() =>
                     setActiveCurriculum(() =>
-                      buildDefaultCurriculum(tmpl, teachers, selectedClass.id)
+                      buildDefaultCurriculum(
+                        tmpl,
+                        teachers,
+                        selectedClass.id,
+                        selectedTimeProfile
+                      )
                     )
                   }
-                  className="rounded-lg border border-[#E5DEC9] bg-[#FCFBF8] px-2.5 py-1.5 text-[11px] font-semibold text-[#203B5C] hover:border-[#B18A52] hover:bg-white"
+                  className="rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-[11px] font-medium text-[#475569] hover:border-[#B18A52] hover:text-[#11284B]"
                 >
-                  {tmpl} Şablonu
+                  {tmpl}
                 </button>
               ))}
               <button
                 type="button"
                 onClick={handleAddRow}
-                className="inline-flex items-center gap-1 rounded-lg bg-[#203B5C] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#162B45]"
+                className="inline-flex items-center gap-1 rounded-lg bg-[#11284B] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#1a3a6b]"
               >
                 <Plus className="h-3.5 w-3.5" />
                 <span>Ders Ekle</span>
@@ -506,489 +540,495 @@ export default function AdminScheduleBuilderPage() {
             </div>
           </div>
 
-          <div className="mt-4 space-y-2.5">
-            {activeCurriculum.map((row) => {
-              const matchingTeachers = getMatchingTeachers(teachers, row.subject);
-              return (
-                <div
-                  key={row.rowId}
-                  className="grid grid-cols-1 gap-2 rounded-xl border border-[#E2E8F0] bg-[#FAF8F5]/70 p-3 text-xs sm:grid-cols-12 sm:items-center"
+          {/* Crisp Single-Table Curriculum */}
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[680px] text-left text-xs">
+              <thead className="border-b border-[#E9EBEE] bg-[#F8FAFC] text-[10px] font-bold tracking-wider text-[#64748B] uppercase">
+                <tr>
+                  <th className="px-4 py-2.5">Ders</th>
+                  <th className="px-3 py-2.5">Düzey</th>
+                  <th className="px-3 py-2.5">Öğretmen</th>
+                  <th className="w-24 px-3 py-2.5 text-center">Haftalık Saat</th>
+                  <th className="px-3 py-2.5">Blok</th>
+                  <th className="px-3 py-2.5">Tür</th>
+                  <th className="w-12 px-3 py-2.5 text-center">Sil</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#F1F5F9]">
+                {activeCurriculum.map((row) => {
+                  const matchingTeachers = getMatchingTeachers(
+                    teachers,
+                    row.subject
+                  );
+                  return (
+                    <tr
+                      key={row.rowId}
+                      className="transition-colors hover:bg-[#FAF8F5]/70"
+                    >
+                      <td className="px-4 py-2">
+                        <select
+                          value={row.subject}
+                          onChange={(e) =>
+                            handleUpdateRow(row.rowId, {
+                              subject: e.target.value,
+                            })
+                          }
+                          className="w-full rounded-lg border border-transparent bg-transparent px-2 py-1.5 font-semibold text-[#11284B] hover:border-[#DCE4EE] focus:border-[#135D43] focus:bg-white focus:outline-none"
+                        >
+                          {PRESET_SUBJECTS.map((sub) => (
+                            <option key={sub} value={sub}>
+                              {sub}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-3 py-2">
+                        <select
+                          value={row.examLevel}
+                          onChange={(e) =>
+                            handleUpdateRow(row.rowId, {
+                              examLevel: e.target.value,
+                            })
+                          }
+                          className="w-full rounded-lg border border-transparent bg-transparent px-2 py-1.5 font-medium text-[#475569] hover:border-[#DCE4EE] focus:border-[#135D43] focus:bg-white focus:outline-none"
+                        >
+                          {EXAM_LEVELS.map((lvl) => (
+                            <option key={lvl} value={lvl}>
+                              {lvl}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-3 py-2">
+                        <select
+                          value={
+                            matchingTeachers.some(
+                              (t) => t.name === row.teacherName
+                            )
+                              ? row.teacherName
+                              : ""
+                          }
+                          onChange={(e) =>
+                            handleUpdateRow(row.rowId, {
+                              teacherName: e.target.value,
+                            })
+                          }
+                          className={`w-full rounded-lg border border-transparent bg-transparent px-2 py-1.5 hover:border-[#DCE4EE] focus:border-[#135D43] focus:bg-white focus:outline-none ${
+                            matchingTeachers.length === 0
+                              ? "font-semibold text-rose-600"
+                              : "font-medium text-[#11284B]"
+                          }`}
+                        >
+                          {matchingTeachers.length === 0 ? (
+                            <option value="">
+                              {row.subject} branşında öğretmen yok
+                            </option>
+                          ) : (
+                            matchingTeachers.map((t) => (
+                              <option key={t.id} value={t.name}>
+                                {t.name} ({teacherDemandMap.get(t.name) ?? 0}s)
+                              </option>
+                            ))
+                          )}
+                        </select>
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <input
+                          type="number"
+                          min={1}
+                          max={16}
+                          value={row.weeklyHours}
+                          onChange={(e) =>
+                            handleUpdateRow(row.rowId, {
+                              weeklyHours: Math.max(
+                                1,
+                                Number(e.target.value) || 1
+                              ),
+                            })
+                          }
+                          className="w-16 rounded-lg border border-[#DCE4EE] bg-[#FCFBF8] px-2 py-1 text-center font-bold text-[#135D43] focus:border-[#135D43] focus:bg-white focus:outline-none"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <select
+                          value={row.blockMode ?? "auto"}
+                          onChange={(e) =>
+                            handleUpdateRow(row.rowId, {
+                              blockMode: e.target.value as BlockMode,
+                            })
+                          }
+                          className="rounded-lg border border-transparent bg-transparent px-2 py-1.5 text-[11px] font-medium text-[#475569] hover:border-[#DCE4EE] focus:border-[#135D43] focus:bg-white focus:outline-none"
+                        >
+                          <option value="auto">Otomatik</option>
+                          <option value="double">2&apos;li Blok</option>
+                          <option value="single">Tekli Yay</option>
+                        </select>
+                      </td>
+                      <td className="px-3 py-2">
+                        <select
+                          value={row.type}
+                          onChange={(e) =>
+                            handleUpdateRow(row.rowId, {
+                              type: e.target.value as
+                                | "Konu Anlatımı"
+                                | "Soru Çözümü",
+                            })
+                          }
+                          className="rounded-lg border border-transparent bg-transparent px-2 py-1.5 text-[11px] font-medium text-[#475569] hover:border-[#DCE4EE] focus:border-[#135D43] focus:bg-white focus:outline-none"
+                        >
+                          <option value="Konu Anlatımı">Konu</option>
+                          <option value="Soru Çözümü">Soru</option>
+                        </select>
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveRow(row.rowId)}
+                          title="Dersi Kaldır"
+                          className="inline-flex rounded-lg p-1.5 text-[#94A3B8] transition hover:bg-rose-50 hover:text-rose-600"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Clean Action Bar + Collapsible Advanced Options */}
+          <div className="border-t border-[#E9EBEE] bg-[#F8FAFC] px-4 py-3.5 sm:px-5">
+            <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-center">
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <select
+                  value={daysScope}
+                  onChange={(e) =>
+                    setDaysScope(e.target.value as "weekdays" | "sixdays")
+                  }
+                  className="rounded-lg border border-[#DCE4EE] bg-white px-2.5 py-1.5 font-semibold text-[#11284B]"
                 >
-                  <div className="sm:col-span-2">
-                    <select
-                      value={row.subject}
-                      onChange={(e) =>
-                        handleUpdateRow(row.rowId, { subject: e.target.value })
-                      }
-                      className="w-full rounded-lg border border-[#DCE4EE] bg-white px-2.5 py-2 font-semibold text-[#11284B]"
-                    >
-                      {PRESET_SUBJECTS.map((sub) => (
-                        <option key={sub} value={sub}>
-                          {sub}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <option value="weekdays">Hafta İçi (Pzt–Cum)</option>
+                  <option value="sixdays">6 Gün (Pzt–Cmt)</option>
+                </select>
 
-                  <div className="sm:col-span-2">
-                    <select
-                      value={row.examLevel}
-                      onChange={(e) =>
-                        handleUpdateRow(row.rowId, { examLevel: e.target.value })
-                      }
-                      className="w-full rounded-lg border border-[#DCE4EE] bg-white px-2.5 py-2 font-semibold text-[#203B5C]"
-                    >
-                      {EXAM_LEVELS.map((lvl) => (
-                        <option key={lvl} value={lvl}>
-                          {lvl}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[#DCE4EE] bg-white px-2.5 py-1.5 font-medium text-[#203B5C]">
+                  <input
+                    type="checkbox"
+                    checked={preserveExamBlocks}
+                    onChange={(e) => setPreserveExamBlocks(e.target.checked)}
+                    className="accent-[#135D43]"
+                  />
+                  <span>Denemeleri koru</span>
+                </label>
 
-                  <div className="sm:col-span-3">
-                    <select
-                      value={
-                        matchingTeachers.some((t) => t.name === row.teacherName)
-                          ? row.teacherName
-                          : ""
-                      }
-                      onChange={(e) =>
-                        handleUpdateRow(row.rowId, {
-                          teacherName: e.target.value,
-                        })
-                      }
-                      className={`w-full rounded-lg border bg-white px-2.5 py-2 ${
-                        matchingTeachers.length === 0
-                          ? "border-rose-300 text-rose-600"
-                          : "border-[#DCE4EE] text-[#11284B]"
-                      }`}
-                    >
-                      {matchingTeachers.length === 0 ? (
-                        <option value="">
-                          {row.subject} branşında öğretmen yok
-                        </option>
-                      ) : (
-                        matchingTeachers.map((t) => (
-                          <option key={t.id} value={t.name}>
-                            {t.name} (Talep: {teacherDemandMap.get(t.name) ?? 0}s)
-                          </option>
-                        ))
-                      )}
-                    </select>
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <div className="flex items-center gap-1.5">
-                      <input
-                        type="number"
-                        min={1}
-                        max={16}
-                        value={row.weeklyHours}
-                        onChange={(e) =>
-                          handleUpdateRow(row.rowId, {
-                            weeklyHours: Math.max(1, Number(e.target.value) || 1),
-                          })
-                        }
-                        className="w-full rounded-lg border border-[#DCE4EE] bg-white px-2 py-2 text-center font-bold text-[#135D43]"
-                      />
-                      <span className="shrink-0 text-[11px] font-semibold text-[#64748B]">
-                        Saat
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <select
-                      value={row.blockMode ?? "auto"}
-                      onChange={(e) =>
-                        handleUpdateRow(row.rowId, {
-                          blockMode: e.target.value as BlockMode,
-                        })
-                      }
-                      title="Blok Dağıtım Tercihi"
-                      className="w-full rounded-lg border border-[#DCE4EE] bg-white px-2 py-2 text-[11px] font-medium text-[#203B5C]"
-                    >
-                      <option value="auto">Blok: Otomatik</option>
-                      <option value="double">Blok: 2&apos;li Ders</option>
-                      <option value="single">Blok: Tekli Yay</option>
-                    </select>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 sm:col-span-1">
-                    <select
-                      value={row.type}
-                      onChange={(e) =>
-                        handleUpdateRow(row.rowId, {
-                          type: e.target.value as "Konu Anlatımı" | "Soru Çözümü",
-                        })
-                      }
-                      className="w-full rounded-lg border border-[#DCE4EE] bg-white px-1.5 py-2 text-[11px] text-[#203B5C]"
-                    >
-                      <option value="Konu Anlatımı">Konu</option>
-                      <option value="Soru Çözümü">Soru</option>
-                    </select>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveRow(row.rowId)}
-                      title="Dersi Kaldır"
-                      className="shrink-0 rounded-lg border border-rose-200 bg-rose-50 p-2 text-rose-600 hover:bg-rose-100"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Step 3: Optimization Engine & Constraints */}
-      {selectedClass && (
-        <div className="rounded-xl border border-[#DCE4EE] bg-white p-4 shadow-2xs sm:p-6">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h2 className="flex items-center gap-2 text-sm font-bold text-[#11284B] sm:text-base">
-                <Cpu className="h-4 w-4 text-[#135D43]" />
-                <span>3. Optimizasyon Kısıtları ve Akıllı Dağıtım</span>
-              </h2>
-              <p className="mt-0.5 text-xs text-[#64748B]">
-                Sert kısıtlar asla çiğnenmez; esnek kısıtlar Simulated Annealing
-                motoruyla puanlanarak en verimli tablo seçilir.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-4 rounded-xl border border-[#DCE8E2] bg-[#F7FAF8] p-4">
-            {/* Hard Constraints Row */}
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <select
-                value={daysScope}
-                onChange={(e) =>
-                  setDaysScope(e.target.value as "weekdays" | "sixdays")
-                }
-                className="rounded-lg border border-[#DCE4EE] bg-white px-3 py-2 font-semibold text-[#11284B]"
-              >
-                <option value="weekdays">Günler: Hafta İçi (Pzt–Cum)</option>
-                <option value="sixdays">Günler: 6 Gün (Pzt–Cmt)</option>
-              </select>
-
-              <select
-                value={timeWindow}
-                onChange={(e) =>
-                  setTimeWindow(
-                    e.target.value as "morning" | "afternoon" | "fullday"
-                  )
-                }
-                className="rounded-lg border border-[#DCE4EE] bg-white px-3 py-2 font-semibold text-[#11284B]"
-              >
-                <option value="fullday">Saat: Tam Gün (08:00–17:00)</option>
-                <option value="morning">Saat: Sadece Sabah (08:00–12:00)</option>
-                <option value="afternoon">
-                  Saat: Öğleden Sonra (13:00–21:00)
-                </option>
-              </select>
-
-              <select
-                value={intensity}
-                onChange={(e) =>
-                  setIntensity(e.target.value as OptimizationIntensity)
-                }
-                className="rounded-lg border border-[#DCE4EE] bg-white px-3 py-2 font-semibold text-[#135D43]"
-              >
-                <option value="standard">Optimizasyon: Standart (700 Tur)</option>
-                <option value="high">Optimizasyon: Yüksek (1.800 Tur)</option>
-                <option value="max">Optimizasyon: Maksimum (3.500 Tur)</option>
-              </select>
-
-              <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-[#DCE4EE] bg-white px-3 py-2 font-medium text-[#203B5C]">
-                <input
-                  type="checkbox"
-                  checked={preserveExamBlocks}
-                  onChange={(e) => setPreserveExamBlocks(e.target.checked)}
-                  className="accent-[#135D43]"
-                />
-                <span>Deneme bloklarını koru</span>
-              </label>
-            </div>
-
-            {/* Soft Constraints Checkboxes */}
-            <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2 lg:grid-cols-4">
-              <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#DCE4EE] bg-white px-3 py-2 font-medium text-[#203B5C]">
-                <input
-                  type="checkbox"
-                  checked={minimizeTeacherGaps}
-                  onChange={(e) => setMinimizeTeacherGaps(e.target.checked)}
-                  className="accent-[#135D43]"
-                />
-                <span>Öğretmen boş saatini azalt</span>
-              </label>
-
-              <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#DCE4EE] bg-white px-3 py-2 font-medium text-[#203B5C]">
-                <input
-                  type="checkbox"
-                  checked={balanceDailySubjects}
-                  onChange={(e) => setBalanceDailySubjects(e.target.checked)}
-                  className="accent-[#135D43]"
-                />
-                <span>Dersleri günlere dengeli yay</span>
-              </label>
-
-              <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#DCE4EE] bg-white px-3 py-2 font-medium text-[#203B5C]">
-                <input
-                  type="checkbox"
-                  checked={morningCorePriority}
-                  onChange={(e) => setMorningCorePriority(e.target.checked)}
-                  className="accent-[#135D43]"
-                />
-                <span>Ağır derslere sabah önceliği</span>
-              </label>
-
-              <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#DCE4EE] bg-white px-3 py-2 font-medium text-[#203B5C]">
-                <input
-                  type="checkbox"
-                  checked={enableSwapChains}
-                  onChange={(e) => setEnableSwapChains(e.target.checked)}
-                  className="accent-[#135D43]"
-                />
-                <span>Zincirleme takas (Swap) kurtarma</span>
-              </label>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-wrap items-center justify-end gap-2 border-t border-[#DCE8E2] pt-3">
-              <button
-                type="button"
-                onClick={() => runSchedulerForClasses([selectedClass])}
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#203B5C] bg-white px-4 py-2.5 text-xs font-bold text-[#203B5C] transition hover:bg-[#EEF3F9]"
-              >
-                <span>Sadece {selectedClass.name} İçin Optimize Et</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => runSchedulerForClasses(classes)}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#135D43] px-5 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-[#0E4A35] sm:text-sm"
-              >
-                <Wand2 className="h-4 w-4 text-[#E8C483]" />
-                <span>
-                  Tüm Sınıflar İçin Optimize Et &amp; Dağıt ({classes.length} Sınıf)
-                </span>
-              </button>
-            </div>
-          </div>
-
-          {/* Distribution Status Report & Teacher Free Time Overview */}
-          {resultBanner && (
-            <div className="mt-5 space-y-4 rounded-xl border border-[#DCE4EE] bg-[#FCFBF8] p-4 text-xs sm:p-5">
-              {/* Top Status Summary */}
-              <div
-                className={`flex flex-col justify-between gap-2 rounded-xl border p-3.5 sm:flex-row sm:items-center ${
-                  resultBanner.ok
-                    ? "border-[#BBE0CE] bg-[#EAF6F0] text-[#0E4D3A]"
-                    : "border-[#FDE68A] bg-[#FFFBEB] text-[#92400E]"
-                }`}
-              >
-                <p className="flex items-center gap-2 font-bold">
-                  {resultBanner.ok ? (
-                    <CheckCircle2 className="h-4 w-4 shrink-0" />
-                  ) : (
-                    <AlertTriangle className="h-4 w-4 shrink-0" />
-                  )}
-                  <span>{resultBanner.message}</span>
-                </p>
-                <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold">
-                  <span className="rounded-md bg-white/80 px-2.5 py-1 text-[#135D43]">
-                    Yerleşen: {resultBanner.metrics.placedHours} /{" "}
-                    {resultBanner.metrics.requestedHours} Saat (%
-                    {resultBanner.metrics.placementRate})
-                  </span>
-                  {resultBanner.metrics.requestedHours -
-                    resultBanner.metrics.placedHours >
-                    0 && (
-                    <span className="rounded-md bg-rose-100 px-2.5 py-1 text-rose-700">
-                      Boşta Kalan:{" "}
-                      {resultBanner.metrics.requestedHours -
-                        resultBanner.metrics.placedHours}{" "}
-                      Saat
-                    </span>
-                  )}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAdvancedOptions((v) => !v)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#DCE4EE] bg-white px-2.5 py-1.5 font-semibold text-[#64748B] hover:text-[#11284B]"
+                >
+                  <SlidersHorizontal className="h-3.5 w-3.5" />
+                  <span>Gelişmiş Ayarlar</span>
+                </button>
               </div>
 
-              {resultBanner.warnings.length > 0 && (
-                <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-[#92400E]">
-                  <p className="mb-1.5 font-bold">Yerleştirilemeyen Dersler:</p>
-                  <ul className="list-inside list-disc space-y-0.5 text-[11px]">
-                    {resultBanner.warnings.map((w, i) => (
-                      <li key={i}>{w}</li>
-                    ))}
-                  </ul>
-                </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => runSchedulerForClasses([selectedClass])}
+                  className="rounded-xl border border-[#203B5C]/30 bg-white px-4 py-2 text-xs font-bold text-[#203B5C] transition hover:bg-[#EEF3F9]"
+                >
+                  Sadece {selectedClass.name} İçin Oluştur
+                </button>
+                <button
+                  type="button"
+                  onClick={() => runSchedulerForClasses(classes)}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#135D43] px-5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-[#0E4A35]"
+                >
+                  <Wand2 className="h-4 w-4 text-[#E8C483]" />
+                  <span>Tüm Sınıflar İçin Dağıt ({classes.length} Sınıf)</span>
+                </button>
+              </div>
+            </div>
+
+            {showAdvancedOptions && (
+              <div className="mt-3 grid grid-cols-1 gap-2 border-t border-[#E2E8F0] pt-3 text-xs sm:grid-cols-2 lg:grid-cols-5">
+                <select
+                  value={timeWindow}
+                  onChange={(e) =>
+                    setTimeWindow(
+                      e.target.value as "morning" | "afternoon" | "fullday"
+                    )
+                  }
+                  className="rounded-lg border border-[#DCE4EE] bg-white px-2.5 py-1.5 font-medium text-[#11284B]"
+                >
+                  <option value="fullday">Genel Pencere: Tam Gün</option>
+                  <option value="morning">Genel Pencere: Sabah</option>
+                  <option value="afternoon">Genel Pencere: Öğleden Sonra</option>
+                </select>
+
+                <select
+                  value={intensity}
+                  onChange={(e) =>
+                    setIntensity(e.target.value as OptimizationIntensity)
+                  }
+                  className="rounded-lg border border-[#DCE4EE] bg-white px-2.5 py-1.5 font-medium text-[#135D43]"
+                >
+                  <option value="standard">Optimizasyon: Standart</option>
+                  <option value="high">Optimizasyon: Yüksek</option>
+                  <option value="max">Optimizasyon: Maksimum</option>
+                </select>
+
+                <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-[#DCE4EE] bg-white px-2.5 py-1.5 text-[#203B5C]">
+                  <input
+                    type="checkbox"
+                    checked={minimizeTeacherGaps}
+                    onChange={(e) => setMinimizeTeacherGaps(e.target.checked)}
+                    className="accent-[#135D43]"
+                  />
+                  <span>Ara boşluğu azalt</span>
+                </label>
+
+                <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-[#DCE4EE] bg-white px-2.5 py-1.5 text-[#203B5C]">
+                  <input
+                    type="checkbox"
+                    checked={balanceDailySubjects}
+                    onChange={(e) => setBalanceDailySubjects(e.target.checked)}
+                    className="accent-[#135D43]"
+                  />
+                  <span>Günlere dengeli yay</span>
+                </label>
+
+                <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-[#DCE4EE] bg-white px-2.5 py-1.5 text-[#203B5C]">
+                  <input
+                    type="checkbox"
+                    checked={morningCorePriority}
+                    onChange={(e) => setMorningCorePriority(e.target.checked)}
+                    className="accent-[#135D43]"
+                  />
+                  <span>Sabah önceliği</span>
+                </label>
+
+                <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-[#DCE4EE] bg-white px-2.5 py-1.5 text-[#203B5C]">
+                  <input
+                    type="checkbox"
+                    checked={enableSwapChains}
+                    onChange={(e) => setEnableSwapChains(e.target.checked)}
+                    className="accent-[#135D43]"
+                  />
+                  <span>Takas kurtarma (Swap)</span>
+                </label>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Distribution Result & Collapsible Teacher Status Report */}
+      {resultBanner && (
+        <section className="space-y-3 rounded-2xl border border-[#DCE4EE] bg-white p-4 text-xs shadow-2xs sm:p-5">
+          <div
+            className={`flex flex-col justify-between gap-2 rounded-xl border p-3.5 sm:flex-row sm:items-center ${
+              resultBanner.ok
+                ? "border-[#BBE0CE] bg-[#EAF6F0] text-[#0E4D3A]"
+                : "border-[#FDE68A] bg-[#FFFBEB] text-[#92400E]"
+            }`}
+          >
+            <p className="flex items-center gap-2 font-bold">
+              {resultBanner.ok ? (
+                <CheckCircle2 className="h-4 w-4 shrink-0" />
+              ) : (
+                <AlertTriangle className="h-4 w-4 shrink-0" />
               )}
+              <span>{resultBanner.message}</span>
+            </p>
+            <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold">
+              <span className="rounded-md bg-white/80 px-2.5 py-1 text-[#135D43]">
+                Yerleşen: {resultBanner.metrics.placedHours} /{" "}
+                {resultBanner.metrics.requestedHours} Saat (%
+                {resultBanner.metrics.placementRate})
+              </span>
+              {resultBanner.metrics.requestedHours -
+                resultBanner.metrics.placedHours >
+                0 && (
+                <span className="rounded-md bg-rose-100 px-2.5 py-1 text-rose-700">
+                  Boşta Kalan:{" "}
+                  {resultBanner.metrics.requestedHours -
+                    resultBanner.metrics.placedHours}{" "}
+                  Saat
+                </span>
+              )}
+            </div>
+          </div>
 
-              {/* Collapsible Teacher Load & Free Time Cards */}
-              {resultBanner.metrics.teacherReports.length > 0 && (
-                <div className="rounded-xl border border-[#DCE4EE] bg-white">
-                  <button
-                    type="button"
-                    onClick={() => setShowTeacherReport((v) => !v)}
-                    className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left transition hover:bg-[#F8FAFC]"
-                  >
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Clock className="h-4 w-4 text-[#135D43]" />
-                      <span className="text-xs font-bold text-[#11284B] sm:text-sm">
-                        Öğretmen Durum Raporu &amp; Boş Vakitler (
-                        {resultBanner.metrics.teacherReports.length} Hoca)
-                      </span>
-                      <span className="rounded bg-[#EEF3F9] px-2 py-0.5 text-[10px] font-semibold text-[#203B5C]">
-                        Toplam Boş Kapasite:{" "}
-                        {resultBanner.metrics.teacherReports.reduce(
-                          (s, r) => s + r.remainingFreeCount,
-                          0
-                        )}{" "}
-                        Saat
-                      </span>
-                    </div>
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#135D43]">
-                      <span>{showTeacherReport ? "Gizle" : "Detayları Aç"}</span>
-                      {showTeacherReport ? (
-                        <ChevronUp className="h-4 w-4" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4" />
-                      )}
-                    </span>
-                  </button>
+          {resultBanner.warnings.length > 0 && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-[#92400E]">
+              <p className="mb-1.5 font-bold">Yerleştirilemeyen Dersler:</p>
+              <ul className="list-inside list-disc space-y-0.5 text-[11px]">
+                {resultBanner.warnings.map((w, i) => (
+                  <li key={i}>{w}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
-                  {showTeacherReport && (
-                    <div className="grid grid-cols-1 gap-2.5 border-t border-[#E2E8F0] p-3.5 md:grid-cols-2 xl:grid-cols-3">
-                      {resultBanner.metrics.teacherReports.map((rep) => {
-                        const fillPct =
-                          rep.openSlotCount > 0
-                            ? Math.min(
-                                100,
-                                Math.round(
-                                  (rep.assignedHours / rep.openSlotCount) * 100
-                                )
-                              )
-                            : 0;
-                        const isExpanded =
-                          expandedTeacherCard === rep.teacherName;
-
-                        return (
-                          <div
-                            key={rep.teacherName}
-                            className="rounded-xl border border-[#E2E8F0] bg-[#FCFBF8] p-3 transition hover:border-[#B18A52]/60"
-                          >
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="min-w-0">
-                                <p className="truncate font-bold text-[#11284B]">
-                                  {rep.teacherName}
-                                </p>
-                                <p className="truncate text-[10px] text-[#64748B]">
-                                  {rep.branch}
-                                </p>
-                              </div>
-                              <div className="flex shrink-0 items-center gap-1.5 text-[10px] font-bold">
-                                <span className="rounded bg-[#EAF6F0] px-1.5 py-0.5 text-[#135D43]">
-                                  {rep.assignedHours}/{rep.openSlotCount}s (%{fillPct})
-                                </span>
-                                <span
-                                  className={`rounded px-1.5 py-0.5 ${
-                                    rep.idleGaps === 0
-                                      ? "bg-emerald-50 text-emerald-700"
-                                      : "bg-amber-50 text-amber-700"
-                                  }`}
-                                >
-                                  {rep.idleGaps}s ara
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-[#E2E8F0]">
-                              <div
-                                className="h-full rounded-full bg-[#135D43]"
-                                style={{ width: `${fillPct}%` }}
-                              />
-                            </div>
-
-                            {/* Compact Day Free-Hour Summary */}
-                            <div className="mt-2.5 flex flex-wrap items-center justify-between gap-1.5">
-                              {rep.freeSlotsByDay.length === 0 ? (
-                                <span className="text-[10px] text-[#94A3B8]">
-                                  Boş vakit kalmadı
-                                </span>
-                              ) : (
-                                <div className="flex flex-wrap gap-1">
-                                  {rep.freeSlotsByDay.map((dInfo) => (
-                                    <span
-                                      key={dInfo.day}
-                                      title={`${dInfo.day}: ${dInfo.freeTimes.join(", ")}`}
-                                      className="rounded border border-[#DCE4EE] bg-white px-1.5 py-0.5 text-[10px] font-medium text-[#203B5C]"
-                                    >
-                                      <strong className="text-[#11284B]">
-                                        {dInfo.day.slice(0, 3)}:
-                                      </strong>{" "}
-                                      {dInfo.freeTimes.length} boş
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-
-                              {rep.freeSlotsByDay.length > 0 && (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setExpandedTeacherCard(
-                                      isExpanded ? null : rep.teacherName
-                                    )
-                                  }
-                                  className="text-[10px] font-bold text-[#135D43] hover:underline"
-                                >
-                                  {isExpanded ? "Gizle" : "Saatleri Gör"}
-                                </button>
-                              )}
-                            </div>
-
-                            {isExpanded && rep.freeSlotsByDay.length > 0 && (
-                              <div className="mt-2 space-y-1 border-t border-[#E2E8F0] pt-2 text-[10px] text-[#475569]">
-                                {rep.freeSlotsByDay.map((dInfo) => (
-                                  <p key={dInfo.day}>
-                                    <strong className="text-[#11284B]">
-                                      {dInfo.day}:
-                                    </strong>{" "}
-                                    {dInfo.freeTimes
-                                      .map((t) => t.split(" - ")[0])
-                                      .join(", ")}
-                                  </p>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
+          {resultBanner.metrics.teacherReports.length > 0 && (
+            <div className="rounded-xl border border-[#E2E8F0] bg-[#FCFBF8]">
+              <button
+                type="button"
+                onClick={() => setShowTeacherReport((v) => !v)}
+                className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left transition hover:bg-[#F8FAFC]"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <Clock className="h-4 w-4 text-[#135D43]" />
+                  <span className="text-xs font-bold text-[#11284B] sm:text-sm">
+                    Öğretmen Durum Raporu &amp; Boş Vakitler (
+                    {resultBanner.metrics.teacherReports.length} Hoca)
+                  </span>
+                  <span className="rounded bg-[#EEF3F9] px-2 py-0.5 text-[10px] font-semibold text-[#203B5C]">
+                    Toplam Boş Kapasite:{" "}
+                    {resultBanner.metrics.teacherReports.reduce(
+                      (s, r) => s + r.remainingFreeCount,
+                      0
+                    )}{" "}
+                    Saat
+                  </span>
+                </div>
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#135D43]">
+                  <span>{showTeacherReport ? "Gizle" : "Detayları Aç"}</span>
+                  {showTeacherReport ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
                   )}
+                </span>
+              </button>
+
+              {showTeacherReport && (
+                <div className="grid grid-cols-1 gap-2.5 border-t border-[#E2E8F0] p-3.5 md:grid-cols-2 xl:grid-cols-3">
+                  {resultBanner.metrics.teacherReports.map((rep) => {
+                    const fillPct =
+                      rep.openSlotCount > 0
+                        ? Math.min(
+                            100,
+                            Math.round(
+                              (rep.assignedHours / rep.openSlotCount) * 100
+                            )
+                          )
+                        : 0;
+                    const isExpanded = expandedTeacherCard === rep.teacherName;
+
+                    return (
+                      <div
+                        key={rep.teacherName}
+                        className="rounded-xl border border-[#E2E8F0] bg-white p-3 transition hover:border-[#B18A52]/60"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="truncate font-bold text-[#11284B]">
+                              {rep.teacherName}
+                            </p>
+                            <p className="truncate text-[10px] text-[#64748B]">
+                              {rep.branch}
+                            </p>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-1.5 text-[10px] font-bold">
+                            <span className="rounded bg-[#EAF6F0] px-1.5 py-0.5 text-[#135D43]">
+                              {rep.assignedHours}/{rep.openSlotCount}s (%{fillPct})
+                            </span>
+                            <span
+                              className={`rounded px-1.5 py-0.5 ${
+                                rep.idleGaps === 0
+                                  ? "bg-emerald-50 text-emerald-700"
+                                  : "bg-amber-50 text-amber-700"
+                              }`}
+                            >
+                              {rep.idleGaps}s ara
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-[#E2E8F0]">
+                          <div
+                            className="h-full rounded-full bg-[#135D43]"
+                            style={{ width: `${fillPct}%` }}
+                          />
+                        </div>
+
+                        <div className="mt-2.5 flex flex-wrap items-center justify-between gap-1.5">
+                          {rep.freeSlotsByDay.length === 0 ? (
+                            <span className="text-[10px] text-[#94A3B8]">
+                              Boş vakit kalmadı
+                            </span>
+                          ) : (
+                            <div className="flex flex-wrap gap-1">
+                              {rep.freeSlotsByDay.map((dInfo) => (
+                                <span
+                                  key={dInfo.day}
+                                  title={`${dInfo.day}: ${dInfo.freeTimes.join(", ")}`}
+                                  className="rounded border border-[#DCE4EE] bg-[#FAF8F5] px-1.5 py-0.5 text-[10px] font-medium text-[#203B5C]"
+                                >
+                                  <strong className="text-[#11284B]">
+                                    {dInfo.day.slice(0, 3)}:
+                                  </strong>{" "}
+                                  {dInfo.freeTimes.length} boş
+                                </span>
+                              ))}
+                            </div>
+                          )}
+
+                          {rep.freeSlotsByDay.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setExpandedTeacherCard(
+                                  isExpanded ? null : rep.teacherName
+                                )
+                              }
+                              className="text-[10px] font-bold text-[#135D43] hover:underline"
+                            >
+                              {isExpanded ? "Gizle" : "Saatleri Gör"}
+                            </button>
+                          )}
+                        </div>
+
+                        {isExpanded && rep.freeSlotsByDay.length > 0 && (
+                          <div className="mt-2 space-y-1 border-t border-[#E2E8F0] pt-2 text-[10px] text-[#475569]">
+                            {rep.freeSlotsByDay.map((dInfo) => (
+                              <p key={dInfo.day}>
+                                <strong className="text-[#11284B]">
+                                  {dInfo.day}:
+                                </strong>{" "}
+                                {dInfo.freeTimes
+                                  .map((t) => t.split(" - ")[0])
+                                  .join(", ")}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
           )}
-        </div>
+        </section>
       )}
 
-      {/* Step 5: Live Class or Teacher Timetable Preview */}
+      {/* Step 3: Live Class or Teacher Timetable Preview */}
       {selectedClass && (
-        <div className="rounded-xl border border-[#DCE4EE] bg-white p-4 shadow-2xs sm:p-6">
+        <section className="rounded-2xl border border-[#DCE4EE] bg-white p-4 shadow-2xs sm:p-6">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="font-editorial text-xl font-semibold text-[#11284B] sm:text-2xl">
                 {previewMode === "class"
-                  ? `${selectedClass.name} — Oluşturulan Haftalık Ders Programı (${selectedClass.schedule.length} Saat)`
+                  ? `${selectedClass.name} — Haftalık Ders Programı (${selectedClass.schedule.length} Saat)`
                   : `${previewTeacher?.name ?? "Öğretmen"} — Haftalık Ders Programı (${previewTeacher?.schedule.length ?? 0} Saat)`}
               </h2>
               <p className="text-xs text-[#64748B]">
-                Sınıf veya öğretmen görünümüne geçerek çakışmasız dağılımı ve
-                boşluk durumunu doğrulayabilirsiniz.
+                Sınıf veya öğretmen görünümüne geçerek programı kontrol
+                edebilirsiniz.
               </p>
             </div>
 
@@ -1040,7 +1080,7 @@ export default function AdminScheduleBuilderPage() {
                   className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
-                  <span>Bu Sınıfın Programını Temizle</span>
+                  <span>Temizle</span>
                 </button>
               )}
             </div>
@@ -1074,7 +1114,7 @@ export default function AdminScheduleBuilderPage() {
               }))}
             />
           )}
-        </div>
+        </section>
       )}
     </div>
   );
