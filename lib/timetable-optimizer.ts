@@ -6,7 +6,7 @@ import type {
 } from "@/lib/campus-store";
 import { buildDailySlots } from "@/components/WeeklyTimetable";
 
-export type BlockMode = "auto" | "double" | "single";
+export type BlockMode = "auto" | "double" | "triple" | "single";
 export type OptimizationIntensity = "standard" | "high" | "max";
 export type ClassTimeProfile =
   | "fullday"
@@ -78,7 +78,7 @@ interface TeachingUnit {
   fullSubject: string;
   teacherName: string;
   type: "Konu Anlatımı" | "Soru Çözümü";
-  duration: 1 | 2;
+  duration: 1 | 2 | 3;
   weeklyHours: number;
   isCoreHeavy: boolean;
   dayIdx: number; // -1 if unplaced
@@ -114,21 +114,32 @@ function decomposeIntoUnits(
     const core = isCoreHeavySubject(row.subject);
     const mode: BlockMode = row.blockMode ?? "auto";
 
-    const durations: (1 | 2)[] = [];
+    const durations: (1 | 2 | 3)[] = [];
     if (mode === "single") {
       for (let i = 0; i < hours; i++) durations.push(1);
     } else if (mode === "double") {
       const pairs = Math.floor(hours / 2);
       for (let i = 0; i < pairs; i++) durations.push(2);
       if (hours % 2 === 1) durations.push(1);
+    } else if (mode === "triple") {
+      const triples = Math.floor(hours / 3);
+      for (let i = 0; i < triples; i++) durations.push(3);
+      const rem = hours % 3;
+      if (rem === 2) durations.push(2);
+      else if (rem === 1) durations.push(1);
     } else {
-      // "auto": 2-hour subjects spread as 1+1 across days; 3+ hours use 2-hr blocks + singles
-      if (hours <= 2) {
-        for (let i = 0; i < hours; i++) durations.push(1);
+      // "auto": 2 saat -> 2'li blok, 3 saat -> 3'lü blok, 6 saat -> 2+2+2, 5 saat -> 3+2
+      if (hours === 1) {
+        durations.push(1);
+      } else if (hours === 2) {
+        durations.push(2);
+      } else if (hours === 3) {
+        durations.push(3);
+      } else if (hours % 2 === 0) {
+        for (let i = 0; i < hours / 2; i++) durations.push(2);
       } else {
-        const pairs = Math.floor(hours / 2);
-        for (let i = 0; i < pairs; i++) durations.push(2);
-        if (hours % 2 === 1) durations.push(1);
+        durations.push(3);
+        for (let i = 0; i < (hours - 3) / 2; i++) durations.push(2);
       }
     }
 
@@ -315,13 +326,16 @@ export function runOptimizedTimetableSolver(
   };
   teachers.forEach((t) => ensureTeacherGrid(t.name));
 
-  // Helper: check if 2-hour block crosses lunch break
-  const isSameHalfDay = (tIdx: number, dur: 1 | 2): boolean => {
+  // Helper: check if a 2- or 3-hour consecutive block stays in the same half-day
+  const isSameHalfDay = (tIdx: number, dur: 1 | 2 | 3): boolean => {
     if (dur === 1) return tIdx >= 0 && tIdx < T;
-    if (tIdx < 0 || tIdx + 1 >= T) return false;
-    const t1 = candidateTimes[tIdx];
-    const t2 = candidateTimes[tIdx + 1];
-    return (t1 < "12:00" && t2 < "12:00") || (t1 >= "12:00" && t2 >= "12:00");
+    if (tIdx < 0 || tIdx + dur - 1 >= T) return false;
+    const tFirst = candidateTimes[tIdx];
+    const tLast = candidateTimes[tIdx + dur - 1];
+    return (
+      (tFirst < "12:00" && tLast < "12:00") ||
+      (tFirst >= "12:00" && tLast >= "12:00")
+    );
   };
 
   const canPlaceAt = (
@@ -497,23 +511,30 @@ export function runOptimizedTimetableSolver(
 
   const extraSplitUnits: TeachingUnit[] = [];
 
-  allUnits.forEach((u) => {
+  const tryPlaceWithSplitFallback = (u: TeachingUnit): boolean => {
     const direct = findBestDirectSlot(u);
     if (direct) {
       placeUnit(u, direct.d, direct.t);
-      return;
+      return true;
     }
-
     if (trySwapRescue(u)) {
-      return;
+      return true;
     }
-
-    // If a 2-hour block couldn't fit, split into two 1-hour units
+    if (u.duration === 3) {
+      splitFallbacks += 1;
+      const u2: TeachingUnit = { ...u, unitId: `${u.unitId}-2`, duration: 2 };
+      const u1: TeachingUnit = { ...u, unitId: `${u.unitId}-1`, duration: 1 };
+      const ok2 = tryPlaceWithSplitFallback(u2);
+      if (ok2 && u2.dayIdx >= 0) extraSplitUnits.push(u2);
+      const ok1 = tryPlaceWithSplitFallback(u1);
+      if (ok1 && u1.dayIdx >= 0) extraSplitUnits.push(u1);
+      return ok2 || ok1;
+    }
     if (u.duration === 2) {
+      splitFallbacks += 1;
       const s1: TeachingUnit = { ...u, unitId: `${u.unitId}-a`, duration: 1 };
       const s2: TeachingUnit = { ...u, unitId: `${u.unitId}-b`, duration: 1 };
       let anyPlaced = false;
-
       for (const su of [s1, s2]) {
         const dSlot = findBestDirectSlot(su);
         if (dSlot) {
@@ -527,10 +548,14 @@ export function runOptimizedTimetableSolver(
           unplacedUnits.push(su);
         }
       }
-      if (anyPlaced) splitFallbacks += 1;
-    } else {
-      unplacedUnits.push(u);
+      return anyPlaced;
     }
+    unplacedUnits.push(u);
+    return false;
+  };
+
+  allUnits.forEach((u) => {
+    tryPlaceWithSplitFallback(u);
   });
 
   const activeUnits = [
@@ -588,7 +613,7 @@ export function runOptimizedTimetableSolver(
         let dayCount = 0;
         let first = -1;
         let last = -1;
-        const subjectCounts = new Map<string, number>();
+        const subjectUnitsOnDay = new Map<string, Set<TeachingUnit>>();
 
         for (let s = 0; s < T; s++) {
           const occ = cGrid[d][s];
@@ -597,8 +622,12 @@ export function runOptimizedTimetableSolver(
           if (first === -1) first = s;
           last = s;
 
-          const prev = subjectCounts.get(occ.fullSubject) ?? 0;
-          subjectCounts.set(occ.fullSubject, prev + 1);
+          let unitSet = subjectUnitsOnDay.get(occ.fullSubject);
+          if (!unitSet) {
+            unitSet = new Set<TeachingUnit>();
+            subjectUnitsOnDay.set(occ.fullSubject, unitSet);
+          }
+          unitSet.add(occ);
 
           if (options.morningCorePriority && occ.isCoreHeavy && candidateTimes[s] >= "12:00") {
             penalty += 6;
@@ -614,11 +643,10 @@ export function runOptimizedTimetableSolver(
           }
         }
 
-        // Penalize >2 hours of same subject in a single day
+        // Penalize placing multiple separate blocks of the same subject on the same day
         if (options.balanceDailySubjects) {
-          subjectCounts.forEach((cnt) => {
-            if (cnt === 2) penalty += 2;
-            if (cnt >= 3) penalty += (cnt - 2) * 30;
+          subjectUnitsOnDay.forEach((unitSet) => {
+            if (unitSet.size > 1) penalty += (unitSet.size - 1) * 35;
           });
         }
       }
