@@ -55,6 +55,7 @@ export interface SidebarNavItem {
   label: string;
   href: string;
   icon: LucideIcon;
+  section?: string;
 }
 
 interface PanelSidebarProps {
@@ -128,29 +129,38 @@ export function PanelSidebar({
 
         {/* Navigation Links */}
         <nav className="mt-6 space-y-1" aria-label="Panel Menüsü">
-          {items.map((item) => {
+          {items.map((item, idx) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
+            const prevSection = idx > 0 ? items[idx - 1].section : undefined;
+            const showSectionHeader =
+              Boolean(item.section) && item.section !== prevSection;
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3.5 py-2.5 text-sm font-medium transition-colors duration-150",
-                  isActive
-                    ? "bg-[#203B5C] text-white"
-                    : "text-[#737B86] hover:bg-[#F8F7F3] hover:text-[#203B5C]"
+              <React.Fragment key={item.href}>
+                {showSectionHeader && (
+                  <p className="px-3.5 pt-3.5 pb-1 text-[10px] font-bold tracking-[0.12em] text-[#94A3B8] uppercase">
+                    {item.section}
+                  </p>
                 )}
-              >
-                <Icon
+                <Link
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
                   className={cn(
-                    "h-4 w-4",
-                    isActive ? "text-[#B18A52]" : "text-[#737B86]"
+                    "flex items-center gap-3 rounded-md px-3.5 py-2 text-sm font-medium transition-colors duration-150",
+                    isActive
+                      ? "bg-[#203B5C] text-white"
+                      : "text-[#737B86] hover:bg-[#F8F7F3] hover:text-[#203B5C]"
                   )}
-                />
-                <span>{item.label}</span>
-              </Link>
+                >
+                  <Icon
+                    className={cn(
+                      "h-4 w-4",
+                      isActive ? "text-[#B18A52]" : "text-[#737B86]"
+                    )}
+                  />
+                  <span>{item.label}</span>
+                </Link>
+              </React.Fragment>
             );
           })}
         </nav>

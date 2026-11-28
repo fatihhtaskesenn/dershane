@@ -23,49 +23,58 @@ const ADMIN_NAV: SidebarNavItem[] = [
     icon: LayoutDashboard,
   },
   {
-    label: "Öğrenci Oluştur",
-    href: "/admin/create-student",
-    icon: UserPlus,
-  },
-  {
-    label: "Öğrenci Durumları",
-    href: "/admin/students",
-    icon: Users,
-  },
-  {
-    label: "Deneme PDF Yükle",
-    href: "/admin/exams",
-    icon: FileUp,
-  },
-  {
-    label: "Öğretmen Oluştur",
-    href: "/admin/create-teacher",
-    icon: GraduationCap,
-  },
-  {
-    label: "Öğretmen Durumları",
-    href: "/admin/teachers",
-    icon: BookOpenCheck,
-  },
-  {
-    label: "Sınıflar",
-    href: "/admin/classes",
-    icon: Layers,
-  },
-  {
     label: "Ders Programı Oluştur",
     href: "/admin/schedule-builder",
     icon: CalendarDays,
+    section: "Program & Sınıf",
   },
   {
     label: "Birebir Oluştur",
     href: "/admin/one-on-one",
     icon: CalendarPlus,
+    section: "Program & Sınıf",
+  },
+  {
+    label: "Sınıflar",
+    href: "/admin/classes",
+    icon: Layers,
+    section: "Program & Sınıf",
+  },
+  {
+    label: "Öğrenci Durumları",
+    href: "/admin/students",
+    icon: Users,
+    section: "Öğrenci & Sınav",
+  },
+  {
+    label: "Öğrenci Oluştur",
+    href: "/admin/create-student",
+    icon: UserPlus,
+    section: "Öğrenci & Sınav",
+  },
+  {
+    label: "Deneme PDF Yükle",
+    href: "/admin/exams",
+    icon: FileUp,
+    section: "Öğrenci & Sınav",
+  },
+  {
+    label: "Öğretmen Durumları",
+    href: "/admin/teachers",
+    icon: BookOpenCheck,
+    section: "Öğretmen Kadrosu",
+  },
+  {
+    label: "Öğretmen Oluştur",
+    href: "/admin/create-teacher",
+    icon: GraduationCap,
+    section: "Öğretmen Kadrosu",
   },
   {
     label: "Siteyi Yönet",
     href: "/admin/content",
     icon: ImageIcon,
+    section: "Kurum",
   },
 ];
 
